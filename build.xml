@@ -10,9 +10,7 @@
 
     <property name="javadoc.dir" value="javadoc"/>
 
-    <target name="compile" description="Compile code">
-        <mkdir dir="${src-ascii.dir}" />
-        <native2ascii src="${src.dir}" dest="${src-ascii.dir}" includes="**/*.java" />
+    <target name="compile" description="Compile code" depends="native2ascii">
         <mkdir dir="${build.classes}" />
         <javac srcdir="${src-ascii.dir}" destdir="${build.classes}">
             <classpath>
@@ -21,6 +19,11 @@
                 </fileset>
             </classpath>
         </javac>
+    </target>
+
+    <target name="native2ascii">
+        <mkdir dir="${src-ascii.dir}" />
+        <native2ascii src="${src.dir}" dest="${src-ascii.dir}" includes="**/*.java" />
     </target>
 
     <target name="cleanup" description="Clean up compiled files">
@@ -34,9 +37,9 @@
         <jar destfile="${build.dir}/beanmaker-${jar.version}.jar" basedir="${build.classes}" includes="org/beanmaker/**/*" />
     </target>
 
-    <target name="doc" description="Create javadoc for this project">
+    <target name="doc" description="Create javadoc for this project" depends="native2ascii">
         <mkdir dir="${javadoc.dir}" />
-        <javadoc sourcepath="${src.dir}" destdir="${javadoc.dir}" />
+        <javadoc sourcepath="${src-ascii.dir}" destdir="${javadoc.dir}" />
     </target>
 
 </project>
