@@ -237,7 +237,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
     private FunctionDeclaration getSelectForAssociatedBeanFunction(final Column column) {
         importsManager.addImport("java.util.List");
         importsManager.addImport("java.util.ArrayList");
-        importsManager.addImport("org.beanmaker.IdNamePair");
+        importsManager.addImport("org.beanmaker.util.IdNamePair");
 
         final String field = column.getJavaName();
         final String associatedBeanClass = column.getAssociatedBeanClass();
