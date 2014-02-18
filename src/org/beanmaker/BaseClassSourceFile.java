@@ -123,7 +123,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
             if (type.equals("Money"))
                 addProperty(new VarDeclaration("String", field + "Str", new FunctionCall("toString", field)));
-            if (JAVA_TEMPORAL_TYPES.contains(type) || ((type.equals("int") || type.equals("int")) && !field.startsWith("id") && !field.equals("itemOrder")))
+            if (JAVA_TEMPORAL_TYPES.contains(type) || ((type.equals("int") || type.equals("long")) && !field.startsWith("id") && !field.equals("itemOrder")))
                 addProperty(new VarDeclaration("String", field + "Str", EMPTY_STRING));
         }
 
