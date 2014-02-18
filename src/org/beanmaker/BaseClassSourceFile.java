@@ -898,8 +898,10 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 if ((type.equals("int") || type.equals("long"))) {
                     if (field.startsWith("id"))
                         isOKFunction.addContent(new ReturnStatement(new FunctionCall("isIdOK", column.getAssociatedBeanClass()).addArgument(field)));
-                    else
+                    else {
+                        importsManager.addImport("org.beanmaker.util.FormatCheckHelper");
                         isOKFunction.addContent(new ReturnStatement(new FunctionCall("isNumber", "FormatCheckHelper").addArgument(field + "Str")));
+                    }
                 }
 
                 else if (JAVA_TEMPORAL_TYPES.contains(type)) {
@@ -907,9 +909,10 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 }
 
                 else if (type.equals("String")) {
-                    if (field.equalsIgnoreCase("email") || field.equalsIgnoreCase("e-mail"))
+                    if (field.equalsIgnoreCase("email") || field.equalsIgnoreCase("e-mail")) {
+                        importsManager.addImport("org.beanmaker.util.FormatCheckHelper");
                         isOKFunction.addContent(new ReturnStatement(new FunctionCall("isEmailValid", "FormatCheckHelper").addArgument(field)));
-                    else
+                    } else
                         isOKFunction.addContent(new ReturnStatement("true"));
                 }
 
