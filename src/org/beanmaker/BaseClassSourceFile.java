@@ -428,7 +428,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                     javaClass.addContent(fromObjectSetter).addContent(EMPTY_LINE);
                 }
 
-                if (JAVA_TEMPORAL_TYPES.contains(type) || type.equals("Money") || ((type.equals("int") || type.equals("int")) && !field.startsWith("id"))) {
+                if (JAVA_TEMPORAL_TYPES.contains(type) || type.equals("Money") || ((type.equals("int") || type.equals("long")) && !field.startsWith("id"))) {
                     final FunctionDeclaration strSetter = new FunctionDeclaration("set" + capitalize(field) + "Str")
                             .addArgument(new FunctionArgument("String", field + "Str"))
                             .addContent(new Assignment("this." + field + "Str", field + "Str"));
