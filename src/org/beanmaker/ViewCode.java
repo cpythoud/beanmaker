@@ -30,7 +30,7 @@ public abstract class ViewCode extends BeanCodeWithDBInfo {
 
     protected void addProperties() {
         javaClass.addContent(
-                new VarDeclaration(beanName, beanVarName).markAsFinal().visibility(Visibility.PRIVATE)
+                new VarDeclaration(beanName, beanVarName).markAsFinal().visibility(Visibility.PROTECTED)
         );
     }
 
