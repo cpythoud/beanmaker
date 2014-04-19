@@ -235,7 +235,7 @@ public class HtmlFormHelper {
         return new TdTag();
     }
 
-    private LabelTag getLabelTag(final String field, final long idBean, final String label, final boolean required) {
+    protected LabelTag getLabelTag(final String field, final long idBean, final String label, final boolean required) {
         final String labelText;
         if (required)
             labelText = label + requiredExtension;
@@ -245,7 +245,7 @@ public class HtmlFormHelper {
         return new LabelTag(labelText, getHtmlId(field, idBean));
     }
 
-    private LabelTag getLabelTag(final String field, final long idBean, final String idPair) {
+    protected LabelTag getLabelTag(final String field, final long idBean, final String idPair) {
         return new LabelTag().forAttr(getHtmlId(field, idBean, idPair));
     }
 	
