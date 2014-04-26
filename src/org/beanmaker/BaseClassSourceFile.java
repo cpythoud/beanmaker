@@ -572,13 +572,13 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
                 final FunctionCall dbAccessForCountFunction = new FunctionCall("processQuery", "dbAccess");
                 final FunctionDeclaration countGetter =
-                        new FunctionDeclaration("getCountFor" + capitalize(listName), "Long")
+                        new FunctionDeclaration("getCountFor" + capitalize(listName), "long")
                                 .addContent(new ReturnStatement(
                                         dbAccessForCountFunction
                                                 .addArgument(quickQuote("SELECT COUNT(id) FROM " + relationship.getTable() + " WHERE " + relationship.getIdSqlName() + "=?"))
                                                 .addArgument(new AnonymousClassCreation("DBQuerySetupRetrieveData<Long>").setContext(dbAccessFunction)
                                                         .addContent(preparedStatementSetup)
-                                                        .addContent(new FunctionDeclaration("processResultSet", "long")
+                                                        .addContent(new FunctionDeclaration("processResultSet", "Long")
                                                                 .annotate("@Override")
                                                                 .addException("SQLException")
                                                                 .addArgument(new FunctionArgument("ResultSet", "rs"))
