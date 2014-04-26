@@ -531,42 +531,63 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
 	private void addOneToManyRelationshipManagement() {
         for (OneToManyRelationship relationship: columns.getOneToManyRelationships()) {
+            final String beanClass = relationship.getBeanClass();
+            final String itemName = uncapitalize(beanClass);
+            final String listName = relationship.getJavaName();
+
             if (relationship.isListOnly()) {
+                importsManager.addImport("org.dbbeans.sql.DBQuerySetupRetrieveData");
+
+                final FunctionDeclaration preparedStatementSetup = new FunctionDeclaration("setupPreparedStatement")
+                        .annotate("@Override")
+                        .addException("SQLException")
+                        .addArgument(new FunctionArgument("PreparedStatement", "stat"))
+                        .addContent(new FunctionCall("setLong", "stat")
+                                .addArgument("1")
+                                .addArgument("id")
+                                .byItself());
+
                 final FunctionCall dbAccessFunction = new FunctionCall("processQuery", "dbAccess").byItself();
                 final FunctionDeclaration listGetter =
-                        new FunctionDeclaration("get" + capitalize(relationship.getJavaName()), new GenericType("List", relationship.getBeanClass()))
-                                .addContent(VarDeclaration.createListDeclaration(relationship.getBeanClass(), relationship.getJavaName()).markAsFinal())
+                        new FunctionDeclaration("get" + capitalize(listName), new GenericType("List", beanClass))
+                                .addContent(VarDeclaration.createListDeclaration(beanClass, listName).markAsFinal())
                                 .addContent(EMPTY_LINE)
                                 .addContent(dbAccessFunction
                                         .addArgument(quickQuote("SELECT id FROM " + relationship.getTable() + " WHERE " + relationship.getIdSqlName() + "=?"))
                                         .addArgument(new AnonymousClassCreation("DBQuerySetupProcess").setContext(dbAccessFunction)
-                                                .addContent(new FunctionDeclaration("setupPreparedStatement")
-                                                        .annotate("@Override")
-                                                        .addException("SQLException")
-                                                        .addArgument(new FunctionArgument("PreparedStatement", "stat"))
-                                                        .addContent(new FunctionCall("setLong", "stat")
-                                                                .addArgument("1")
-                                                                .addArgument("id")
-                                                                .byItself()))
+                                                .addContent(preparedStatementSetup)
                                                 .addContent(EMPTY_LINE)
                                                 .addContent(new FunctionDeclaration("processResultSet")
                                                         .annotate("@Override")
                                                         .addException("SQLException")
                                                         .addArgument(new FunctionArgument("ResultSet", "rs"))
                                                         .addContent(new WhileBlock(new Condition("rs.next()"))
-                                                                .addContent(new FunctionCall("add", relationship.getJavaName()).byItself()
-                                                                        .addArgument(new ObjectCreation(relationship.getBeanClass())
+                                                                .addContent(new FunctionCall("add", listName).byItself()
+                                                                        .addArgument(new ObjectCreation(beanClass)
                                                                                 .addArgument(new FunctionCall("getLong", "rs")
                                                                                         .addArgument("1"))))))))
                                 .addContent(EMPTY_LINE)
-                                .addContent(new ReturnStatement(relationship.getJavaName()));
+                                .addContent(new ReturnStatement(listName));
                 javaClass.addContent(listGetter).addContent(EMPTY_LINE);
+
+                final FunctionCall dbAccessForCountFunction = new FunctionCall("processQuery", "dbAccess");
+                final FunctionDeclaration countGetter =
+                        new FunctionDeclaration("getCountFor" + capitalize(listName), "Long")
+                                .addContent(new ReturnStatement(
+                                        dbAccessForCountFunction
+                                                .addArgument(quickQuote("SELECT COUNT(id) FROM " + relationship.getTable() + " WHERE " + relationship.getIdSqlName() + "=?"))
+                                                .addArgument(new AnonymousClassCreation("DBQuerySetupRetrieveData<Long>").setContext(dbAccessFunction)
+                                                        .addContent(preparedStatementSetup)
+                                                        .addContent(new FunctionDeclaration("processResultSet", "long")
+                                                                .annotate("@Override")
+                                                                .addException("SQLException")
+                                                                .addArgument(new FunctionArgument("ResultSet", "rs"))
+                                                                .addContent(new FunctionCall("next", "rs").byItself())
+                                                                .addContent(new ReturnStatement(new FunctionCall("getLong", "rs").addArgument("1")))))
+                                ));
+                javaClass.addContent(countGetter).addContent(EMPTY_LINE);
             } else {
                 importsManager.addImport("java.util.Collections");
-
-                final String beanClass = relationship.getBeanClass();
-                final String itemName = uncapitalize(beanClass);
-                final String listName = relationship.getJavaName();
 
                 javaClass.addContent(
                         new FunctionDeclaration("add" + beanClass)
@@ -598,6 +619,9 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 ).addContent(EMPTY_LINE).addContent(
                         new FunctionDeclaration("get" + capitalize(listName), new GenericType("List", beanClass))
                                 .addContent(new ReturnStatement(new FunctionCall("unmodifiableList", "Collections").addArgument(listName)))
+                ).addContent(EMPTY_LINE).addContent(
+                        new FunctionDeclaration("getCountFor" + capitalize(listName), "long")
+                                .addContent(new ReturnStatement(new FunctionCall("size", listName)))
                 ).addContent(EMPTY_LINE);
             }
         }
