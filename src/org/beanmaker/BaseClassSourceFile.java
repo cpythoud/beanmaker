@@ -20,6 +20,7 @@ import org.jcodegen.java.JavaClass;
 import org.jcodegen.java.JavaCodeBlock;
 import org.jcodegen.java.LineOfCode;
 import org.jcodegen.java.ObjectCreation;
+import org.jcodegen.java.OperatorExpression;
 import org.jcodegen.java.ReturnStatement;
 import org.jcodegen.java.VarDeclaration;
 import org.jcodegen.java.Visibility;
@@ -553,7 +554,9 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                                 .addContent(VarDeclaration.createListDeclaration(beanClass, listName).markAsFinal())
                                 .addContent(EMPTY_LINE)
                                 .addContent(dbAccessFunction
-                                        .addArgument(quickQuote("SELECT id FROM " + relationship.getTable() + " WHERE " + relationship.getIdSqlName() + "=?"))
+                                        .addArgument(new OperatorExpression(quickQuote("SELECT id FROM " + relationship.getTable() + " WHERE " + relationship.getIdSqlName() + "=? ORDER BY "),
+                                                new FunctionCall("getOrderByFields", beanClass + "." + Strings.uncamelize(beanClass).toUpperCase() + "_PARAMETERS"),
+                                                OperatorExpression.Operator.ADD))
                                         .addArgument(new AnonymousClassCreation("DBQuerySetupProcess").setContext(dbAccessFunction)
                                                 .addContent(preparedStatementSetup)
                                                 .addContent(EMPTY_LINE)
