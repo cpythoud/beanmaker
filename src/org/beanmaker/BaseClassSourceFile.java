@@ -163,7 +163,6 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
     private ConstructorDeclaration getBaseConstructor() {
         return javaClass.createConstructor();
-        //return javaClass.createConstructor().addContent("setLocale(Locale.getDefault());");
     }
 
     private ConstructorDeclaration getIdArgumentConstructor() {
@@ -523,11 +522,6 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
     private void addRequiredIndicators() {
         for (Column column: columns.getList())
             addIndicator(column.getJavaName(), "Required", column.isRequired(), true);
-        /*for (Column column: columns.getList())
-            javaClass.addContent(
-                    new FunctionDeclaration("is" + capitalize(column.getJavaName() + "RequiredInHtmlForm"), "boolean")
-                            .addContent(new ReturnStatement(new FunctionCall("is" + capitalize(column.getJavaName() + "Required"))))
-            ).addContent(EMPTY_LINE);*/
     }
 
     private void addUniqueIndicators() {
