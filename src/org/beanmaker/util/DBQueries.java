@@ -159,7 +159,7 @@ public class DBQueries {
     }
 
 
-    public static int getMaxItemOrderInt(final DB db, final String table, final String extraCondition) {
+    /*public static int getMaxItemOrderInt(final DB db, final String table, final String extraCondition) {
         return new DBAccess(db).processQuery(getMaxItemOrderQuery(table, extraCondition), new DBQueryRetrieveData<Integer>() {
             @Override
             public Integer processResultSet(ResultSet rs) throws SQLException {
@@ -177,20 +177,53 @@ public class DBQueries {
                 return rs.getLong(1);
             }
         });
+    }*/
+
+    public static long getMaxItemOrder(final DB db, final String query) {
+        return new DBAccess(db).processQuery(query, new DBQueryRetrieveData<Long>() {
+            @Override
+            public Long processResultSet(ResultSet rs) throws SQLException {
+                rs.next();
+                return rs.getLong(1);
+            }
+        });
     }
 
-    private static String getMaxItemOrderQuery(final String table, final String extraCondition) {
-        /*if (!isTableNameProperlyQuoted(table))
-            throw new IllegalArgumentException(QUOTED_TABLE_NAME_EXCEPTION_MESSAGE);*/
+    public static long getMaxItemOrder(final DB db, final String query, final long... parameters) {
+        return new DBAccess(db).processQuery(query, new DBQuerySetupRetrieveData<Long>() {
+            @Override
+            public void setupPreparedStatement(final PreparedStatement stat) throws SQLException {
+                setupParameters(stat, 1, toList(parameters));
+            }
+
+            @Override
+            public Long processResultSet(final ResultSet rs) throws SQLException {
+                rs.next();
+                return rs.getLong(1);
+            }
+        });
+    }
+
+    private static void setupParameters(final PreparedStatement stat, final int startIndex, final List<Long> parameters) throws SQLException {
+        int index = startIndex - 1;
+        for (long parameter: parameters)
+            stat.setLong(++index, parameter);
+    }
+
+
+
+    /*private static String getMaxItemOrderQuery(final String table, final String extraCondition) {
+        *//*if (!isTableNameProperlyQuoted(table))
+            throw new IllegalArgumentException(QUOTED_TABLE_NAME_EXCEPTION_MESSAGE);*//*
 
         if (extraCondition == null)
             return "SELECT MAX(item_order) FROM " + table;
 
         return "SELECT MAX(item_order) FROM " + table + " WHERE " + extraCondition;
-    }
+    }*/
 
 
-    public static void itemOrderMoveUp(final DB db, final String table, final long id, final long itemOrder) {
+    /*public static void itemOrderMoveUp(final DB db, final String table, final long id, final long itemOrder) {
         itemOrderMoveUp(db, table, id, itemOrder, null);
     }
 
@@ -204,11 +237,11 @@ public class DBQueries {
 
     public static void itemOrderMoveDown(final DB db, final String table, final long id, final long itemOrder, final String extraCondition) {
         itemOrderMove(db, table, id, itemOrder, extraCondition, false);
-    }
+    }*/
 
 
 
-    private static void itemOrderMove(final DB db, final String table, final long id, final long itemOrder, final String extraCondition, final boolean moveUp) {
+    /*private static void itemOrderMove(final DB db, final String table, final long id, final long itemOrder, final String extraCondition, final boolean moveUp) {
         final DBTransaction transaction = new DBTransaction(db);
 
         final long swapPositionWithBeanId = transaction.addQuery(getMoveItemOrderQuery(table, extraCondition), new DBQuerySetupRetrieveData<Long>() {
@@ -235,7 +268,7 @@ public class DBQueries {
         }
 
         transaction.commit();
-    }
+    }*/
 
     private static long getItemOrderSwapValue(final long itemOrder, final boolean moveUp) {
         if (moveUp)
@@ -244,13 +277,118 @@ public class DBQueries {
         return itemOrder + 1;
     }
 
-    private static String getMoveItemOrderQuery(final String table, final String extraCondition) {
+    /*private static String getMoveItemOrderQuery(final String table, final String extraCondition) {
         if (extraCondition == null)
             return "SELECT id FROM " + table + " WHERE item_order=?";
 
         return "SELECT id FROM " + table + " WHERE item_order=? AND " + extraCondition;
+    }*/
+
+
+    /*private static void incItemOrder(final DBTransaction transaction, final long id, final String table) {
+        setItemOrder(transaction, id, table, getItemOrder(transaction, id, table) + 1);
     }
 
+    private static void decItemOrder(final DBTransaction transaction, final long id, final String table) {
+        setItemOrder(transaction, id, table, getItemOrder(transaction, id, table) - 1);
+    }
+
+    private static long getItemOrder(final DBTransaction transaction, final long id, final String table) {
+        return transaction.addQuery("SELECT item_order FROM " + table + " WHERE id=?", new DBQuerySetupRetrieveData<Long>() {
+            @Override
+            public void setupPreparedStatement(PreparedStatement stat) throws SQLException {
+                stat.setLong(1, id);
+            }
+
+            @Override
+            public Long processResultSet(ResultSet rs) throws SQLException {
+                if (rs.next())
+                    return rs.getLong(1);
+
+                throw new IllegalArgumentException("No such ID #" + id);
+            }
+        });
+    }
+
+    private static void setItemOrder(final DBTransaction transaction, final long id, final String table, final long itemOrder) {
+        transaction.addUpdate("UPDATE " + table + " SET item_order=? WHERE id=?", new DBQuerySetup() {
+            @Override
+            public void setupPreparedStatement(PreparedStatement stat) throws SQLException {
+                stat.setLong(1, itemOrder);
+                stat.setLong(2, id);
+            }
+        });
+    }*/
+
+    // New itemOrder implementation
+
+    public static void itemOrderMoveUp(final DB db, final String idFromItemOrderQuery, final String table, final long id, final long itemOrder) {
+        itemOrderMove(db, idFromItemOrderQuery, table, id, itemOrder, null, true);
+    }
+
+    public static void itemOrderMoveUp(final DB db, final String idFromItemOrderQuery, final String table, final long id, final long itemOrder, final long... parameters) {
+        itemOrderMove(db, idFromItemOrderQuery, table, id, itemOrder, toList(parameters), true);
+    }
+
+    public static void itemOrderMoveDown(final DB db, final String idFromItemOrderQuery, final String table, final long id, final long itemOrder) {
+        itemOrderMove(db, idFromItemOrderQuery, table, id, itemOrder, null, false);
+    }
+
+    public static void itemOrderMoveDown(final DB db, final String idFromItemOrderQuery, final String table, final long id, final long itemOrder, final long... parameters) {
+        itemOrderMove(db, idFromItemOrderQuery, table, id, itemOrder, toList(parameters), false);
+    }
+
+    private static List<Long> toList(final long... parameters) {
+        final List<Long> list = new ArrayList<Long>();
+        for (long parameter: parameters)
+            list.add(parameter);
+        return list;
+    }
+
+    private static void itemOrderMove(final DB db, final String idFromItemOrderQuery, final String table, final long id, final long itemOrder, final List<Long> parameters, final boolean moveUp) {
+        final DBTransaction transaction = new DBTransaction(db);
+
+        final long swapPositionWithBeanId = transaction.addQuery(idFromItemOrderQuery, new DBQuerySetupRetrieveData<Long>() {
+            @Override
+            public void setupPreparedStatement(PreparedStatement stat) throws SQLException {
+                stat.setLong(1, getItemOrderSwapValue(itemOrder, moveUp));
+                if (parameters != null)
+                    setupParameters(stat, 2, parameters);
+            }
+
+            @Override
+            public Long processResultSet(ResultSet rs) throws SQLException {
+                if (rs.next())
+                    return rs.getLong(1);
+
+                throw new IllegalArgumentException("No such item order # " + composeIdForException(id, parameters) + ". Cannot effect change.  Please check database integrity.");
+            }
+        });
+
+        if (moveUp) {
+            incItemOrder(transaction, swapPositionWithBeanId, table);
+            decItemOrder(transaction, id, table);
+        } else {
+            decItemOrder(transaction, swapPositionWithBeanId, table);
+            incItemOrder(transaction, id, table);
+        }
+
+        transaction.commit();
+    }
+
+    private static String composeIdForException(final long id, final List<Long> parameters) {
+        if (parameters == null)
+            return "[" + id + "]";
+
+        final StringBuilder buf = new StringBuilder();
+        buf.append("[").append(id).append(", ");
+        for (long parameter: parameters)
+            buf.append(parameter).append(", ");
+        buf.delete(buf.length() - 2, buf.length());
+        buf.append("]");
+
+        return buf.toString();
+    }
 
     private static void incItemOrder(final DBTransaction transaction, final long id, final String table) {
         setItemOrder(transaction, id, table, getItemOrder(transaction, id, table) + 1);

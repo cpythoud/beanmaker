@@ -90,6 +90,16 @@ public class Columns {
 		else
 			throw new IllegalArgumentException("Column #" + index + " cannot have an associated bean.");
 	}
+
+    public void setItemOrderAssociatedField(final int index, final String itemOrderAssociatedField) {
+        if (index < 1 || index > columns.size())
+            throw new IndexOutOfBoundsException("There is no column number " + index);
+
+        if (columns.get(index - 1).isItemOrder())
+            columns.get(index - 1).setItemOrderAssociatedField(itemOrderAssociatedField);
+        else
+            throw new IllegalArgumentException("Column #" + index + " is not an item order field.");
+    }
 	
 	public boolean hasBadField() {
 		for (Column column: columns) {
@@ -243,6 +253,14 @@ public class Columns {
 		
 		return "id";
 	}
+
+    public Column getItemOrderField() {
+        for (Column column: columns)
+            if (column.isItemOrder())
+                return new Column(column);
+
+        throw new IllegalArgumentException("Column set does not contain an item order field.");
+    }
 	
 	private DatabaseServer server;
 	private String db;

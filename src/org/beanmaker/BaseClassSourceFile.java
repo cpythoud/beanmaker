@@ -27,6 +27,8 @@ import org.jcodegen.java.Visibility;
 import org.jcodegen.java.WhileBlock;
 
 import org.dbbeans.util.Strings;
+
+import static org.dbbeans.util.Strings.camelize;
 import static org.dbbeans.util.Strings.capitalize;
 import static org.dbbeans.util.Strings.quickQuote;
 import static org.dbbeans.util.Strings.uncapitalize;
@@ -645,6 +647,8 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         if (!columns.hasItemOrder())
             return;
 
+        final Column itemOrderField = columns.getItemOrderField();
+
         javaClass.addContent(
                 new FunctionDeclaration("isFirstItemOrder", "boolean").addContent(
                        checkForItemOrderOperationOnUninitializedBean()
@@ -653,18 +657,17 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 )
         ).addContent(EMPTY_LINE);
 
+        final FunctionCall getMaxItemOrderFunctionCall = new FunctionCall("getMaxItemOrder", "DBQueries")
+                .addArgument("db")
+                .addArgument(new FunctionCall("getItemOrderMaxQuery", parametersVar));
+        if (!itemOrderField.isUnique())
+            getMaxItemOrderFunctionCall.addArgument(uncapitalize(camelize(itemOrderField.getItemOrderAssociatedField())));
+
         javaClass.addContent(
                 new FunctionDeclaration("isLastItemOrder", "boolean").addContent(
                         checkForItemOrderOperationOnUninitializedBean()
                 ).addContent(EMPTY_LINE).addContent(
-                        new ReturnStatement(
-                                new Comparison("itemOrder",
-                                        new FunctionCall("getMaxItemOrderInt", "DBQueries")
-                                                .addArgument("db")
-                                                .addArgument(quickQuote(tableName))
-                                                .addArgument(new FunctionCall("getItemOrderExtraSqlCondition", parametersVar))
-                                )
-                        )
+                        new ReturnStatement(new Comparison("itemOrder", getMaxItemOrderFunctionCall))
                 )
         ).addContent(EMPTY_LINE);
 
@@ -676,12 +679,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                                 new ExceptionThrow("IllegalArgumentException").addArgument(quickQuote("Cannot move Item Order above position 1 which it currently occupies"))
                         )
                 ).addContent(EMPTY_LINE).addContent(
-                        new FunctionCall("itemOrderMoveUp", "DBQueries")
-                            .addArgument("db")
-                            .addArgument(quickQuote(tableName))
-                            .addArgument("id")
-                            .addArgument("itemOrder")
-                            .byItself()
+                        getItemOrderFunctionCall("itemOrderMoveUp", itemOrderField)
                 ).addContent(EMPTY_LINE).addContent(
                         new LineOfCode("itemOrder--;")
                 )
@@ -695,16 +693,24 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                                 new ExceptionThrow("IllegalArgumentException").addArgument("\"Cannot move Item Order below max position: \" + itemOrder")
                         )
                 ).addContent(EMPTY_LINE).addContent(
-                        new FunctionCall("itemOrderMoveDown", "DBQueries")
-                                .addArgument("db")
-                                .addArgument(quickQuote(tableName))
-                                .addArgument("id")
-                                .addArgument("itemOrder")
-                                .byItself()
+                        getItemOrderFunctionCall("itemOrderMoveDown", itemOrderField)
                 ).addContent(EMPTY_LINE).addContent(
                         new LineOfCode("itemOrder++;")
                 )
         ).addContent(EMPTY_LINE);
+    }
+
+    private FunctionCall getItemOrderFunctionCall(final String functionName, final Column itemOrderField) {
+        final FunctionCall itemOrderFunctionCall = new FunctionCall(functionName, "DBQueries")
+                .addArgument("db")
+                .addArgument(new FunctionCall("getIdFromItemOrderQuery", parametersVar))
+                .addArgument(quickQuote(tableName))
+                .addArgument("id")
+                .addArgument("itemOrder")
+                .byItself();
+        if (!itemOrderField.isUnique())
+            itemOrderFunctionCall.addArgument(uncapitalize(camelize(itemOrderField.getItemOrderAssociatedField())));
+        return itemOrderFunctionCall;
     }
 
     private IfBlock checkForItemOrderOperationOnUninitializedBean() {

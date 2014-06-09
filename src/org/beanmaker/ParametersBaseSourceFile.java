@@ -8,8 +8,13 @@ import org.dbbeans.util.Strings;
 
 public class ParametersBaseSourceFile extends BeanCodeWithDBInfo {
 
+    private Column itemOrderField = null;
+
     public ParametersBaseSourceFile(final String beanName, final String packageName, final Columns columns, final String tableName) {
         super(beanName, packageName, "ParametersBase", columns, tableName);
+
+        if (columns.hasItemOrder())
+            itemOrderField = columns.getItemOrderField();
 
         createSourceCode();
     }
@@ -55,11 +60,29 @@ public class ParametersBaseSourceFile extends BeanCodeWithDBInfo {
         );
     }
 
-    private void addItemOrderExtraSqlConditionGetter() {
+    private void addItemOrderMaxQueryGetter() {
+        final StringBuilder query = new StringBuilder();
+        query.append("SELECT MAX(item_order) FROM ").append(tableName);
+        if (!itemOrderField.isUnique())
+            query.append(" WHERE ").append(itemOrderField.getItemOrderAssociatedField()).append("=?");
+
         newLine();
         javaClass.addContent(
-                new FunctionDeclaration("getItemOrderExtraSqlCondition", "String").addContent(
-                        new ReturnStatement("null")
+                new FunctionDeclaration("getItemOrderMaxQuery", "String").addContent(
+                        new ReturnStatement(Strings.quickQuote(query.toString()))
+                )
+        ).addContent(EMPTY_LINE);
+    }
+
+    private void addIdFromItemOrderQueryGetter() {
+        final StringBuilder query = new StringBuilder();
+        query.append("SELECT id FROM ").append(tableName).append(" WHERE item_order=?");
+        if (!itemOrderField.isUnique())
+            query.append(" AND ").append(itemOrderField.getItemOrderAssociatedField()).append("=?");
+
+        javaClass.addContent(
+                new FunctionDeclaration("getIdFromItemOrderQuery", "String").addContent(
+                        new ReturnStatement(Strings.quickQuote(query.toString()))
                 )
         );
     }
@@ -72,7 +95,9 @@ public class ParametersBaseSourceFile extends BeanCodeWithDBInfo {
         addNamingFieldsGetter();
         addOrderingFieldsGetter();
         addOrderByFieldsGetter();
-        if (columns.hasItemOrder())
-            addItemOrderExtraSqlConditionGetter();
+        if (columns.hasItemOrder()) {
+            addItemOrderMaxQueryGetter();
+            addIdFromItemOrderQueryGetter();
+        }
     }
 }

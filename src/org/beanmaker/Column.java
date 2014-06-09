@@ -25,6 +25,7 @@ public class Column {
     private boolean unique = false;
 
     private String associatedBeanClass;
+    private String itemOrderAssociatedField;
 
     private final boolean id;
     private final boolean lastUpdate;
@@ -68,7 +69,7 @@ public class Column {
             modifiedBy = sqlName.equals("modified_by");
 			if (sqlName.equals("item_order")) {
 				itemOrder = true;
-                unique = true;
+                unique = true;  // ???
             } else {
 				itemOrder = false;
             }
@@ -104,6 +105,7 @@ public class Column {
 		this.required = col.required;
         this.unique = col.unique;
 		this.associatedBeanClass = col.associatedBeanClass;
+        this.itemOrderAssociatedField = col.itemOrderAssociatedField;
 	}
 	
 	public String getSqlTypeName() {
@@ -297,5 +299,25 @@ public class Column {
 		
 		this.associatedBeanClass = associatedBeanClass;
 	}
+
+    public String getItemOrderAssociatedField() {
+        if (Strings.isEmpty(itemOrderAssociatedField))
+            return "";
+
+        return itemOrderAssociatedField;
+    }
+
+    public void setItemOrderAssociatedField(final String itemOrderAssociatedField) {
+        if (!isItemOrder())
+            throw new IllegalArgumentException("This column is not an item order field.");
+
+        if (Strings.isEmpty(itemOrderAssociatedField)) {
+            this.itemOrderAssociatedField = "";
+            unique = true;
+        } else {
+            this.itemOrderAssociatedField = itemOrderAssociatedField;
+            unique = false;
+        }
+    }
 }
 
