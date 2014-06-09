@@ -679,7 +679,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                                 new ExceptionThrow("IllegalArgumentException").addArgument(quickQuote("Cannot move Item Order above position 1 which it currently occupies"))
                         )
                 ).addContent(EMPTY_LINE).addContent(
-                        getItemOrderFunctionCall("itemOrderMoveUp", itemOrderField)
+                        getItemOrderFunctionCalls("itemOrderMoveUp", itemOrderField)
                 ).addContent(EMPTY_LINE).addContent(
                         new LineOfCode("itemOrder--;")
                 )
@@ -693,24 +693,35 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                                 new ExceptionThrow("IllegalArgumentException").addArgument("\"Cannot move Item Order below max position: \" + itemOrder")
                         )
                 ).addContent(EMPTY_LINE).addContent(
-                        getItemOrderFunctionCall("itemOrderMoveDown", itemOrderField)
+                        getItemOrderFunctionCalls("itemOrderMoveDown", itemOrderField)
                 ).addContent(EMPTY_LINE).addContent(
                         new LineOfCode("itemOrder++;")
                 )
         ).addContent(EMPTY_LINE);
     }
 
-    private FunctionCall getItemOrderFunctionCall(final String functionName, final Column itemOrderField) {
-        final FunctionCall itemOrderFunctionCall = new FunctionCall(functionName, "DBQueries")
+    private JavaCodeBlock getItemOrderFunctionCalls(final String functionName, final Column itemOrderField) {
+        final FunctionCall itemOrderFunctionCall = getItemOrderFunctionCall(functionName, "getIdFromItemOrderQuery");
+        if (itemOrderField.isUnique())
+            return itemOrderFunctionCall;
+
+        final String itemOrderAssociatedFieldJavaName = uncapitalize(camelize(itemOrderField.getItemOrderAssociatedField()));
+        itemOrderFunctionCall.addArgument(itemOrderAssociatedFieldJavaName);
+        final FunctionCall itemOrderFunctionCallNullCase = getItemOrderFunctionCall(functionName, "getIdFromItemOrderQueryWithNullSecondaryField");
+
+        return new IfBlock(new Condition(new Comparison(itemOrderAssociatedFieldJavaName, "0", Comparison.Comparator.GREATER_THAN)))
+                .addContent(itemOrderFunctionCall)
+                .elseClause(new ElseBlock().addContent(itemOrderFunctionCallNullCase));
+    }
+
+    private FunctionCall getItemOrderFunctionCall(final String functionName, final String parameterFunctionName) {
+        return new FunctionCall(functionName, "DBQueries")
                 .addArgument("db")
-                .addArgument(new FunctionCall("getIdFromItemOrderQuery", parametersVar))
+                .addArgument(new FunctionCall(parameterFunctionName, parametersVar))
                 .addArgument(quickQuote(tableName))
                 .addArgument("id")
                 .addArgument("itemOrder")
                 .byItself();
-        if (!itemOrderField.isUnique())
-            itemOrderFunctionCall.addArgument(uncapitalize(camelize(itemOrderField.getItemOrderAssociatedField())));
-        return itemOrderFunctionCall;
     }
 
     private IfBlock checkForItemOrderOperationOnUninitializedBean() {

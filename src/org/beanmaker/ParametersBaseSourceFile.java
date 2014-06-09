@@ -87,6 +87,18 @@ public class ParametersBaseSourceFile extends BeanCodeWithDBInfo {
         );
     }
 
+    private void addIdFromItemOrderQueryWithNullSecondaryFieldGetter() {
+        final String query =
+                "SELECT id FROM " + tableName + " WHERE item_order=? AND " + itemOrderField.getItemOrderAssociatedField() + " IS NULL";
+
+        newLine();
+        javaClass.addContent(
+                new FunctionDeclaration("getIdFromItemOrderQueryWithNullSecondaryField", "String").addContent(
+                        new ReturnStatement(Strings.quickQuote(query))
+                )
+        );
+    }
+
     private void createSourceCode() {
         sourceFile.setStartComment(SourceFiles.getCommentAndVersion());
 
@@ -98,6 +110,8 @@ public class ParametersBaseSourceFile extends BeanCodeWithDBInfo {
         if (columns.hasItemOrder()) {
             addItemOrderMaxQueryGetter();
             addIdFromItemOrderQueryGetter();
+            if (!itemOrderField.isUnique())
+                addIdFromItemOrderQueryWithNullSecondaryFieldGetter();
         }
     }
 }
