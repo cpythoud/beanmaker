@@ -204,6 +204,31 @@ public class DBQueries {
         });
     }
 
+    public static long getMaxItemOrder(final DBTransaction transaction, final String query) {
+        return transaction.addQuery(query, new DBQueryRetrieveData<Long>() {
+            @Override
+            public Long processResultSet(ResultSet rs) throws SQLException {
+                rs.next();
+                return rs.getLong(1);
+            }
+        });
+    }
+
+    public static long getMaxItemOrder(final DBTransaction transaction, final String query, final long... parameters) {
+        return transaction.addQuery(query, new DBQuerySetupRetrieveData<Long>() {
+            @Override
+            public void setupPreparedStatement(final PreparedStatement stat) throws SQLException {
+                setupParameters(stat, 1, toList(parameters));
+            }
+
+            @Override
+            public Long processResultSet(final ResultSet rs) throws SQLException {
+                rs.next();
+                return rs.getLong(1);
+            }
+        });
+    }
+
     private static void setupParameters(final PreparedStatement stat, final int startIndex, final List<Long> parameters) throws SQLException {
         int index = startIndex - 1;
         for (long parameter: parameters)

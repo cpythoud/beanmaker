@@ -74,6 +74,17 @@ public class ParametersBaseSourceFile extends BeanCodeWithDBInfo {
         ).addContent(EMPTY_LINE);
     }
 
+    private void addItemOrderMaxQueryGetterWithNullSecondaryFieldGetter() {
+        final String query =
+                "SELECT MAX(item_order) FROM " + tableName + " WHERE " + itemOrderField.getItemOrderAssociatedField() + " IS NULL";
+
+        javaClass.addContent(
+                new FunctionDeclaration("getItemOrderMaxQueryWithNullSecondaryField", "String").addContent(
+                        new ReturnStatement(Strings.quickQuote(query))
+                )
+        ).addContent(EMPTY_LINE);
+    }
+
     private void addIdFromItemOrderQueryGetter() {
         final StringBuilder query = new StringBuilder();
         query.append("SELECT id FROM ").append(tableName).append(" WHERE item_order=?");
@@ -109,6 +120,8 @@ public class ParametersBaseSourceFile extends BeanCodeWithDBInfo {
         addOrderByFieldsGetter();
         if (columns.hasItemOrder()) {
             addItemOrderMaxQueryGetter();
+            if (!itemOrderField.isUnique())
+                addItemOrderMaxQueryGetterWithNullSecondaryFieldGetter();
             addIdFromItemOrderQueryGetter();
             if (!itemOrderField.isUnique())
                 addIdFromItemOrderQueryWithNullSecondaryFieldGetter();

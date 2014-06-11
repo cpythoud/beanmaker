@@ -657,19 +657,22 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 )
         ).addContent(EMPTY_LINE);
 
-        final FunctionCall getMaxItemOrderFunctionCall = new FunctionCall("getMaxItemOrder", "DBQueries")
-                .addArgument("db")
-                .addArgument(new FunctionCall("getItemOrderMaxQuery", parametersVar));
-        if (!itemOrderField.isUnique())
-            getMaxItemOrderFunctionCall.addArgument(uncapitalize(camelize(itemOrderField.getItemOrderAssociatedField())));
-
-        javaClass.addContent(
-                new FunctionDeclaration("isLastItemOrder", "boolean").addContent(
-                        checkForItemOrderOperationOnUninitializedBean()
-                ).addContent(EMPTY_LINE).addContent(
-                        new ReturnStatement(new Comparison("itemOrder", getMaxItemOrderFunctionCall))
-                )
+        final FunctionDeclaration isLastItemOrderFunction = new FunctionDeclaration("isLastItemOrder", "boolean").addContent(
+                checkForItemOrderOperationOnUninitializedBean()
         ).addContent(EMPTY_LINE);
+
+        if (!itemOrderField.isUnique())
+            isLastItemOrderFunction.addContent(
+                    new IfBlock(new Condition(new Comparison(uncapitalize(camelize(itemOrderField.getItemOrderAssociatedField())), "0"))).addContent(
+                            new ReturnStatement(new Comparison("itemOrder", getMaxItemOrderFunctionCall(itemOrderField, false, true)))
+                    ).addContent(EMPTY_LINE)
+            );
+
+        isLastItemOrderFunction.addContent(
+                new ReturnStatement(new Comparison("itemOrder", getMaxItemOrderFunctionCall(itemOrderField, false, false)))
+        );
+
+        javaClass.addContent(isLastItemOrderFunction).addContent(EMPTY_LINE);
 
         javaClass.addContent(
                 new FunctionDeclaration("itemOrderMoveUp").addContent(
@@ -698,6 +701,25 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                         new LineOfCode("itemOrder++;")
                 )
         ).addContent(EMPTY_LINE);
+    }
+
+    private FunctionCall getMaxItemOrderFunctionCall(final Column itemOrderField, final boolean withTransaction, final boolean nullSecondaryVariant) {
+        final FunctionCall functionCall = new FunctionCall("getMaxItemOrder", "DBQueries");
+
+        if (withTransaction)
+            functionCall.addArgument("transaction");
+        else
+            functionCall.addArgument("db");
+
+        if (nullSecondaryVariant)
+            functionCall.addArgument(new FunctionCall("getItemOrderMaxQueryWithNullSecondaryField", parametersVar));
+        else {
+            functionCall.addArgument(new FunctionCall("getItemOrderMaxQuery", parametersVar));
+            if (!itemOrderField.isUnique())
+                functionCall.addArgument(uncapitalize(camelize(itemOrderField.getItemOrderAssociatedField())));
+        }
+
+        return functionCall;
     }
 
     private JavaCodeBlock getItemOrderFunctionCalls(final String functionName, final Column itemOrderField) {
@@ -1185,13 +1207,39 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
         javaClass.addContent(createRecordFunction).addContent(EMPTY_LINE);
 
-        javaClass.addContent(
-                new FunctionDeclaration("createRecord", "long").addArgument(new FunctionArgument("DBTransaction", "transaction")).visibility(Visibility.PRIVATE).addContent(
-                        new ReturnStatement(new FunctionCall("addRecordCreation", "transaction")
-                                .addArgument(quickQuote(getInsertSQLQuery()))
-                                .addArgument(new ObjectCreation("RecordCreationSetup")))
-                )
-        ).addContent(EMPTY_LINE);
+        final FunctionDeclaration createRecordFunctionWithTransaction =
+                new FunctionDeclaration("createRecord", "long").addArgument(new FunctionArgument("DBTransaction", "transaction")).visibility(Visibility.PRIVATE);
+
+        if (columns.hasItemOrder()) {
+            final Column itemOrderField = columns.getItemOrderField();
+            final IfBlock uninitializedItemOrderCase = new IfBlock(new Condition(new Comparison("itemOrder", "0")));
+            if (itemOrderField.isUnique())
+                uninitializedItemOrderCase.addContent(
+                        new Assignment("itemOrder",
+                                new OperatorExpression(getMaxItemOrderFunctionCall(columns.getItemOrderField(), true, false), "1", OperatorExpression.Operator.ADD))
+                );
+            else {
+                uninitializedItemOrderCase.addContent(
+                        new IfBlock(new Condition(new Comparison(uncapitalize(camelize(itemOrderField.getItemOrderAssociatedField())), "0"))).addContent(
+                                new Assignment("itemOrder",
+                                        new OperatorExpression(getMaxItemOrderFunctionCall(columns.getItemOrderField(), true, true), "1", OperatorExpression.Operator.ADD))
+                        ).elseClause(new ElseBlock().addContent(
+                                new Assignment("itemOrder",
+                                        new OperatorExpression(getMaxItemOrderFunctionCall(columns.getItemOrderField(), true, false), "1", OperatorExpression.Operator.ADD))
+                        ))
+                );
+            }
+
+            createRecordFunctionWithTransaction.addContent(uninitializedItemOrderCase).addContent(EMPTY_LINE);
+        }
+
+        createRecordFunctionWithTransaction.addContent(
+                new ReturnStatement(new FunctionCall("addRecordCreation", "transaction")
+                        .addArgument(quickQuote(getInsertSQLQuery()))
+                        .addArgument(new ObjectCreation("RecordCreationSetup")))
+        );
+
+        javaClass.addContent(createRecordFunctionWithTransaction).addContent(EMPTY_LINE);
 
         javaClass.addContent(
                 new FunctionDeclaration("createExtraDbActions")
