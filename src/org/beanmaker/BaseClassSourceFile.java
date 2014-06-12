@@ -1086,7 +1086,20 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
         deleteFunction.addContent(
                 new VarDeclaration("DBTransaction", "transaction", new FunctionCall("createDBTransaction")).markAsFinal()
-        ).addContent(
+        );
+
+        if (columns.hasItemOrder())
+            deleteFunction.addContent(
+                    new VarDeclaration("long", "curItemOrder").markAsFinal()
+            ).addContent(
+                    new IfBlock(new Condition(new FunctionCall("isLastItemOrder"))).addContent(
+                            new Assignment("curItemOrder", "0")
+                    ).elseClause(new ElseBlock().addContent(
+                            new Assignment("curItemOrder", "itemOrder")
+                    ))
+            );
+
+        deleteFunction.addContent(
                 accessDB.addArgument(quickQuote(getDeleteSQLQuery()))
                         .addArgument(new AnonymousClassCreation("DBQuerySetup").setContext(accessDB).addContent(
                         new FunctionDeclaration("setupPreparedStatement").annotate("@Override").addException("SQLException")
@@ -1094,7 +1107,30 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                                 new FunctionCall("setLong", "stat").addArguments("1", "id").byItself()
                         )
                 ))
-        ).addContent(
+        );
+
+        if (columns.hasItemOrder()) {
+            final IfBlock checkItemOrderNotMax = new IfBlock(new Condition(new Comparison("curItemOrder", "0", Comparison.Comparator.GREATER_THAN)));
+
+            final Column itemOrderField = columns.getItemOrderField();
+            if (itemOrderField.isUnique())
+                checkItemOrderNotMax.addContent(
+                        getUpdateItemOrderAboveFunctionCall("getUpdateItemOrdersAboveQuery", null)
+                );
+            else {
+                final String itemOrderAssociatedField = uncapitalize(camelize(itemOrderField.getItemOrderAssociatedField()));
+                checkItemOrderNotMax.addContent(
+                        new IfBlock(new Condition(new Comparison(itemOrderAssociatedField, "0"))).addContent(
+                                getUpdateItemOrderAboveFunctionCall("getUpdateItemOrdersAboveQueryWithNullSecondaryField", null)
+                        ).elseClause(new ElseBlock().addContent(
+                                getUpdateItemOrderAboveFunctionCall("getUpdateItemOrdersAboveQuery", itemOrderAssociatedField)
+                )));
+            }
+
+            deleteFunction.addContent(checkItemOrderNotMax);
+        }
+
+        deleteFunction.addContent(
                 new FunctionCall("deleteExtraDbActions").byItself().addArgument("transaction")
         ).addContent(
                 new FunctionCall("commit", "transaction").byItself()
@@ -1116,6 +1152,18 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 new FunctionDeclaration("postDeleteActions").visibility(Visibility.PROTECTED)
         ).addContent(EMPTY_LINE);
 	}
+
+    private FunctionCall getUpdateItemOrderAboveFunctionCall(final String queryRetrievalFunction, final String itemOrderAssociatedField) {
+        final FunctionCall functionCall = new FunctionCall("updateItemOrdersAbove", "DBQueries").byItself()
+                .addArgument(new FunctionCall(queryRetrievalFunction, parametersVar))
+                .addArgument("transaction")
+                .addArgument("curItemOrder");
+
+        if (itemOrderAssociatedField != null)
+            functionCall.addArgument(itemOrderAssociatedField);
+
+        return functionCall;
+    }
 
     private FunctionCall getStatSetFunction(final String type, final String field, final int index) {
         return new FunctionCall("set" + capitalize(type), "stat").byItself().addArguments(Integer.toString(index), field);

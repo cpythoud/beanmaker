@@ -234,6 +234,24 @@ public class DBQueries {
         itemOrderMove(db, idFromItemOrderQuery, table, id, itemOrder, toList(parameters), false);
     }
 
+    public static void updateItemOrdersAbove(final String query, final DBTransaction transaction, final long threshold) {
+        updateItemOrdersAbove(query, transaction, threshold, null);
+    }
+
+    public static void updateItemOrdersAbove(final String query, final DBTransaction transaction, final long threshold, final long... parameters) {
+        transaction.addUpdate(query, new DBQuerySetup() {
+            @Override
+            public void setupPreparedStatement(final PreparedStatement stat) throws SQLException {
+                stat.setLong(1, threshold);
+                if (parameters != null) {
+                    int index = 1;
+                    for (long parameter: parameters)
+                        stat.setLong(++index, parameter);
+                }
+            }
+        });
+    }
+
     private static List<Long> toList(final long... parameters) {
         final List<Long> list = new ArrayList<Long>();
         for (long parameter: parameters)

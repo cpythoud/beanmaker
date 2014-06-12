@@ -95,16 +95,40 @@ public class ParametersBaseSourceFile extends BeanCodeWithDBInfo {
                 new FunctionDeclaration("getIdFromItemOrderQuery", "String").addContent(
                         new ReturnStatement(Strings.quickQuote(query.toString()))
                 )
-        );
+        ).addContent(EMPTY_LINE);
     }
 
     private void addIdFromItemOrderQueryWithNullSecondaryFieldGetter() {
         final String query =
                 "SELECT id FROM " + tableName + " WHERE item_order=? AND " + itemOrderField.getItemOrderAssociatedField() + " IS NULL";
 
-        newLine();
         javaClass.addContent(
                 new FunctionDeclaration("getIdFromItemOrderQueryWithNullSecondaryField", "String").addContent(
+                        new ReturnStatement(Strings.quickQuote(query))
+                )
+        ).addContent(EMPTY_LINE);
+    }
+
+    private void addUpdateItemOrdersAboveQueryGetter() {
+        final StringBuilder query = new StringBuilder();
+        query.append("UPDATE ").append(tableName).append(" SET item_order=item_order-1 WHERE item_order > ?");
+        if (!itemOrderField.isUnique())
+            query.append(" AND ").append(itemOrderField.getItemOrderAssociatedField()).append("=?");
+
+        javaClass.addContent(
+                new FunctionDeclaration("getUpdateItemOrdersAboveQuery", "String").addContent(
+                        new ReturnStatement(Strings.quickQuote(query.toString()))
+                )
+        );
+    }
+
+    private void addUpdateItemOrdersAboveQueryWithNullSecondaryField() {
+        final String query =
+                "UPDATE " + tableName + " SET item_order=item_order-1 WHERE item_order > ? AND " + itemOrderField.getItemOrderAssociatedField() + " IS NULL";
+
+        newLine();
+        javaClass.addContent(
+                new FunctionDeclaration("getUpdateItemOrdersAboveQueryWithNullSecondaryField", "String").addContent(
                         new ReturnStatement(Strings.quickQuote(query))
                 )
         );
@@ -125,6 +149,9 @@ public class ParametersBaseSourceFile extends BeanCodeWithDBInfo {
             addIdFromItemOrderQueryGetter();
             if (!itemOrderField.isUnique())
                 addIdFromItemOrderQueryWithNullSecondaryFieldGetter();
+            addUpdateItemOrdersAboveQueryGetter();
+            if (!itemOrderField.isUnique())
+                addUpdateItemOrdersAboveQueryWithNullSecondaryField();
         }
     }
 }
