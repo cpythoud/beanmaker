@@ -701,6 +701,67 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                         new LineOfCode("itemOrder++;")
                 )
         ).addContent(EMPTY_LINE);
+
+        if (itemOrderField.isUnique()) {
+            final String otherBean = uncapitalize(beanName);
+            javaClass.addContent(
+                    new FunctionDeclaration("itemOrderMoveAfter")
+                            .addArgument(new FunctionArgument(beanName, otherBean))
+                            .addContent(
+                                    new IfBlock(new Condition(new Comparison("itemOrder", new FunctionCall("getItemOrder", otherBean), Comparison.Comparator.GREATER_THAN))).addContent(
+                                            new FunctionCall("itemOrderMove").byItself()
+                                                    .addArgument(new OperatorExpression(new FunctionCall("getItemOrder", otherBean), "1", OperatorExpression.Operator.ADD))
+                                                    .addArgument(new FunctionCall("getIncreaseItemOrderBetweenQuery", parametersVar))
+                                                    .addArgument(new FunctionCall("getItemOrder", otherBean))
+                                                    .addArgument("itemOrder")
+                                    ).elseClause(new ElseBlock().addContent(
+                                            new FunctionCall("itemOrderMove").byItself()
+                                                    .addArgument(new FunctionCall("getItemOrder", otherBean))
+                                                    .addArgument(new FunctionCall("getDecreaseItemOrderBetweenQuery", parametersVar))
+                                                    .addArgument("itemOrder")
+                                                    .addArgument(new OperatorExpression(new FunctionCall("getItemOrder", otherBean), "1", OperatorExpression.Operator.ADD))
+                                    ))
+                            )
+            ).addContent(EMPTY_LINE).addContent(
+                    new FunctionDeclaration("itemOrderMoveBefore")
+                            .addArgument(new FunctionArgument(beanName, otherBean))
+                            .addContent(
+                                    new IfBlock(new Condition(new Comparison("itemOrder", new FunctionCall("getItemOrder", otherBean), Comparison.Comparator.GREATER_THAN))).addContent(
+                                            new FunctionCall("itemOrderMove").byItself()
+                                                    .addArgument(new FunctionCall("getItemOrder", otherBean))
+                                                    .addArgument(new FunctionCall("getIncreaseItemOrderBetweenQuery", parametersVar))
+                                                    .addArgument(new OperatorExpression(new FunctionCall("getItemOrder", otherBean), "1", OperatorExpression.Operator.SUBTRACT))
+                                                    .addArgument("itemOrder")
+                                    ).elseClause(new ElseBlock().addContent(
+                                            new FunctionCall("itemOrderMove").byItself()
+                                                    .addArgument(new OperatorExpression(new FunctionCall("getItemOrder", otherBean), "1", OperatorExpression.Operator.SUBTRACT))
+                                                    .addArgument(new FunctionCall("getDecreaseItemOrderBetweenQuery", parametersVar))
+                                                    .addArgument("itemOrder")
+                                                    .addArgument(new FunctionCall("getItemOrder", otherBean))
+                                    ))
+                            )
+            ).addContent(EMPTY_LINE).addContent(
+                    new FunctionDeclaration("itemOrderMove").visibility(Visibility.PROTECTED)
+                            .addArgument(new FunctionArgument("long", "newItemOrder"))
+                            .addArgument(new FunctionArgument("String", "query"))
+                            .addArgument(new FunctionArgument("long", "lowerBound"))
+                            .addArgument(new FunctionArgument("long", "upperBound"))
+                            .addContent(new VarDeclaration("DBTransaction", "transaction", new FunctionCall("createDBTransaction")).markAsFinal())
+                            .addContent(new FunctionCall("updateItemOrdersInBetween", "DBQueries").addArguments("query", "transaction", "lowerBound", "upperBound").byItself())
+                            .addContent(new FunctionCall("itemOrderMoveCompleteTransaction").addArguments("newItemOrder", "transaction").byItself())
+            ).addContent(EMPTY_LINE);
+        } else {
+
+        }
+
+        javaClass.addContent(
+                new FunctionDeclaration("itemOrderMoveCompleteTransaction").visibility(Visibility.PROTECTED)
+                        .addArgument(new FunctionArgument("long", "newItemOrder"))
+                        .addArgument(new FunctionArgument("DBTransaction", "transaction"))
+                        .addContent(new Assignment("itemOrder", "newItemOrder"))
+                        .addContent(new FunctionCall("updateRecord").addArgument("transaction").byItself())
+                        .addContent(new FunctionCall("commit", "transaction").byItself())
+        ).addContent(EMPTY_LINE);
     }
 
     private FunctionCall getMaxItemOrderFunctionCall(final Column itemOrderField, final boolean withTransaction, final boolean nullSecondaryVariant) {
@@ -1124,7 +1185,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                                 getUpdateItemOrderAboveFunctionCall("getUpdateItemOrdersAboveQueryWithNullSecondaryField", null)
                         ).elseClause(new ElseBlock().addContent(
                                 getUpdateItemOrderAboveFunctionCall("getUpdateItemOrdersAboveQuery", itemOrderAssociatedField)
-                )));
+                        )));
             }
 
             deleteFunction.addContent(checkItemOrderNotMax);

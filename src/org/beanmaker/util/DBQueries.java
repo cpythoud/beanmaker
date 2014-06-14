@@ -252,6 +252,25 @@ public class DBQueries {
         });
     }
 
+    public static void updateItemOrdersInBetween(final String query, final DBTransaction transaction, final long lowerBound, final long upperBound) {
+        updateItemOrdersInBetween(query, transaction, lowerBound, upperBound, null);
+    }
+
+    public static void updateItemOrdersInBetween(final String query, final DBTransaction transaction, final long lowerBound, final long upperBound, final long... parameters) {
+        transaction.addUpdate(query, new DBQuerySetup() {
+            @Override
+            public void setupPreparedStatement(final PreparedStatement stat) throws SQLException {
+                stat.setLong(1, lowerBound);
+                stat.setLong(2, upperBound);
+                if (parameters != null) {
+                    int index = 2;
+                    for (long parameter: parameters)
+                        stat.setLong(++index, parameter);
+                }
+            }
+        });
+    }
+
     private static List<Long> toList(final long... parameters) {
         final List<Long> list = new ArrayList<Long>();
         for (long parameter: parameters)
