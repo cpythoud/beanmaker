@@ -60,78 +60,136 @@ public class ParametersBaseSourceFile extends BeanCodeWithDBInfo {
         );
     }
 
+    private StringBuilder getItemOrderMaxBaseQuery() {
+        return new StringBuilder().append("SELECT MAX(item_order) FROM ").append(tableName);
+    }
+
     private void addItemOrderMaxQueryGetter() {
-        final StringBuilder query = new StringBuilder();
-        query.append("SELECT MAX(item_order) FROM ").append(tableName);
+        final StringBuilder query = getItemOrderMaxBaseQuery();
         if (!itemOrderField.isUnique())
-            query.append(" WHERE ").append(itemOrderField.getItemOrderAssociatedField()).append("=?");
+            appendSecondaryFieldCondition(query, false, true);
 
         newLine();
-        javaClass.addContent(
-                new FunctionDeclaration("getItemOrderMaxQuery", "String").addContent(
-                        new ReturnStatement(Strings.quickQuote(query.toString()))
-                )
-        ).addContent(EMPTY_LINE);
+        addFunctionReturningQueryAsString("getItemOrderMaxQuery", query);
     }
 
     private void addItemOrderMaxQueryGetterWithNullSecondaryFieldGetter() {
-        final String query =
-                "SELECT MAX(item_order) FROM " + tableName + " WHERE " + itemOrderField.getItemOrderAssociatedField() + " IS NULL";
+        final StringBuilder query = getItemOrderMaxBaseQuery();
+        appendSecondaryFieldCondition(query, true, true);
 
-        javaClass.addContent(
-                new FunctionDeclaration("getItemOrderMaxQueryWithNullSecondaryField", "String").addContent(
-                        new ReturnStatement(Strings.quickQuote(query))
-                )
-        ).addContent(EMPTY_LINE);
+        addFunctionReturningQueryAsString("getItemOrderMaxQueryWithNullSecondaryField", query);
+    }
+
+    private StringBuilder getIdFromItemOrderBaseQuery() {
+        return new StringBuilder().append("SELECT id FROM ").append(tableName).append(" WHERE item_order=?");
     }
 
     private void addIdFromItemOrderQueryGetter() {
-        final StringBuilder query = new StringBuilder();
-        query.append("SELECT id FROM ").append(tableName).append(" WHERE item_order=?");
+        final StringBuilder query = getIdFromItemOrderBaseQuery();
         if (!itemOrderField.isUnique())
-            query.append(" AND ").append(itemOrderField.getItemOrderAssociatedField()).append("=?");
+            appendSecondaryFieldCondition(query, false, false);
 
-        javaClass.addContent(
-                new FunctionDeclaration("getIdFromItemOrderQuery", "String").addContent(
-                        new ReturnStatement(Strings.quickQuote(query.toString()))
-                )
-        ).addContent(EMPTY_LINE);
+        addFunctionReturningQueryAsString("getIdFromItemOrderQuery", query);
     }
 
     private void addIdFromItemOrderQueryWithNullSecondaryFieldGetter() {
-        final String query =
-                "SELECT id FROM " + tableName + " WHERE item_order=? AND " + itemOrderField.getItemOrderAssociatedField() + " IS NULL";
+        final StringBuilder query = getIdFromItemOrderBaseQuery();
+        appendSecondaryFieldCondition(query, true, false);
 
-        javaClass.addContent(
-                new FunctionDeclaration("getIdFromItemOrderQueryWithNullSecondaryField", "String").addContent(
-                        new ReturnStatement(Strings.quickQuote(query))
-                )
-        ).addContent(EMPTY_LINE);
+        addFunctionReturningQueryAsString("getIdFromItemOrderQueryWithNullSecondaryField", query);
+    }
+
+    private StringBuilder getUpdateItemOrdersAboveBaseQuery() {
+        return new StringBuilder().append("UPDATE ").append(tableName).append(" SET item_order=item_order-1 WHERE item_order > ?");
     }
 
     private void addUpdateItemOrdersAboveQueryGetter() {
-        final StringBuilder query = new StringBuilder();
-        query.append("UPDATE ").append(tableName).append(" SET item_order=item_order-1 WHERE item_order > ?");
+        final StringBuilder query = getUpdateItemOrdersAboveBaseQuery();
         if (!itemOrderField.isUnique())
-            query.append(" AND ").append(itemOrderField.getItemOrderAssociatedField()).append("=?");
+            appendSecondaryFieldCondition(query, false, false);
 
-        javaClass.addContent(
-                new FunctionDeclaration("getUpdateItemOrdersAboveQuery", "String").addContent(
-                        new ReturnStatement(Strings.quickQuote(query.toString()))
-                )
-        );
+        addFunctionReturningQueryAsString("getUpdateItemOrdersAboveQuery", query);
     }
 
     private void addUpdateItemOrdersAboveQueryWithNullSecondaryField() {
-        final String query =
-                "UPDATE " + tableName + " SET item_order=item_order-1 WHERE item_order > ? AND " + itemOrderField.getItemOrderAssociatedField() + " IS NULL";
+        final StringBuilder query = getUpdateItemOrdersAboveBaseQuery();
+        appendSecondaryFieldCondition(query, true, false);
 
-        newLine();
-        javaClass.addContent(
-                new FunctionDeclaration("getUpdateItemOrdersAboveQueryWithNullSecondaryField", "String").addContent(
-                        new ReturnStatement(Strings.quickQuote(query))
-                )
-        );
+        addFunctionReturningQueryAsString("getUpdateItemOrdersAboveQueryWithNullSecondaryField", query);
+    }
+
+    private StringBuilder getDecreaseItemOrderBetweenBaseQuery() {
+        return new StringBuilder().append("UPDATE ").append(tableName).append(" SET item_order=item_order-1 WHERE item_order > ? AND item_order < ?");
+    }
+
+    private void addDecreaseItemOrderBetweenQueryGetter() {
+        final StringBuilder query = getDecreaseItemOrderBetweenBaseQuery();
+        if (!itemOrderField.isUnique())
+            appendSecondaryFieldCondition(query, false, false);
+
+        addFunctionReturningQueryAsString("getDecreaseItemOrderBetweenQuery", query);
+    }
+
+    private void addDecreaseItemOrderBetweenQueryGetterWithNullSecondaryField() {
+        final StringBuilder query = getDecreaseItemOrderBetweenBaseQuery();
+        appendSecondaryFieldCondition(query, true, false);
+
+        addFunctionReturningQueryAsString("getDecreaseItemOrderBetweenQueryWithNullSecondaryField", query);
+    }
+
+    private StringBuilder getIncreaseItemOrderBetweenBaseQuery() {
+        return new StringBuilder().append("UPDATE ").append(tableName).append(" SET item_order=item_order+1 WHERE item_order > ? AND item_order < ?");
+    }
+
+    private void addIncreaseItemOrderBetweenQueryGetter() {
+        final StringBuilder query = getIncreaseItemOrderBetweenBaseQuery();
+        if (!itemOrderField.isUnique())
+            appendSecondaryFieldCondition(query, false, false);
+
+        addFunctionReturningQueryAsString("getIncreaseItemOrderBetweenQuery", query);
+    }
+
+    private void addIncreaseItemOrderBetweenQueryGetterWithNullSecondaryField() {
+        final StringBuilder query = getIncreaseItemOrderBetweenBaseQuery();
+        appendSecondaryFieldCondition(query,  true, false);
+
+        addFunctionReturningQueryAsString("getIncreaseItemOrderBetweenQueryWithNullSecondaryField", query);
+    }
+
+    private StringBuilder getPushItemOrdersUpBaseQuery() {
+        return new StringBuilder().append("UPDATE ").append(tableName).append(" SET item_order=item_order+1 WHERE item_order > ?");
+    }
+
+    private void addPushItemOrdersUpQueryGetter() {
+        final StringBuilder query = getPushItemOrdersUpBaseQuery();
+        appendSecondaryFieldCondition(query, false, false);
+
+        addFunctionReturningQueryAsString("getPushItemOrdersUpQuery", query);
+    }
+
+    private void addPushItemOrdersUpQueryGetterWithNullSecondaryField() {
+        final StringBuilder query = getPushItemOrdersUpBaseQuery();
+        appendSecondaryFieldCondition(query, true, false);
+
+        addFunctionReturningQueryAsString("getPushItemOrdersUpQueryWithNullSecondaryField", query);
+    }
+
+    private StringBuilder getPushItemOrdersDownBaseQuery() {
+        return new StringBuilder().append("UPDATE ").append(tableName).append(" SET item_order=item_order-1 WHERE item_order > ?");
+    }
+
+    private void addPushItemOrdersDownQueryGetter() {
+        final StringBuilder query = getPushItemOrdersDownBaseQuery();
+        appendSecondaryFieldCondition(query, false, false);
+
+        addFunctionReturningQueryAsString("getPushItemOrdersDownQuery", query);
+    }
+
+    private void addPushItemOrdersDownQueryGetterWithNullSecondaryField() {
+        final StringBuilder query = getPushItemOrdersDownBaseQuery();
+        appendSecondaryFieldCondition(query, true, false);
+
+        addFunctionReturningQueryAsString("getPushItemOrdersDownQueryWithNullSecondaryField", query);
     }
 
     private void createSourceCode() {
@@ -152,6 +210,37 @@ public class ParametersBaseSourceFile extends BeanCodeWithDBInfo {
             addUpdateItemOrdersAboveQueryGetter();
             if (!itemOrderField.isUnique())
                 addUpdateItemOrdersAboveQueryWithNullSecondaryField();
+            addDecreaseItemOrderBetweenQueryGetter();
+            if (!itemOrderField.isUnique())
+                addDecreaseItemOrderBetweenQueryGetterWithNullSecondaryField();
+            addIncreaseItemOrderBetweenQueryGetter();
+            if (!itemOrderField.isUnique()) {
+                addIncreaseItemOrderBetweenQueryGetterWithNullSecondaryField();
+                addPushItemOrdersUpQueryGetter();
+                addPushItemOrdersUpQueryGetterWithNullSecondaryField();
+                addPushItemOrdersDownQueryGetter();
+                addPushItemOrdersDownQueryGetterWithNullSecondaryField();
+            }
         }
+    }
+
+    private void appendSecondaryFieldCondition(final StringBuilder query, final boolean isNull, final boolean firstCondition) {
+        if (firstCondition)
+            query.append(" WHERE ");
+        else
+            query.append(" AND ");
+        query.append(itemOrderField.getItemOrderAssociatedField());
+        if (isNull)
+            query.append(" IS NULL");
+        else
+            query.append("=?");
+    }
+
+    private void addFunctionReturningQueryAsString(final String functionName, final StringBuilder query) {
+        javaClass.addContent(
+                new FunctionDeclaration(functionName, "String").addContent(
+                        new ReturnStatement(Strings.quickQuote(query.toString()))
+                )
+        ).addContent(EMPTY_LINE);
     }
 }
