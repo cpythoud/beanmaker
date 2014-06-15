@@ -9,6 +9,7 @@ import org.jcodegen.java.Comparison;
 import org.jcodegen.java.Condition;
 import org.jcodegen.java.ConstructorDeclaration;
 import org.jcodegen.java.ElseBlock;
+import org.jcodegen.java.ElseIfBlock;
 import org.jcodegen.java.ExceptionThrow;
 import org.jcodegen.java.ForLoop;
 import org.jcodegen.java.FunctionArgument;
@@ -703,55 +704,188 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         ).addContent(EMPTY_LINE);
 
         if (itemOrderField.isUnique()) {
-            final String otherBean = uncapitalize(beanName);
             javaClass.addContent(
                     new FunctionDeclaration("itemOrderMoveAfter")
-                            .addArgument(new FunctionArgument(beanName, otherBean))
+                            .addArgument(new FunctionArgument(beanName, beanVarName))
                             .addContent(
-                                    new IfBlock(new Condition(new Comparison("itemOrder", new FunctionCall("getItemOrder", otherBean), Comparison.Comparator.GREATER_THAN))).addContent(
+                                    new IfBlock(new Condition(new Comparison("itemOrder", new FunctionCall("getItemOrder", beanVarName), Comparison.Comparator.GREATER_THAN))).addContent(
                                             new FunctionCall("itemOrderMove").byItself()
-                                                    .addArgument(new OperatorExpression(new FunctionCall("getItemOrder", otherBean), "1", OperatorExpression.Operator.ADD))
+                                                    .addArgument(new OperatorExpression(new FunctionCall("getItemOrder", beanVarName), "1", OperatorExpression.Operator.ADD))
                                                     .addArgument(new FunctionCall("getIncreaseItemOrderBetweenQuery", parametersVar))
-                                                    .addArgument(new FunctionCall("getItemOrder", otherBean))
+                                                    .addArgument(new FunctionCall("getItemOrder", beanVarName))
                                                     .addArgument("itemOrder")
                                     ).elseClause(new ElseBlock().addContent(
                                             new FunctionCall("itemOrderMove").byItself()
-                                                    .addArgument(new FunctionCall("getItemOrder", otherBean))
+                                                    .addArgument(new FunctionCall("getItemOrder", beanVarName))
                                                     .addArgument(new FunctionCall("getDecreaseItemOrderBetweenQuery", parametersVar))
                                                     .addArgument("itemOrder")
-                                                    .addArgument(new OperatorExpression(new FunctionCall("getItemOrder", otherBean), "1", OperatorExpression.Operator.ADD))
+                                                    .addArgument(new OperatorExpression(new FunctionCall("getItemOrder", beanVarName), "1", OperatorExpression.Operator.ADD))
                                     ))
                             )
             ).addContent(EMPTY_LINE).addContent(
                     new FunctionDeclaration("itemOrderMoveBefore")
-                            .addArgument(new FunctionArgument(beanName, otherBean))
+                            .addArgument(new FunctionArgument(beanName, beanVarName))
                             .addContent(
-                                    new IfBlock(new Condition(new Comparison("itemOrder", new FunctionCall("getItemOrder", otherBean), Comparison.Comparator.GREATER_THAN))).addContent(
+                                    new IfBlock(new Condition(new Comparison("itemOrder", new FunctionCall("getItemOrder", beanVarName), Comparison.Comparator.GREATER_THAN))).addContent(
                                             new FunctionCall("itemOrderMove").byItself()
-                                                    .addArgument(new FunctionCall("getItemOrder", otherBean))
+                                                    .addArgument(new FunctionCall("getItemOrder", beanVarName))
                                                     .addArgument(new FunctionCall("getIncreaseItemOrderBetweenQuery", parametersVar))
-                                                    .addArgument(new OperatorExpression(new FunctionCall("getItemOrder", otherBean), "1", OperatorExpression.Operator.SUBTRACT))
+                                                    .addArgument(new OperatorExpression(new FunctionCall("getItemOrder", beanVarName), "1", OperatorExpression.Operator.SUBTRACT))
                                                     .addArgument("itemOrder")
                                     ).elseClause(new ElseBlock().addContent(
                                             new FunctionCall("itemOrderMove").byItself()
-                                                    .addArgument(new OperatorExpression(new FunctionCall("getItemOrder", otherBean), "1", OperatorExpression.Operator.SUBTRACT))
+                                                    .addArgument(new OperatorExpression(new FunctionCall("getItemOrder", beanVarName), "1", OperatorExpression.Operator.SUBTRACT))
                                                     .addArgument(new FunctionCall("getDecreaseItemOrderBetweenQuery", parametersVar))
                                                     .addArgument("itemOrder")
-                                                    .addArgument(new FunctionCall("getItemOrder", otherBean))
+                                                    .addArgument(new FunctionCall("getItemOrder", beanVarName))
                                     ))
                             )
             ).addContent(EMPTY_LINE).addContent(
-                    new FunctionDeclaration("itemOrderMove").visibility(Visibility.PROTECTED)
-                            .addArgument(new FunctionArgument("long", "newItemOrder"))
-                            .addArgument(new FunctionArgument("String", "query"))
-                            .addArgument(new FunctionArgument("long", "lowerBound"))
-                            .addArgument(new FunctionArgument("long", "upperBound"))
-                            .addContent(new VarDeclaration("DBTransaction", "transaction", new FunctionCall("createDBTransaction")).markAsFinal())
-                            .addContent(new FunctionCall("updateItemOrdersInBetween", "DBQueries").addArguments("query", "transaction", "lowerBound", "upperBound").byItself())
-                            .addContent(new FunctionCall("itemOrderMoveCompleteTransaction").addArguments("newItemOrder", "transaction").byItself())
+                    getBaseItemOrderMoveFunction().addContent(
+                            new FunctionCall("updateItemOrdersInBetween", "DBQueries").addArguments("query", "transaction", "lowerBound", "upperBound").byItself()
+                    ).addContent(
+                            getItemOrderCompleteTransactionFunctionCall()
+                    )
             ).addContent(EMPTY_LINE);
         } else {
-
+            final String associatedFieldJavaName = uncapitalize(camelize(itemOrderField.getItemOrderAssociatedField()));
+            final String associatedFieldJavaFunction = "get" + camelize(itemOrderField.getItemOrderAssociatedField());
+            javaClass.addContent(
+                    new FunctionDeclaration("itemOrderMoveAfter").addArgument(new FunctionArgument(beanName, beanVarName)).addContent(
+                            new IfBlock(new Condition(new Comparison(associatedFieldJavaName, new FunctionCall(associatedFieldJavaFunction, beanVarName)))).addContent(
+                                    new IfBlock(new Condition(new Comparison("itemOrder", new FunctionCall("getItemOrder", beanVarName), Comparison.Comparator.GREATER_THAN))).addContent(
+                                            new IfBlock(new Condition(new Comparison(associatedFieldJavaName, "0"))).addContent(
+                                                    new FunctionCall("itemOrderMove").byItself()
+                                                            .addArgument(new OperatorExpression(new FunctionCall("getItemOrder", beanVarName), "1", OperatorExpression.Operator.ADD))
+                                                            .addArgument(new FunctionCall("getIncreaseItemOrderBetweenQueryWithNullSecondaryField", parametersVar))
+                                                            .addArgument(new FunctionCall("getItemOrder", beanVarName))
+                                                            .addArgument("itemOrder")
+                                            ).elseClause(new ElseBlock().addContent(
+                                                    new FunctionCall("itemOrderMove").byItself()
+                                                            .addArgument(new OperatorExpression(new FunctionCall("getItemOrder", beanVarName), "1", OperatorExpression.Operator.ADD))
+                                                            .addArgument(new FunctionCall("getIncreaseItemOrderBetweenQuery", parametersVar))
+                                                            .addArgument(new FunctionCall("getItemOrder", beanVarName))
+                                                            .addArgument("itemOrder")
+                                                            .addArgument(associatedFieldJavaName)
+                                            ))
+                                    ).elseClause(new ElseBlock().addContent(
+                                            new IfBlock(new Condition(new Comparison(associatedFieldJavaName, "0"))).addContent(
+                                                    new FunctionCall("itemOrderMove").byItself()
+                                                            .addArgument(new FunctionCall("getItemOrder", beanVarName))
+                                                            .addArgument(new FunctionCall("getDecreaseItemOrderBetweenQueryWithNullSecondaryField", parametersVar))
+                                                            .addArgument("itemOrder")
+                                                            .addArgument(new OperatorExpression(new FunctionCall("getItemOrder", beanVarName), "1", OperatorExpression.Operator.ADD))
+                                            ).elseClause(new ElseBlock().addContent(
+                                                    new FunctionCall("itemOrderMove").byItself()
+                                                            .addArgument(new FunctionCall("getItemOrder", beanVarName))
+                                                            .addArgument(new FunctionCall("getDecreaseItemOrderBetweenQuery", parametersVar))
+                                                            .addArgument("itemOrder")
+                                                            .addArgument(new OperatorExpression(new FunctionCall("getItemOrder", beanVarName), "1", OperatorExpression.Operator.ADD))
+                                                            .addArgument(associatedFieldJavaName)
+                                            ))
+                                    ))
+                            ).elseClause(new ElseBlock().addContent(
+                                    new FunctionCall("itemOrderMove").byItself()
+                                            .addArgument(new OperatorExpression(new FunctionCall("getItemOrder", beanVarName), "1", OperatorExpression.Operator.ADD))
+                                            .addArgument(beanVarName)
+                            ))
+                    )
+            ).addContent(EMPTY_LINE).addContent(
+                    new FunctionDeclaration("itemOrderMoveBefore").addArgument(new FunctionArgument(beanName, beanVarName)).addContent(
+                            new IfBlock(new Condition(new Comparison(associatedFieldJavaName, new FunctionCall(associatedFieldJavaFunction, beanVarName)))).addContent(
+                                    new IfBlock(new Condition(new Comparison("itemOrder", new FunctionCall("getItemOrder", beanVarName), Comparison.Comparator.GREATER_THAN))).addContent(
+                                            new IfBlock(new Condition(new Comparison(associatedFieldJavaName, "0"))).addContent(
+                                                    new FunctionCall("itemOrderMove").byItself()
+                                                            .addArgument(new FunctionCall("getItemOrder", beanVarName))
+                                                            .addArgument(new FunctionCall("getIncreaseItemOrderBetweenQueryWithNullSecondaryField", parametersVar))
+                                                            .addArgument(new OperatorExpression(new FunctionCall("getItemOrder", beanVarName), "1", OperatorExpression.Operator.SUBTRACT))
+                                                            .addArgument("itemOrder")
+                                            ).elseClause(new ElseBlock().addContent(
+                                                    new FunctionCall("itemOrderMove").byItself()
+                                                            .addArgument(new FunctionCall("getItemOrder", beanVarName))
+                                                            .addArgument(new FunctionCall("getIncreaseItemOrderBetweenQuery", parametersVar))
+                                                            .addArgument(new OperatorExpression(new FunctionCall("getItemOrder", beanVarName), "1", OperatorExpression.Operator.SUBTRACT))
+                                                            .addArgument("itemOrder")
+                                                            .addArgument(associatedFieldJavaName)
+                                            ))
+                                    ).elseClause(new ElseBlock().addContent(
+                                            new IfBlock(new Condition(new Comparison(associatedFieldJavaName, "0"))).addContent(
+                                                    new FunctionCall("itemOrderMove").byItself()
+                                                            .addArgument(new OperatorExpression(new FunctionCall("getItemOrder", beanVarName), "1", OperatorExpression.Operator.SUBTRACT))
+                                                            .addArgument(new FunctionCall("getDecreaseItemOrderBetweenQueryWithNullSecondaryField", parametersVar))
+                                                            .addArgument("itemOrder")
+                                                            .addArgument(new FunctionCall("getItemOrder", beanVarName))
+                                            ).elseClause(new ElseBlock().addContent(
+                                                    new FunctionCall("itemOrderMove").byItself()
+                                                            .addArgument(new OperatorExpression(new FunctionCall("getItemOrder", beanVarName), "1", OperatorExpression.Operator.SUBTRACT))
+                                                            .addArgument(new FunctionCall("getDecreaseItemOrderBetweenQuery", parametersVar))
+                                                            .addArgument("itemOrder")
+                                                            .addArgument(new FunctionCall("getItemOrder", beanVarName))
+                                                            .addArgument(associatedFieldJavaName)
+                                            ))
+                                    ))
+                            ).elseClause(new ElseBlock().addContent(
+                                    new FunctionCall("itemOrderMove").byItself()
+                                            .addArgument(new FunctionCall("getItemOrder", beanVarName))
+                                            .addArgument(beanVarName)
+                            ))
+                    )
+            ).addContent(EMPTY_LINE).addContent(
+                    getBaseItemOrderMoveFunction().addArgument(new FunctionArgument("long...", "parameters")).addContent(
+                            new FunctionCall("updateItemOrdersInBetween", "DBQueries").addArguments("query", "transaction", "lowerBound", "upperBound", "parameters").byItself()
+                    ).addContent(
+                            getItemOrderCompleteTransactionFunctionCall()
+                    )
+            ).addContent(EMPTY_LINE).addContent(
+                    getItemOrderMoveDeclarationStart()
+                            .addArgument(new FunctionArgument("long", "newItemOrder"))
+                            .addArgument(new FunctionArgument(beanName, beanVarName))
+                            .addContent(
+                                    new IfBlock(new Condition(new Comparison(associatedFieldJavaName, "0"))).addContent(
+                                            getItemOrderMoveCall()
+                                                    .addArgument(new FunctionCall("getPushItemOrdersUpQueryWithNullSecondaryField", parametersVar))
+                                                    .addArgument("newItemOrder - 1")
+                                                    .addArgument(new FunctionCall("getPushItemOrdersDownQuery", parametersVar))
+                                                    .addArgument(beanVarName)
+                                    ).addElseIfClause(new ElseIfBlock(new Condition(new Comparison(new FunctionCall(associatedFieldJavaFunction, beanVarName), "0"))).addContent(
+                                            getItemOrderMoveCall()
+                                                    .addArgument(new FunctionCall("getPushItemOrdersUpQuery", parametersVar))
+                                                    .addArgument("newItemOrder - 1")
+                                                    .addArgument(new FunctionCall("getPushItemOrdersDownQueryWithNullSecondaryField", parametersVar))
+                                                    .addArgument(beanVarName)
+                                    )).elseClause(new ElseBlock().addContent(
+                                            getItemOrderMoveCall()
+                                                    .addArgument(new FunctionCall("getPushItemOrdersUpQuery", parametersVar))
+                                                    .addArgument("newItemOrder - 1")
+                                                    .addArgument(new FunctionCall("getPushItemOrdersDownQuery", parametersVar))
+                                                    .addArgument(beanVarName)
+                                    ))
+                            )
+            ).addContent(EMPTY_LINE).addContent(
+                    getItemOrderMoveDeclarationStart()
+                            .addArgument(new FunctionArgument("long", "newItemOrder"))
+                            .addArgument(new FunctionArgument("String", "queryDest"))
+                            .addArgument(new FunctionArgument("long", "destLowerBound"))
+                            .addArgument(new FunctionArgument("String", "queryOrig"))
+                            .addArgument(new FunctionArgument(beanName, beanVarName))
+                            .addContent(
+                                    new VarDeclaration("DBTransaction", "transaction", new FunctionCall("createDBTransaction")).markAsFinal()
+                            ).addContent(
+                                    new IfBlock(new Condition(new Comparison(associatedFieldJavaName, "0"))).addContent(
+                                            getDBQueriesUpdateItemOrdersAboveCall().addArguments("queryDest", "transaction", "destLowerBound")
+                                    ).elseClause(new ElseBlock().addContent(
+                                            getDBQueriesUpdateItemOrdersAboveCall().addArguments("queryDest", "transaction", "destLowerBound", associatedFieldJavaName)
+                                    ))
+                            ).addContent(
+                                    new IfBlock(new Condition(new Comparison(new FunctionCall(associatedFieldJavaFunction, beanVarName), "0"))).addContent(
+                                            getDBQueriesUpdateItemOrdersAboveCall().addArguments("queryOrig", "transaction", "itemOrder")
+                                    ).elseClause(new ElseBlock().addContent(
+                                            getDBQueriesUpdateItemOrdersAboveCall().addArguments("queryOrig", "transaction", "itemOrder", associatedFieldJavaName)
+                                    ))
+                            ).addContent(
+                                    getItemOrderCompleteTransactionFunctionCall()
+                            )
+            );
         }
 
         javaClass.addContent(
@@ -762,6 +896,31 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                         .addContent(new FunctionCall("updateRecord").addArgument("transaction").byItself())
                         .addContent(new FunctionCall("commit", "transaction").byItself())
         ).addContent(EMPTY_LINE);
+    }
+
+    private FunctionDeclaration getItemOrderMoveDeclarationStart() {
+        return new FunctionDeclaration("itemOrderMove").visibility(Visibility.PROTECTED);
+    }
+
+    private FunctionDeclaration getBaseItemOrderMoveFunction() {
+        return getItemOrderMoveDeclarationStart()
+                .addArgument(new FunctionArgument("long", "newItemOrder"))
+                .addArgument(new FunctionArgument("String", "query"))
+                .addArgument(new FunctionArgument("long", "lowerBound"))
+                .addArgument(new FunctionArgument("long", "upperBound"))
+                .addContent(new VarDeclaration("DBTransaction", "transaction", new FunctionCall("createDBTransaction")).markAsFinal());
+    }
+
+    private FunctionCall getItemOrderMoveCall() {
+        return new FunctionCall("itemOrderMove").byItself().addArgument("newItemOrder");
+    }
+
+    private FunctionCall getDBQueriesUpdateItemOrdersAboveCall() {
+        return new FunctionCall("updateItemOrdersAbove", "DBQueries").byItself();
+    }
+
+    private FunctionCall getItemOrderCompleteTransactionFunctionCall() {
+        return new FunctionCall("itemOrderMoveCompleteTransaction").addArguments("newItemOrder", "transaction").byItself();
     }
 
     private FunctionCall getMaxItemOrderFunctionCall(final Column itemOrderField, final boolean withTransaction, final boolean nullSecondaryVariant) {
