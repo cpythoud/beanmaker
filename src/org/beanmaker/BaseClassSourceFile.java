@@ -885,7 +885,51 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                             ).addContent(
                                     getItemOrderCompleteTransactionFunctionCall()
                             )
-            );
+            ).addContent(EMPTY_LINE).addContent(
+                    new FunctionDeclaration("itemOrderReassociateWith").addArgument(new FunctionArgument("long", associatedFieldJavaName)).addContent(
+                            new IfBlock(new Condition(new Comparison("id", "0"))).addContent(
+                                    ExceptionThrow.getThrowExpression("IllegalArgumentException", "Bean must be saved in DB before reassociation.")
+                            )
+                    ).addContent(
+                            new IfBlock(new Condition(new Comparison("this." + associatedFieldJavaName, associatedFieldJavaName))).addContent(
+                                    ExceptionThrow.getThrowExpression("IllegalArgumentException", "Association already exists.")
+                            )
+                    ).addContent(EMPTY_LINE).addContent(
+                            new FunctionCall("itemOrderMove").addArgument(associatedFieldJavaName).byItself()
+                    )
+            ).addContent(EMPTY_LINE).addContent(
+                    getItemOrderMoveDeclarationStart().addArgument(new FunctionArgument("long", associatedFieldJavaName)).addContent(
+                            new VarDeclaration("DBTransaction", "transaction", new FunctionCall("createDBTransaction")).markAsFinal()
+                    ).addContent(
+                            new VarDeclaration("long", "newItemOrder")
+                    ).addContent(
+                            new IfBlock(new Condition(new Comparison(associatedFieldJavaName, "0"))).addContent(
+                                    new Assignment("newItemOrder", new FunctionCall("getMaxItemOrder", "DBQueries")
+                                            .addArgument("transaction")
+                                            .addArgument(new FunctionCall("getItemOrderMaxQueryWithNullSecondaryField", parametersVar))
+                                            .addArgument(associatedFieldJavaName))
+                            ).elseClause(new ElseBlock().addContent(
+                                    new Assignment("newItemOrder", new FunctionCall("getMaxItemOrder", "DBQueries")
+                                            .addArgument("transaction")
+                                            .addArgument(new FunctionCall("getItemOrderMaxQuery", parametersVar))
+                                            .addArgument(associatedFieldJavaName))
+                            ))
+                    ).addContent(
+                            new IfBlock(new Condition(new Comparison("this." + associatedFieldJavaName, "0"))).addContent(
+                                    new FunctionCall("updateItemOrdersAbove", "DBQueries").byItself()
+                                            .addArgument(new FunctionCall("getUpdateItemOrdersAboveQueryWithNullSecondaryField", parametersVar))
+                                            .addArgument("transaction").addArgument("itemOrder")
+                            ).elseClause(new ElseBlock().addContent(
+                                    new FunctionCall("updateItemOrdersAbove", "DBQueries").byItself()
+                                            .addArgument(new FunctionCall("getUpdateItemOrdersAboveQuery", parametersVar))
+                                            .addArgument("transaction").addArgument("itemOrder")
+                            ))
+                    ).addContent(
+                            new Assignment("this." + associatedFieldJavaName, associatedFieldJavaName)
+                    ).addContent(
+                            getItemOrderCompleteTransactionFunctionCall()
+                    )
+            ).addContent(EMPTY_LINE);
         }
 
         javaClass.addContent(
