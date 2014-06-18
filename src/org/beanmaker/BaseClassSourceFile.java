@@ -904,15 +904,20 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                             new VarDeclaration("long", "newItemOrder")
                     ).addContent(
                             new IfBlock(new Condition(new Comparison(associatedFieldJavaName, "0"))).addContent(
-                                    new Assignment("newItemOrder", new FunctionCall("getMaxItemOrder", "DBQueries")
-                                            .addArgument("transaction")
-                                            .addArgument(new FunctionCall("getItemOrderMaxQueryWithNullSecondaryField", parametersVar))
-                                            .addArgument(associatedFieldJavaName))
+                                    new Assignment("newItemOrder", new OperatorExpression(
+                                            new FunctionCall("getMaxItemOrder", "DBQueries")
+                                                .addArgument("transaction")
+                                                .addArgument(new FunctionCall("getItemOrderMaxQueryWithNullSecondaryField", parametersVar)),
+                                            "1",
+                                            OperatorExpression.Operator.ADD))
                             ).elseClause(new ElseBlock().addContent(
-                                    new Assignment("newItemOrder", new FunctionCall("getMaxItemOrder", "DBQueries")
-                                            .addArgument("transaction")
-                                            .addArgument(new FunctionCall("getItemOrderMaxQuery", parametersVar))
-                                            .addArgument(associatedFieldJavaName))
+                                    new Assignment("newItemOrder", new OperatorExpression(
+                                            new FunctionCall("getMaxItemOrder", "DBQueries")
+                                                .addArgument("transaction")
+                                                .addArgument(new FunctionCall("getItemOrderMaxQuery", parametersVar))
+                                                .addArgument(associatedFieldJavaName),
+                                            "1",
+                                            OperatorExpression.Operator.ADD))
                             ))
                     ).addContent(
                             new IfBlock(new Condition(new Comparison("this." + associatedFieldJavaName, "0"))).addContent(
@@ -923,6 +928,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                                     new FunctionCall("updateItemOrdersAbove", "DBQueries").byItself()
                                             .addArgument(new FunctionCall("getUpdateItemOrdersAboveQuery", parametersVar))
                                             .addArgument("transaction").addArgument("itemOrder")
+                                            .addArgument("this." + associatedFieldJavaName)
                             ))
                     ).addContent(
                             new Assignment("this." + associatedFieldJavaName, associatedFieldJavaName)
