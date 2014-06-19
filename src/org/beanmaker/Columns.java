@@ -245,14 +245,21 @@ public class Columns {
 		return oneToManyRelationships.size() > 0;
 	}
 	
-	public String getOrderByField() {
-		for (String candidate: ORDER_BY_CANDIDATE_FIELDS)
+	public String getNamingField() {
+		for (String candidate: NAMING_CANDIDATE_FIELDS)
 			for (Column col: columns)
 				if (col.getSqlName().toLowerCase().equals(candidate.toLowerCase()))
 					return candidate;
 		
 		return "id";
 	}
+
+    public String getOrderByField() {
+        if (hasItemOrder())
+            return "item_order";
+
+        return getNamingField();
+    }
 
     public Column getItemOrderField() {
         for (Column column: columns)
@@ -269,6 +276,6 @@ public class Columns {
 	private List<Column> columns;
 	private List<OneToManyRelationship> oneToManyRelationships;
 	
-	private static final List<String> ORDER_BY_CANDIDATE_FIELDS = Arrays.asList("name", "description");
+	private static final List<String> NAMING_CANDIDATE_FIELDS = Arrays.asList("name", "description");
 }
 

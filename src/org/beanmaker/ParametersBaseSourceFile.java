@@ -31,18 +31,18 @@ public class ParametersBaseSourceFile extends BeanCodeWithDBInfo {
     }
 
     private void addNamingFieldsGetter() {
-        addStringListGetter("getNamingFields");
+        addStringListGetter("getNamingFields", columns.getNamingField());
     }
 
     private void addOrderingFieldsGetter() {
-        addStringListGetter("getOrderingFields");
+        addStringListGetter("getOrderingFields", columns.getOrderByField());
     }
 
-    private void addStringListGetter(final String getter) {
+    private void addStringListGetter(final String getter, final String originalValue) {
         javaClass.addContent(
                 new FunctionDeclaration(getter, "List<String>").addContent(
                         new ReturnStatement(
-                                new FunctionCall("asList", "Arrays").addArgument(Strings.quickQuote(columns.getOrderByField()))
+                                new FunctionCall("asList", "Arrays").addArgument(Strings.quickQuote(originalValue))
                         )
                 )
         ).addContent(EMPTY_LINE);
