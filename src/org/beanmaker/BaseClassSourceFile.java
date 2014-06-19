@@ -1272,8 +1272,8 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         for (Column column: columns.getList()) {
             if (!column.isSpecial() && column.isUnique()) {
                 javaClass.addContent(
-                        new FunctionDeclaration("is" + capitalize(column.getJavaName() + "Unique")).addContent(
-                                new LineOfCode("// A IMPLEMENTER")
+                        new FunctionDeclaration("is" + capitalize(column.getJavaName() + "Unique"), "boolean").addContent(  // TODO: IMPLEMENT!!!
+                                new ReturnStatement("false")
                         )
                 ).addContent(EMPTY_LINE);
             }
@@ -1284,7 +1284,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 final String field = column.getJavaName();
                 final String fieldCap = capitalize(field);
                 javaClass.addContent(
-                        new FunctionDeclaration("get" + fieldCap + "NotUniqueErrorMessage").addContent(
+                        new FunctionDeclaration("get" + fieldCap + "NotUniqueErrorMessage", "String").addContent(
                                 new ReturnStatement(new FunctionCall("getNotUniqueErrorMessage", internalsVar).addArgument(quickQuote(field)))
                         )
                 ).addContent(EMPTY_LINE);
