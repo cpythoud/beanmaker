@@ -1271,9 +1271,25 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
         for (Column column: columns.getList()) {
             if (!column.isSpecial() && column.isUnique()) {
+                importsManager.addImport("org.dbbeans.sql.queries.BooleanCheckQuery");
+                final FunctionCall dbAccessFunctionCall = new FunctionCall("processQuery", "dbAccess");
                 javaClass.addContent(
                         new FunctionDeclaration("is" + capitalize(column.getJavaName() + "Unique"), "boolean").addContent(  // TODO: IMPLEMENT!!!
-                                new ReturnStatement("false")
+                                new ReturnStatement(
+                                        dbAccessFunctionCall
+                                                .addArgument(Strings.quickQuote(getNotUniqueQuery(column)))
+                                                .addArgument(new AnonymousClassCreation("BooleanCheckQuery").setContext(dbAccessFunctionCall, 1).addContent(
+                                                        new FunctionDeclaration("setupPreparedStatement")
+                                                                .addArgument(new FunctionArgument("PreparedStatement", "stat"))
+                                                                .annotate("@Override").addException("SQLException").addContent(
+                                                                new FunctionCall("set" + capitalize(column.getJavaType()), "stat")
+                                                                        .addArgument("1").addArgument(column.getJavaName()).byItself()
+                                                        ).addContent(
+                                                                new FunctionCall("setLong", "stat")
+                                                                        .addArguments("2", "id").byItself()
+                                                        )
+                                                ))
+                                )
                         )
                 ).addContent(EMPTY_LINE);
             }
@@ -1296,6 +1312,10 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                         new ReturnStatement(new FunctionCall("getErrorMessages", internalsVar))
                 )
         );
+    }
+
+    private String getNotUniqueQuery(final Column column) {
+        return "SELECT id FROM " + tableName + " WHERE " + column.getSqlName() + "=? AND id <> ?";
     }
 	
 	private void addReset() {
