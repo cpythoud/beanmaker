@@ -1272,7 +1272,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         for (Column column: columns.getList()) {
             if (!column.isSpecial() && column.isUnique()) {
                 importsManager.addImport("org.dbbeans.sql.queries.BooleanCheckQuery");
-                final FunctionCall dbAccessFunctionCall = new FunctionCall("processQuery", "dbAccess");
+                final FunctionCall dbAccessFunctionCall = new FunctionCall("processQuery", "!dbAccess");
                 javaClass.addContent(
                         new FunctionDeclaration("is" + capitalize(column.getJavaName() + "Unique"), "boolean").addContent(  // TODO: IMPLEMENT!!!
                                 new ReturnStatement(
