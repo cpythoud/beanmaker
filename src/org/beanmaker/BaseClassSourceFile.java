@@ -382,6 +382,30 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 .annotate("@Override")
                 .addArgument(new FunctionArgument("ResultSet", "rs"));
     }
+
+    private void addEquals() {
+        javaClass.addContent(
+                new FunctionDeclaration("equals", "boolean").addArgument(new FunctionArgument("Object", "object")).annotate("@Override").addContent(
+                        new IfBlock(new Condition(new Comparison("id", "0"))).addContent(
+                                new ReturnStatement("false")
+                        )
+                ).addContent(EMPTY_LINE).addContent(
+                        new IfBlock(new Condition("object instanceof " + beanName)).addContent(
+                                new ReturnStatement("((" + beanName + ") object).getId() == id")
+                        )
+                ).addContent(EMPTY_LINE).addContent(
+                        new ReturnStatement("false")
+                )
+        ).addContent(EMPTY_LINE).addContent(
+                new FunctionDeclaration("hashCode", "int").annotate("@Override").addContent(
+                        new IfBlock(new Condition(new Comparison("id", "0"))).addContent(
+                                new ReturnStatement("-1")
+                        )
+                ).addContent(EMPTY_LINE).addContent(
+                        new ReturnStatement("31 * ((int) (id ^ (id >>> 32))) + 17")
+                )
+        ).addContent(EMPTY_LINE);
+    }
 	
 	private void addSetters() {
         for (Column column: columns.getList()) {
@@ -1886,6 +1910,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         addProperties();
 		addConstructors();
 		addSetIdFunction();
+        addEquals();
 		addSetters();
 		addGetters();
         addLabelGetters();
