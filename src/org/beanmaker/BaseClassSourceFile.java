@@ -406,6 +406,15 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 )
         ).addContent(EMPTY_LINE);
     }
+
+    private void addToString() {
+        final String returnExpression = "\"[" + beanName + " - " + tableName + " #\" + id + \"]\"";
+        javaClass.addContent(
+                new FunctionDeclaration("toString", "String").annotate("@Override").addContent(
+                        new ReturnStatement(returnExpression)
+                )
+        ).addContent(EMPTY_LINE);
+    }
 	
 	private void addSetters() {
         for (Column column: columns.getList()) {
@@ -1911,6 +1920,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 		addConstructors();
 		addSetIdFunction();
         addEquals();
+        addToString();
 		addSetters();
 		addGetters();
         addLabelGetters();
