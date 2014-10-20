@@ -24,6 +24,17 @@ public class ErrorMessage {
 	public String getMessage() {
 		return message;
 	}
+
+    public String toJson() {
+        final StringBuilder buf = new StringBuilder();
+
+        buf.append("{ \"idBean\": ").append(beanId).append(", ");
+        buf.append("\"fieldName\": \"").append(fieldName).append("\", ");
+        buf.append("\"fieldLabel\": \"").append(fieldLabel).append("\", ");
+        buf.append("\"message\": \"").append(message).append("\" }");
+
+        return buf.toString();
+    }
 	
 	private final long beanId;
 	private final String fieldName;
