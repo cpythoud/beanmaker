@@ -32,6 +32,8 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         importsManager.addImport("org.beanmaker.util.ErrorMessage");
 
         importsManager.addImport("javax.servlet.ServletRequest");
+
+        importsManager.addImport("org.jcodegen.html.FormTag");
     }
 
     private void addClassModifiers() {
@@ -80,19 +82,10 @@ public class BaseHTMLViewSourceFile extends ViewCode {
 
     private void addHTMLFormGetter() {
         final FunctionDeclaration getHtmlFormFunction = new FunctionDeclaration("getHtmlForm", "String").addContent(
-                new VarDeclaration("StringBuilder", "buf", new ObjectCreation("StringBuilder")).markAsFinal()
-        ).addContent(EMPTY_LINE).addContent(
-                new FunctionCall("composePreFormMatter").byItself()
-                        .addArgument("buf")
+                new VarDeclaration("FormTag", "form", new FunctionCall("getFormStart")).markAsFinal()
         ).addContent(
-                new FunctionCall("form", "htmlFormHelper").byItself()
-                        .addArgument("buf")
-                        .addArgument(quickQuote(beanName))
-                        .addArgument(getId())
-        ).addContent(
-                new FunctionCall("hiddenSubmitInput", "htmlFormHelper").byItself()
-                        .addArgument("buf")
-                        .addArgument(quickQuote(beanName))
+                new FunctionCall("composeHiddenSubmitField").byItself()
+                        .addArgument("form")
         );
 
         for (Column column: columns.getList()) {
@@ -103,29 +96,39 @@ public class BaseHTMLViewSourceFile extends ViewCode {
 
         getHtmlFormFunction.addContent(
                 new FunctionCall("composeAdditionalHtmlFormFields").byItself()
-                        .addArgument("buf")
-        ).addContent(
+                        .addArgument("form")
+        )/*.addContent(
                 new IfBlock(new Condition("captchaControl"))
                         .addContent(new FunctionCall("composeCaptchaField").byItself().addArgument("buf"))
-        ).addContent(
+        )*/.addContent(
                 new FunctionCall("composeButtons").byItself()
-                        .addArgument("buf")
-        ).addContent(
-                new FunctionCall("composeFormEnd").byItself()
-                        .addArgument("buf")
-        ).addContent(
-                new FunctionCall("composePostFormMatter").byItself()
-                        .addArgument("buf")
+                        .addArgument("form")
         ).addContent(EMPTY_LINE).addContent(
-                new ReturnStatement(new FunctionCall("toString", "buf"))
+                new ReturnStatement(new FunctionCall("toString", "form"))
         );
 
         javaClass.addContent(getHtmlFormFunction).addContent(EMPTY_LINE);
 
         javaClass.addContent(
-                new FunctionDeclaration("composePreFormMatter")
+                new FunctionDeclaration("getFormStart", "FormTag")
                         .visibility(Visibility.PROTECTED)
-                        .addArgument(new FunctionArgument("StringBuilder", "buf"))
+                        .addContent(
+                                new ReturnStatement(
+                                        new FunctionCall("getForm", "htmlFormHelper")
+                                                .addArgument(quickQuote(beanName))
+                                                .addArgument(new FunctionCall("getId", beanVarName))
+                                )
+                        )
+        ).addContent(EMPTY_LINE);
+
+        javaClass.addContent(
+                new FunctionDeclaration("composeHiddenSubmitField")
+                        .visibility(Visibility.PROTECTED)
+                        .addArgument(new FunctionArgument("FormTag", "form"))
+                        .addContent(
+                                new FunctionCall("child", "form").byItself()
+                                        .addArgument(new FunctionCall("getHiddenSubmitInput", "htmlFormHelper").addArgument(quickQuote(beanName)))
+                        )
         ).addContent(EMPTY_LINE);
 
         for (Column column: columns.getList()) {
@@ -136,10 +139,10 @@ public class BaseHTMLViewSourceFile extends ViewCode {
 
         javaClass.addContent(
                 new FunctionDeclaration("composeAdditionalHtmlFormFields").visibility(Visibility.PROTECTED)
-                        .addArgument(new FunctionArgument("StringBuilder", "buf"))
+                        .addArgument(new FunctionArgument("FormTag", "form"))
         ).addContent(EMPTY_LINE);
 
-        javaClass.addContent(
+        /*javaClass.addContent(
                 new FunctionDeclaration("composeCaptchaField").visibility(Visibility.PROTECTED)
                         .addArgument(new FunctionArgument("StringBuilder", "buf"))
                         .addContent(new FunctionCall("captcha", "htmlFormHelper").byItself()
@@ -147,52 +150,35 @@ public class BaseHTMLViewSourceFile extends ViewCode {
                                 .addArgument(getId())
                                 .addArgument(new FunctionCall("getString", "resourceBundle").addArgument(quickQuote("captchaFieldName")))
                                 .addArgument(quickQuote("/captcha.jpg")))
-        ).addContent(EMPTY_LINE);
+        ).addContent(EMPTY_LINE);*/
 
         javaClass.addContent(
                 new FunctionDeclaration("composeButtons").visibility(Visibility.PROTECTED)
-                        .addArgument(new FunctionArgument("StringBuilder", "buf"))
-                        .addContent(new FunctionCall("startButtons", "htmlFormHelper").byItself().addArgument("buf"))
-                        .addContent(new FunctionCall("composeSubmitButton").byItself().addArgument("buf"))
-                        .addContent(new FunctionCall("composeResetButton").byItself().addArgument("buf"))
-                        .addContent(new FunctionCall("endButtons", "htmlFormHelper").byItself().addArgument("buf"))
+                        .addArgument(new FunctionArgument("FormTag", "form"))
+                        .addContent(new FunctionCall("composeSubmitButton").byItself().addArgument("form"))
+                        .addContent(new FunctionCall("composeResetButton").byItself().addArgument("form"))
         ).addContent(EMPTY_LINE);
 
         javaClass.addContent(
-                getComposeButtonFunction("composeSubmitButton", "submit", "submit_button")
-        ).addContent(EMPTY_LINE);
-
-        javaClass.addContent(
-                getComposeButtonFunction("composeResetButton", "reset", "reset_button")
-        ).addContent(EMPTY_LINE);
-
-		javaClass.addContent(
-                new FunctionDeclaration("composeFormEnd").visibility(Visibility.PROTECTED)
-                        .addArgument(new FunctionArgument("StringBuilder", "buf"))
+                new FunctionDeclaration("composeSubmitButton").visibility(Visibility.PROTECTED)
+                        .addArgument(new FunctionArgument("FormTag", "form"))
                         .addContent(
-                                new FunctionCall("endForm", "htmlFormHelper").byItself().addArgument("buf")
+                                new FunctionCall("child", "form").byItself()
+                                        .addArgument(new FunctionCall("getSubmitButton", "htmlFormHelper")
+                                                .addArgument(quickQuote(beanName))
+                                                .addArgument(getId())
+                                                .addArgument(new FunctionCall("getString", "resourceBundle").addArgument(quickQuote("submit_button"))))
                         )
         ).addContent(EMPTY_LINE);
 
-		javaClass.addContent(
-                new FunctionDeclaration("composePostFormMatter").visibility(Visibility.PROTECTED)
-                        .addArgument(new FunctionArgument("StringBuilder", "buf"))
+        javaClass.addContent(
+                new FunctionDeclaration("composeResetButton").visibility(Visibility.PROTECTED)
+                        .addArgument(new FunctionArgument("FormTag", "form"))
         ).addContent(EMPTY_LINE);
 	}
 
-    private FunctionDeclaration getComposeButtonFunction(final String functionName, final String buttonType, final String resourceBundleKey) {
-        return new FunctionDeclaration(functionName).visibility(Visibility.PROTECTED)
-                .addArgument(new FunctionArgument("StringBuilder", "buf"))
-                .addContent(
-                        new FunctionCall("button", "htmlFormHelper").byItself()
-                                .addArguments("buf", quickQuote(buttonType), quickQuote(beanName))
-                                .addArgument(getId())
-                                .addArgument(new FunctionCall("getString", "resourceBundle").addArgument(quickQuote(resourceBundleKey)))
-                );
-    }
-
     private FunctionCall getFieldHtmlFormFunctionCall(final Column column) {
-        return new FunctionCall("compose" + capitalize(column.getJavaName()) + "FormElement").addArgument("buf").byItself();
+        return new FunctionCall("compose" + capitalize(column.getJavaName()) + "FormElement").addArgument("form").byItself();
     }
 
     private FunctionDeclaration getFieldHtmlFormFunction(final Column column) {
@@ -206,27 +192,27 @@ public class BaseHTMLViewSourceFile extends ViewCode {
             if (field.startsWith("id") && column.hasAssociatedBean())
                 return getSelectForAssociatedBeanFunction(column);
 
-            return getInputFormElement("number", field);
+            return getInputFormElement("NUMBER", field);
         }
 
         if (type.equals("String")) {
             if (column.getDisplaySize() < TEXTAREA_THRESHOLD) {
                 if (field.equalsIgnoreCase("email") || field.equalsIgnoreCase("e-mail"))
-                    return getInputFormElement("email", field);
-                return getInputFormElement("text", field);
+                    return getInputFormElement("EMAIL", field);
+                return getInputFormElement("TEXT", field);
             } else {
                 return getTextAreaFormElement(field);
             }
         }
 
         if (type.equals("Date"))
-            return getInputFormElement("date", field);
+            return getInputFormElement("DATE", field);
 
         if (type.equals("Time"))
-            return getInputFormElement("time", field);
+            return getInputFormElement("TIME", field);
 
         if (type.equals("Timestamp"))
-            return getInputFormElement("datetime", field);
+            return getInputFormElement("DATETIME", field);
 
         if (type.equals("Money"))
             return getInputFormElement("money", field);
@@ -247,7 +233,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
 
         final FunctionDeclaration functionDeclaration = new FunctionDeclaration("compose" + capitalize(field) + "FormElement")
                 .visibility(Visibility.PROTECTED)
-                .addArgument(new FunctionArgument("StringBuilder", "buf"));
+                .addArgument(new FunctionArgument("FormTag", "form"));
 
         functionDeclaration.addContent(
                 new VarDeclaration(parametersClass, parametersVar, new ObjectCreation(parametersClass)).markAsFinal()
@@ -264,15 +250,16 @@ public class BaseHTMLViewSourceFile extends ViewCode {
                                 .addArgument("null")
                                 .addArgument(new FunctionCall("getNamingFields", parametersVar))
                                 .addArgument(new FunctionCall("getOrderingFields", parametersVar)))
-        ).addContent(
-                new FunctionCall("select", "htmlFormHelper").byItself()
-                        .addArgument("buf")
-                        .addArgument(quickQuote(field))
-                        .addArgument(getId())
-                        .addArgument(addFieldValueArgument(field, false))
-                        .addArgument(getLabelArgument(field))
-                        .addArgument("pairs")
-                        .addArgument(new FunctionCall("is" + capitalize(field) + "RequiredInHtmlForm"))
+        ).addContent(EMPTY_LINE).addContent(
+                new FunctionCall("child", "form").byItself().addArgument(
+                        new FunctionCall("getSelectField", "htmlFormHelper")
+                                .addArgument(quickQuote(field))
+                                .addArgument(getId())
+                                .addArgument(addFieldValueArgument(field, false))
+                                .addArgument(getLabelArgument(field))
+                                .addArgument("pairs")
+                                .addArgument(new FunctionCall("is" + capitalize(field) + "RequiredInHtmlForm"))
+                )
         );
 
         return functionDeclaration;
@@ -286,29 +273,32 @@ public class BaseHTMLViewSourceFile extends ViewCode {
     }
 
     private FunctionDeclaration getInputFormElement(final String inputType, final String field) {
+        importsManager.addImport("org.jcodegen.html.InputTag");
+
         final FunctionDeclaration functionDeclaration = new FunctionDeclaration("compose" + capitalize(field) + "FormElement").visibility(Visibility.PROTECTED)
-                .addArgument(new FunctionArgument("StringBuilder", "buf"));
+                .addArgument(new FunctionArgument("FormTag", "form"));
 
         final String fieldVar;
-        if (!inputType.equals("text") && !inputType.equals("email"))
+        if (!inputType.equals("TEXT") && !inputType.equals("EMAIL"))
             fieldVar = field + "Str";
         else
             fieldVar = field;
         final String inputTypeVal;
         if (inputType.equals("money"))
-            inputTypeVal = "text";
+            inputTypeVal = "TEXT";
         else
             inputTypeVal = inputType;
 
         functionDeclaration.addContent(
-                new FunctionCall("input", "htmlFormHelper").byItself()
-                        .addArgument("buf")
-                        .addArgument(quickQuote(field))
-                        .addArgument(getId())
-                        .addArgument(addFieldValueArgument(fieldVar, false))
-                        .addArgument(getLabelArgument(field))
-                        .addArgument(quickQuote(inputTypeVal))
-                        .addArgument(new FunctionCall("is" + capitalize(field) + "RequiredInHtmlForm"))
+                new FunctionCall("child", "form").byItself().addArgument(
+                        new FunctionCall("getTextField", "htmlFormHelper")
+                                .addArgument(quickQuote(field))
+                                .addArgument(getId())
+                                .addArgument(addFieldValueArgument(fieldVar, false))
+                                .addArgument(getLabelArgument(field))
+                                .addArgument("InputTag.InputType." + inputTypeVal)
+                                .addArgument(new FunctionCall("is" + capitalize(field) + "RequiredInHtmlForm"))
+                )
         );
 
         return functionDeclaration;
@@ -316,16 +306,17 @@ public class BaseHTMLViewSourceFile extends ViewCode {
 
     private FunctionDeclaration getTextAreaFormElement(final String field) {
         final FunctionDeclaration functionDeclaration =  new FunctionDeclaration("compose" + capitalize(field) + "FormElement").visibility(Visibility.PROTECTED)
-                .addArgument(new FunctionArgument("StringBuilder", "buf"));
+                .addArgument(new FunctionArgument("FormTag", "form"));
 
         functionDeclaration.addContent(
-                new FunctionCall("textarea", "htmlFormHelper").byItself()
-                        .addArgument("buf")
-                        .addArgument(quickQuote(field))
-                        .addArgument(getId())
-                        .addArgument(addFieldValueArgument(field, false))
-                        .addArgument(getLabelArgument(field))
-                        .addArgument(new FunctionCall("is" + capitalize(field) + "RequiredInHtmlForm"))
+                new FunctionCall("child", "form").byItself().addArgument(
+                        new FunctionCall("getTextAreaField", "htmlFormHelper")
+                                .addArgument(quickQuote(field))
+                                .addArgument(getId())
+                                .addArgument(addFieldValueArgument(field, false))
+                                .addArgument(getLabelArgument(field))
+                                .addArgument(new FunctionCall("is" + capitalize(field) + "RequiredInHtmlForm"))
+                )
         );
 
         return functionDeclaration;
@@ -334,14 +325,15 @@ public class BaseHTMLViewSourceFile extends ViewCode {
     private FunctionDeclaration getCheckboxFormElement(final String field) {
         return new FunctionDeclaration("compose" + capitalize(field) + "FormElement")
                 .visibility(Visibility.PROTECTED)
-                .addArgument(new FunctionArgument("StringBuilder", "buf"))
+                .addArgument(new FunctionArgument("FormTag", "form"))
                 .addContent(
-                        new FunctionCall("checkbox", "htmlFormHelper").byItself()
-                                .addArgument("buf")
-                                .addArgument(quickQuote(field))
-                                .addArgument(getId())
-                                .addArgument(addFieldValueArgument(field, true))
-                                .addArgument(getLabelArgument(field))
+                        new FunctionCall("child", "form").byItself().addArgument(
+                                new FunctionCall("getCheckboxField", "htmlFormHelper")
+                                        .addArgument(quickQuote(field))
+                                        .addArgument(getId())
+                                        .addArgument(addFieldValueArgument(field, true))
+                                        .addArgument(getLabelArgument(field))
+                        )
                 );
     }
 
