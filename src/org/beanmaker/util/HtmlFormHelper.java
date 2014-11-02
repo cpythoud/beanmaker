@@ -141,15 +141,15 @@ public class HtmlFormHelper {
     }
 
     public FormTag getInlineForm(final String beanName, final long id) {
+        final FormTag form = getForm(beanName, id);
         inline = true;
-        horizontal = false;
-        return getForm(beanName, id).cssClass("form-inline");
+        return form.cssClass("form-inline");
     }
 
     public FormTag getHorizontalForm(final String beanName, final long id) {
-        inline = false;
+        final FormTag form = getForm(beanName, id);
         horizontal = true;
-        return getForm(beanName, id).cssClass("form-horizontal");
+        return form.cssClass("form-horizontal");
     }
 
     public InputTag getHiddenSubmitInput(final String beanName) {
