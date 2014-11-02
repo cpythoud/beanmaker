@@ -1,5 +1,7 @@
 package org.beanmaker.util;
 
+import java.util.List;
+
 public class ErrorMessage {
 
 	public ErrorMessage(final long beanId, final String fieldName, final String fieldLabel, final String message) {
@@ -34,6 +36,16 @@ public class ErrorMessage {
         buf.append("\"message\": \"").append(message).append("\" }");
 
         return buf.toString();
+    }
+
+    public static void toJson(final StringBuilder buf, final List<ErrorMessage> errorMessages) {
+        buf.append("\"errors\": [ ");
+
+        for (ErrorMessage errorMessage: errorMessages)
+            buf.append(errorMessage.toJson()).append(", ");
+
+        buf.delete(buf.length() - 2, buf.length());
+        buf.append(" ]");
     }
 	
 	private final long beanId;
