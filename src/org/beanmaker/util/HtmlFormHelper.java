@@ -30,8 +30,8 @@ public class HtmlFormHelper {
     private boolean horizontal = false;
 
     private String horizontalSizeShift = "sm";
-    private int horizontalLabelWidth = 2;
-    private int horizontalFieldWidth = 10;
+    private int horizontalLabelWidth = 4;
+    private int horizontalFieldWidth = 8;
 
 
     public String getNotRequiredExtension() {
