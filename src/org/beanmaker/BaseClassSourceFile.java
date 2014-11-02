@@ -64,6 +64,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         importsManager.addImport("java.util.Locale");
 
         importsManager.addImport("org.beanmaker.util.BeanInternals");
+        importsManager.addImport("org.beanmaker.util.DbBeanInterface");
         importsManager.addImport("org.beanmaker.util.DBQueries");
         importsManager.addImport("org.beanmaker.util.ErrorMessage");
         importsManager.addImport("org.beanmaker.util.IdNamePair");
@@ -107,7 +108,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
     }
 	
 	private void addClassModifiers() {
-        javaClass.markAsAbstract().extendsClass("DbBean");
+        javaClass.markAsAbstract().extendsClass("DbBean").implementsInterface("DbBeanInterface");
 	}
 
     private void addProperties() {
