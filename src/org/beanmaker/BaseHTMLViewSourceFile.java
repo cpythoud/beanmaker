@@ -127,7 +127,9 @@ public class BaseHTMLViewSourceFile extends ViewCode {
                         .addArgument(new FunctionArgument("FormTag", "form"))
                         .addContent(
                                 new FunctionCall("child", "form").byItself()
-                                        .addArgument(new FunctionCall("getHiddenSubmitInput", "htmlFormHelper").addArgument(quickQuote(beanName)))
+                                        .addArgument(new FunctionCall("getHiddenSubmitInput", "htmlFormHelper")
+                                                .addArgument(quickQuote(beanName))
+                                                .addArgument(new FunctionCall("getId", beanVarName)))
                         )
         ).addContent(EMPTY_LINE);
 

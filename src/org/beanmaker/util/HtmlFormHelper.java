@@ -152,8 +152,8 @@ public class HtmlFormHelper {
         return form.cssClass("form-horizontal");
     }
 
-    public InputTag getHiddenSubmitInput(final String beanName) {
-        return new InputTag(InputTag.InputType.HIDDEN).name("submitted" + beanName).value("true");
+    public InputTag getHiddenSubmitInput(final String beanName, final long id) {
+        return new InputTag(InputTag.InputType.HIDDEN).name("submitted" + beanName).value(Long.toString(id));
     }
 
     public DivTag getTextField(final String field, final long idBean, final String value, final String fieldLabel, final InputTag.InputType type, final boolean required) {
