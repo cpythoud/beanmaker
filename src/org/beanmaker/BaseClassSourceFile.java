@@ -1344,7 +1344,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 new FunctionDeclaration("getErrorMessages", "List<ErrorMessage>").addContent(
                         new ReturnStatement(new FunctionCall("getErrorMessages", internalsVar))
                 )
-        );
+        ).addContent(EMPTY_LINE);
     }
 
     private String getNotUniqueQuery(final Column column) {
