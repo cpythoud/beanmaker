@@ -29,6 +29,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
 
     private void addImports() {
         importsManager.addImport("org.beanmaker.util.BaseHTMLView");
+        importsManager.addImport("org.beanmaker.util.DbBeanHTMLViewInterface");
         importsManager.addImport("org.beanmaker.util.ErrorMessage");
 
         importsManager.addImport("javax.servlet.ServletRequest");
@@ -37,7 +38,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
     }
 
     private void addClassModifiers() {
-        javaClass.markAsAbstract().extendsClass("BaseHTMLView");
+        javaClass.markAsAbstract().extendsClass("BaseHTMLView").implementsInterface("DbBeanHTMLViewInterface");
     }
 
     @Override
