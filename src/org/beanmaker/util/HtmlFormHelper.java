@@ -118,6 +118,8 @@ public class HtmlFormHelper {
         this.horizontalSizeShift = horizontalSizeShift;
         this.horizontalLabelWidth = horizontalLabelWidth;
         this.horizontalFieldWidth = horizontalFieldWidth;
+
+        setHorizontal(true);
     }
 
     public String getHorizontalSizeShift() {
