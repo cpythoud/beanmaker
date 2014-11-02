@@ -185,7 +185,7 @@ public class HtmlFormHelper {
         final DivTag formGroup = new DivTag().cssClass("form-group");
 
         if (horizontal)
-            formGroup.child(new DivTag().cssClass(getHorizontalFieldClass()).child(label).child(field));
+            formGroup.child(label).child(new DivTag().cssClass(getHorizontalFieldClass()).child(field));
         else
             formGroup.child(label).child(field);
 
