@@ -38,7 +38,9 @@ public class ErrorMessage {
         return buf.toString();
     }
 
-    public static void toJson(final StringBuilder buf, final List<ErrorMessage> errorMessages) {
+    public static String toJson(final List<ErrorMessage> errorMessages) {
+        final StringBuilder buf = new StringBuilder();
+
         buf.append("\"errors\": [ ");
 
         for (ErrorMessage errorMessage: errorMessages)
@@ -46,6 +48,8 @@ public class ErrorMessage {
 
         buf.delete(buf.length() - 2, buf.length());
         buf.append(" ]");
+
+        return buf.toString();
     }
 	
 	private final long beanId;
