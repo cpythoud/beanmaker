@@ -164,6 +164,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         javaClass.addContent(getBaseConstructor()).addContent(EMPTY_LINE);
         javaClass.addContent(getIdArgumentConstructor()).addContent(EMPTY_LINE);
         javaClass.addContent(getCopyConstructor()).addContent(EMPTY_LINE);
+        javaClass.addContent(getFieldConstructor()).addContent(EMPTY_LINE);
 	}
 
     private ConstructorDeclaration getBaseConstructor() {
@@ -205,6 +206,37 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
             }
 
         return copyConstructor;
+    }
+
+    private ConstructorDeclaration getFieldConstructor() {
+        final ConstructorDeclaration fieldConstructor = getBaseConstructor().visibility(Visibility.PROTECTED);
+        for (Column column: columns.getList())
+            fieldConstructor.addArgument(new FunctionArgument(column.getJavaType(), column.getJavaName()));
+
+        for (Column column: columns.getList()) {
+            final String type = column.getJavaType();
+            final String field = column.getJavaName();
+            if (field.startsWith("id") || field.equals("itemOrder") || type.equals("boolean") || type.equals("String"))
+                fieldConstructor.addContent(new Assignment("this." + field, field));
+            else
+                fieldConstructor.addContent(new FunctionCall("set" + capitalize(field)).addArgument(field).byItself());
+        }
+
+        // For now, to be replaced when getAll has been updated with database friendly code
+        for (OneToManyRelationship relationship: columns.getOneToManyRelationships())
+            if (!relationship.isListOnly()) {
+                final String beanClass = relationship.getBeanClass();
+                final String beanObject = uncapitalize(beanClass);
+                final String javaName = relationship.getJavaName();
+                fieldConstructor.addArgument(new FunctionArgument(new GenericType("List", beanClass).toString(), javaName));
+                fieldConstructor.addContent(EMPTY_LINE).addContent(
+                        new ForLoop(beanClass + " " + beanObject + ": " + javaName).addContent(
+                                new FunctionCall("add", "this." + javaName).byItself().addArgument(beanObject)
+                                )
+                        );
+            }
+
+        return fieldConstructor;
     }
 	
 	private void addSetIdFunction() {
