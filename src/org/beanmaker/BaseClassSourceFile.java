@@ -29,12 +29,8 @@ import org.jcodegen.java.WhileBlock;
 
 import org.dbbeans.util.Strings;
 
-import static org.dbbeans.util.Strings.camelize;
-import static org.dbbeans.util.Strings.capitalize;
-import static org.dbbeans.util.Strings.quickQuote;
-import static org.dbbeans.util.Strings.uncapitalize;
-
 import static org.beanmaker.SourceFiles.chopId;
+import static org.dbbeans.util.Strings.*;
 
 public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
@@ -69,7 +65,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         importsManager.addImport("org.beanmaker.util.ErrorMessage");
         importsManager.addImport("org.beanmaker.util.IdNamePair");
 
-        importsManager.addImport("org.dbbeans.sql.DBQueryProcess");
+        importsManager.addImport("org.dbbeans.sql.DBQueryRetrieveData");
         importsManager.addImport("org.dbbeans.sql.DBQuerySetup");
         importsManager.addImport("org.dbbeans.sql.DBQuerySetupProcess");
         importsManager.addImport("org.dbbeans.sql.DBTransaction");
@@ -1872,25 +1868,91 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 )
         ).addContent(EMPTY_LINE);
 
-        final FunctionCall dbAccessFunction = new FunctionCall("processQuery", "dbAccess").byItself();
         javaClass.addContent(
                 new FunctionDeclaration("getAll", "List<" + beanName + ">").markAsStatic().visibility(Visibility.PROTECTED)
                         .addArgument(new FunctionArgument("String", "orderBy")).addContent(
-                        VarDeclaration.createListDeclaration(beanName, "all").markAsFinal()
+                        new ReturnStatement(new FunctionCall("getSelection").addArguments("null", "orderBy", "null"))
+                )
+        ).addContent(EMPTY_LINE);
+
+        final ObjectCreation newBeanFromFields = new ObjectCreation(beanName);
+        int index = 0;
+        for (Column column: columns.getList()) {
+            final String javaType = column.getJavaType();
+            if (javaType.equals("Money"))
+                throw new UnsupportedOperationException("Money not supported for now."); // for now...
+            ++index;
+            newBeanFromFields.addArgument(new FunctionCall("get" + capitalize(javaType), "rs").addArguments(Integer.toString(index)));
+        }
+        for (OneToManyRelationship relationship: columns.getOneToManyRelationships())
+            if (!relationship.isListOnly())
+                newBeanFromFields.addArgument(new FunctionCall("getSelection", relationship.getBeanClass())
+                        .addArgument(new OperatorExpression("\"id_" + uncamelize(beanVarName) + "=\"", new FunctionCall("getLong", "rs").addArgument("1"), OperatorExpression.Operator.ADD)));
+        javaClass.addContent(
+                new JavaClass("GetSelectionQueryProcess").implementsInterface("DBQueryRetrieveData<List<" + beanName + ">>").visibility(Visibility.PRIVATE).markAsStatic().addContent(
+                        new FunctionDeclaration("processResultSet", "List<" + beanName + ">").annotate("@Override").addException("SQLException")
+                                .addArgument(new FunctionArgument("ResultSet", "rs")).addContent(
+                                VarDeclaration.createListDeclaration(beanName, "list").markAsFinal()
+                        ).addContent(EMPTY_LINE).addContent(
+                            new WhileBlock(new Condition(new FunctionCall("next", "rs"))).addContent(
+                                    new FunctionCall("add", "list").byItself().addArgument(newBeanFromFields)
+                            )
+                        ).addContent(EMPTY_LINE).addContent(
+                                new ReturnStatement("list")
+                        )
+                )
+        ).addContent(EMPTY_LINE);
+
+        javaClass.addContent(
+                new FunctionDeclaration("getSelection", "List<" + beanName + ">").markAsStatic().visibility(Visibility.PROTECTED)
+                        .addArgument(new FunctionArgument("String", "whereClause")).addContent(
+                        new ReturnStatement(new FunctionCall("getSelection").addArguments("whereClause", "null"))
+                )
+        ).addContent(EMPTY_LINE);
+
+        javaClass.addContent(
+                new FunctionDeclaration("getSelection", "List<" + beanName + ">").markAsStatic().visibility(Visibility.PROTECTED)
+                        .addArgument(new FunctionArgument("String", "whereClause"))
+                        .addArgument(new FunctionArgument("DBQuerySetup", "setup")).addContent(
+                        new ReturnStatement(new FunctionCall("getSelection")
+                                .addArgument("whereClause")
+                                .addArguments(new FunctionCall("getOrderByFields", parametersVar))
+                                .addArgument("setup"))
+                )
+        ).addContent(EMPTY_LINE);
+
+        javaClass.addContent(
+                new FunctionDeclaration("getSelection", "List<" + beanName + ">").markAsStatic().visibility(Visibility.PROTECTED)
+                        .addArgument(new FunctionArgument("String", "whereClause"))
+                        .addArgument(new FunctionArgument("String", "orderBy"))
+                        .addArgument(new FunctionArgument("DBQuerySetup", "setup")).addContent(
+                        new IfBlock(new Condition(new Comparison("whereClause", "null"))
+                                .andCondition(new Condition(new Comparison("setup", "null", Comparison.Comparator.NEQ)))).addContent(
+                                new ExceptionThrow("IllegalArgumentException").addArgument(quickQuote("Cannot accept setup code without a WHERE clause."))
+                        )
                 ).addContent(EMPTY_LINE).addContent(
-                        dbAccessFunction
-                                .addArgument(quickQuote("SELECT id FROM " + tableName + " ORDER BY ") + " + orderBy")
-                                .addArgument(new AnonymousClassCreation("DBQueryProcess").setContext(dbAccessFunction).addContent(
-                                        new FunctionDeclaration("processResultSet").annotate("@Override").addException("SQLException")
-                                                .addArgument(new FunctionArgument("ResultSet", "rs")).addContent(
-                                                new WhileBlock(new Condition("rs.next()")).addContent(
-                                                        new FunctionCall("add", "all").byItself()
-                                                                .addArgument(new ObjectCreation(beanName).addArgument(new FunctionCall("getLong", "rs").addArgument("1")))
-                                                )
-                                        )
-                                ))
+                        new VarDeclaration("StringBuilder", "query", new ObjectCreation("StringBuilder")).markAsFinal()
+                ).addContent(
+                        new FunctionCall("append", "query").addArgument(quickQuote(getAllFieldsQuery())).byItself()
+                ).addContent(
+                        new IfBlock(new Condition(new Comparison("whereClause", "null", Comparison.Comparator.NEQ))).addContent(
+                                new FunctionCall("append", new FunctionCall("append", "query").addArgument(quickQuote(" WHERE "))).addArgument("whereClause").byItself()
+                        )
+                ).addContent(
+                        new IfBlock(new Condition(new Comparison("orderBy", "null", Comparison.Comparator.NEQ))).addContent(
+                                new FunctionCall("append", new FunctionCall("append", "query").addArgument(quickQuote(" ORDER BY "))).addArgument("orderBy").byItself()
+                        )
                 ).addContent(EMPTY_LINE).addContent(
-                        new ReturnStatement("all")
+                        new IfBlock(new Condition(new Comparison("whereClause", "null"))).addContent(
+                                new ReturnStatement(new FunctionCall("processQuery", "dbAccess")
+                                        .addArgument(new FunctionCall("toString", "query"))
+                                        .addArgument(new ObjectCreation("GetSelectionQueryProcess")))
+                        )
+                ).addContent(EMPTY_LINE).addContent(
+                        new ReturnStatement(new FunctionCall("processQuery", "dbAccess")
+                                .addArgument(new FunctionCall("toString", "query"))
+                                .addArgument("setup")
+                                .addArgument(new ObjectCreation("GetSelectionQueryProcess")))
                 )
         ).addContent(EMPTY_LINE);
     }
@@ -1997,6 +2059,24 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 		
 		return buf.toString();
 	}
+
+    private String getAllFieldsQuery() {
+        StringBuilder buf = new StringBuilder();
+
+        buf.append("SELECT ");
+
+        for (Column column: columns.getList()) {
+            final String name = column.getSqlName();
+            buf.append(name);
+            buf.append(", ");
+        }
+        buf.delete(buf.length() - 2, buf.length());
+
+        buf.append(" FROM ");
+        buf.append(tableName);
+
+        return buf.toString();
+    }
 
     private String getReadSQLQueryOneToManyRelationship(final String tableName, final String indexField) {
         return "SELECT id FROM " + tableName + " WHERE " + indexField + "=?";
