@@ -29,6 +29,8 @@ import org.jcodegen.java.WhileBlock;
 
 import org.dbbeans.util.Strings;
 
+import javax.enterprise.inject.New;
+
 import static org.beanmaker.SourceFiles.chopId;
 import static org.dbbeans.util.Strings.*;
 
@@ -1943,7 +1945,8 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                                 new FunctionCall("append", new FunctionCall("append", "query").addArgument(quickQuote(" ORDER BY "))).addArgument("orderBy").byItself()
                         )
                 ).addContent(EMPTY_LINE).addContent(
-                        new IfBlock(new Condition(new Comparison("whereClause", "null"))).addContent(
+                        new IfBlock(new Condition(new Comparison("whereClause", "null"))
+                                .orCondition(new Condition(new Comparison("setup", "null")))).addContent(
                                 new ReturnStatement(new FunctionCall("processQuery", "dbAccess")
                                         .addArgument(new FunctionCall("toString", "query"))
                                         .addArgument(new ObjectCreation("GetSelectionQueryProcess")))
