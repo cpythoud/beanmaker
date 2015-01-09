@@ -25,8 +25,9 @@ public class BeanSourceFile extends BeanCode {
 	private void addConstructors() {
         javaClass.addContent(getBaseConstructor()).addContent(EMPTY_LINE);
         javaClass.addContent(getIdArgumentConstructor()).addContent(EMPTY_LINE);
-        javaClass.addContent(getCopyConstructor());
-        javaClass.addContent(getFieldConstructor());
+        javaClass.addContent(getCopyConstructor()).addContent(EMPTY_LINE);
+        javaClass.addContent(getFieldConstructor()).addContent(EMPTY_LINE);
+        javaClass.addContent(getResultSetConstructor()).addContent(EMPTY_LINE);
 	}
 
     private ConstructorDeclaration getBaseConstructor() {
@@ -70,6 +71,24 @@ public class BeanSourceFile extends BeanCode {
             }
 
         return fieldConstructor.addContent(superCall);
+    }
+
+    private ConstructorDeclaration getResultSetConstructor() {
+        importsManager.addImport("java.sql.SQLException");
+        importsManager.addImport("java.sql.ResultSet");
+
+        final ConstructorDeclaration rsConstructor = getBaseConstructor().visibility(Visibility.PROTECTED)
+                .addArgument(new FunctionArgument("ResultSet", "rs")).addException("SQLException");
+        for (OneToManyRelationship relationship: columns.getOneToManyRelationships())
+            if (!relationship.isListOnly())
+                rsConstructor.addArgument(new FunctionArgument(new GenericType("List", relationship.getBeanClass()).toString(), relationship.getJavaName()));
+
+        final FunctionCall superCall = new FunctionCall("super").byItself().addArgument("rs");
+        for (OneToManyRelationship relationship: columns.getOneToManyRelationships())
+            if (!relationship.isListOnly())
+                superCall.addArgument(relationship.getJavaName());
+
+        return rsConstructor.addContent(superCall);
     }
 
     private void createSourceCode() {

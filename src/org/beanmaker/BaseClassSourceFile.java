@@ -144,6 +144,9 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         }
 
         newLine();
+        javaClass.addContent(new VarDeclaration("String", "DATABASE_FIELD_LIST", quickQuote(getStaticFieldList())).visibility(Visibility.PROTECTED).markAsStatic().markAsFinal());
+
+        newLine();
         javaClass.addContent(
                 new VarDeclaration("BeanInternals", internalsVar,
                         new ObjectCreation("BeanInternals").addArgument(quickQuote(bundleName))).markAsFinal().visibility(Visibility.PROTECTED)
@@ -155,12 +158,23 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         );
         newLine();
     }
+
+    private String getStaticFieldList() {
+        final StringBuilder list = new StringBuilder();
+
+        for (Column column: columns.getList())
+            list.append(tableName).append(".").append(column.getSqlName()).append(", ");
+        list.delete(list.length() - 2, list.length());
+
+        return list.toString();
+    }
 	
 	private void addConstructors() {
         javaClass.addContent(getBaseConstructor()).addContent(EMPTY_LINE);
         javaClass.addContent(getIdArgumentConstructor()).addContent(EMPTY_LINE);
         javaClass.addContent(getCopyConstructor()).addContent(EMPTY_LINE);
         javaClass.addContent(getFieldConstructor()).addContent(EMPTY_LINE);
+        javaClass.addContent(getResultSetConstructor()).addContent(EMPTY_LINE);
 	}
 
     private ConstructorDeclaration getBaseConstructor() {
@@ -218,7 +232,6 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 fieldConstructor.addContent(new FunctionCall("set" + capitalize(field)).addArgument(field).byItself());
         }
 
-        // For now, to be replaced when getAll has been updated with database friendly code
         for (OneToManyRelationship relationship: columns.getOneToManyRelationships())
             if (!relationship.isListOnly()) {
                 final String beanClass = relationship.getBeanClass();
@@ -233,6 +246,24 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
             }
 
         return fieldConstructor;
+    }
+
+    private ConstructorDeclaration getResultSetConstructor() {
+        final ConstructorDeclaration rsConstructor = getBaseConstructor().visibility(Visibility.PROTECTED)
+                .addArgument(new FunctionArgument("ResultSet", "rs")).addException("SQLException");
+        for (OneToManyRelationship relationship: columns.getOneToManyRelationships())
+            if (!relationship.isListOnly())
+                rsConstructor.addArgument(new FunctionArgument(new GenericType("List", relationship.getBeanClass()).toString(), relationship.getJavaName()));
+
+        final FunctionCall thisCall = new FunctionCall("this").byItself();
+        int index = 0;
+        for (Column column: columns.getList())
+            thisCall.addArgument(new FunctionCall("get" + capitalize(column.getJavaType()), "rs").addArgument(Integer.toString(++index)));
+        for (OneToManyRelationship relationship: columns.getOneToManyRelationships())
+            if (!relationship.isListOnly())
+                thisCall.addArgument(relationship.getJavaName());
+
+        return rsConstructor.addContent(thisCall);
     }
 	
 	private void addSetIdFunction() {
