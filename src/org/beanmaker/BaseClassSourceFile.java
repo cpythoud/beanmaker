@@ -29,8 +29,6 @@ import org.jcodegen.java.WhileBlock;
 
 import org.dbbeans.util.Strings;
 
-import javax.enterprise.inject.New;
-
 import static org.beanmaker.SourceFiles.chopId;
 import static org.dbbeans.util.Strings.*;
 
