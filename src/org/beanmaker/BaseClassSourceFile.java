@@ -144,6 +144,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         }
 
         newLine();
+        javaClass.addContent(new VarDeclaration("String", "DATABASE_TABLE_NAME", quickQuote(tableName)).visibility(Visibility.PROTECTED).markAsStatic().markAsFinal());
         javaClass.addContent(new VarDeclaration("String", "DATABASE_FIELD_LIST", quickQuote(getStaticFieldList())).visibility(Visibility.PROTECTED).markAsStatic().markAsFinal());
 
         newLine();
