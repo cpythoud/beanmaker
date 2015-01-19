@@ -20,6 +20,7 @@ import java.sql.Timestamp;
 
 import java.text.DateFormat;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public abstract class BaseMasterTableView extends BaseView {
@@ -28,6 +29,7 @@ public abstract class BaseMasterTableView extends BaseView {
 
     protected String tableCssClass = "cctable";
     protected String thResetCssClass = null;
+    protected String tdResetCssClass = null;
     protected String thFilterCssClass = null;
     protected String tdFilterCssClass = null;
     protected String thTitleCssClass = "tb-sort";
@@ -136,6 +138,23 @@ public abstract class BaseMasterTableView extends BaseView {
 
     protected ThTag getTitleCell(final String name) {
         return new ThTag(resourceBundle.getString(name)).cssClass(thTitleCssClass).attribute("data-sort-class", "tb-" + name);
+    }
+
+    protected TrTag getTableLine() {
+        final TrTag line = new TrTag();
+
+        line.child(getTableCellForRemoveFilteringPlaceholder());
+
+        return line;
+    }
+
+    protected TdTag getTableCellForRemoveFilteringPlaceholder() {
+        final TdTag cell = new TdTag();
+
+        if (tdResetCssClass != null)
+            cell.cssClass(tdResetCssClass);
+
+        return cell;
     }
 
     protected TdTag getTableCell(final String name, final String value) {
