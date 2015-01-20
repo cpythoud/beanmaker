@@ -20,7 +20,6 @@ import java.sql.Timestamp;
 
 import java.text.DateFormat;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public abstract class BaseMasterTableView extends BaseView {
@@ -52,6 +51,8 @@ public abstract class BaseMasterTableView extends BaseView {
     protected String booleanCenterValueCssClass = "center";
 
     protected int zeroFilledMaxDigits = 20;
+
+    protected boolean displayId = false;
 
     public BaseMasterTableView(final String resourceBundleName, final String tableId) {
         super(resourceBundleName);
