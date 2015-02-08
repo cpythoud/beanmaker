@@ -50,7 +50,7 @@ public abstract class BaseMasterTableView extends BaseView {
 
     protected String booleanCenterValueCssClass = "center";
 
-    protected int zeroFilledMaxDigits = 20;
+    protected int zeroFilledMaxDigits = 18;
 
     protected boolean displayId = false;
 
