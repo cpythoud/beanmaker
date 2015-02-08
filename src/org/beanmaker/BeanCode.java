@@ -24,11 +24,11 @@ public abstract class BeanCode extends BaseCode {
         bundleName = getBundleName(beanName,  packageName);
     }
 
-    private static String getBeanVarName(final String beanName) {
+    protected static String getBeanVarName(final String beanName) {
         return Strings.uncapitalize(beanName);
     }
 
-    private static String getBundleName(final String beanName, final String packageName) {
+    protected static String getBundleName(final String beanName, final String packageName) {
         return Strings.replace(packageName, ".", "-") + "-" + beanName;
     }
 }
