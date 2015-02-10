@@ -162,6 +162,10 @@ public abstract class BaseMasterTableView extends BaseView {
         return cell;
     }
 
+    protected TdTag getTableCell(final String name, final Tag content) {
+        return new TdTag().child(content).cssClass("tb-" + name);
+    }
+
     protected TdTag getTableCell(final String name, final String value) {
         return new TdTag(value).cssClass("tb-" + name);
     }
