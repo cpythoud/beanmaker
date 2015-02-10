@@ -88,10 +88,18 @@ public abstract class BaseMasterTableView extends BaseView {
     protected abstract List<TrTag> getData();
 
     protected TrTag getFilterRow() {
-        return new TrTag().child(getRemoveFilteringCellWithLink());
+        return getDefaultStartOfFilterRow();
     }
 
     protected TrTag getTitleRow() {
+        return getDefaultStartOfTitleRow();
+    }
+
+    protected TrTag getDefaultStartOfFilterRow() {
+        return new TrTag().child(getRemoveFilteringCellWithLink());
+    }
+
+    protected TrTag getDefaultStartOfTitleRow() {
         return new TrTag().child(getRemoveFilteringCell());
     }
 

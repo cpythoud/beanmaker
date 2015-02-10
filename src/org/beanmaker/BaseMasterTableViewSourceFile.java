@@ -49,7 +49,7 @@ public class BaseMasterTableViewSourceFile extends BeanCodeWithDBInfo {
     }
 
     private void addFilterRowFunctions() {
-        final FunctionDeclaration masterFunction = getMasterFunction("getFilterRow", "filterRow", true);
+        final FunctionDeclaration masterFunction = getMasterFunction("FilterRow", "filterRow", true);
         addFunctionCallsTo(masterFunction, "filterRow", "Filter");
         masterFunction.addContent(new ReturnStatement("filterRow"));
         javaClass.addContent(masterFunction).addContent(EMPTY_LINE);
@@ -57,16 +57,16 @@ public class BaseMasterTableViewSourceFile extends BeanCodeWithDBInfo {
         addFilterCellGetterFunctions();
     }
 
-    private FunctionDeclaration getMasterFunction(final String functionName, final String trName, final boolean overrides) {
-        final FunctionDeclaration functionDeclaration = new FunctionDeclaration(functionName, "TrTag").visibility(Visibility.PROTECTED);
+    private FunctionDeclaration getMasterFunction(final String endOfFunctionName, final String trName, final boolean overrides) {
+        final FunctionDeclaration functionDeclaration = new FunctionDeclaration("get" + endOfFunctionName, "TrTag").visibility(Visibility.PROTECTED);
 
         final FunctionCall initCall;
         if (overrides) {
             functionDeclaration.annotate("@Override");
-            initCall = new FunctionCall(functionName, "super");
+            initCall = new FunctionCall("getDefaultStartOf" + endOfFunctionName);
         } else {
             functionDeclaration.addArgument(new FunctionArgument(beanName, beanVarName));
-            initCall = new FunctionCall(functionName);
+            initCall = new FunctionCall("get" + endOfFunctionName);
         }
 
         return functionDeclaration.addContent(new VarDeclaration("TrTag", trName, initCall).markAsFinal()).addContent(EMPTY_LINE);
@@ -102,7 +102,7 @@ public class BaseMasterTableViewSourceFile extends BeanCodeWithDBInfo {
     }
 
     private void addTitleRowFunctions() {
-        final FunctionDeclaration masterFunction = getMasterFunction("getTitleRow", "titleRow", true);
+        final FunctionDeclaration masterFunction = getMasterFunction("TitleRow", "titleRow", true);
         addFunctionCallsTo(masterFunction, "titleRow", "Title");
         masterFunction.addContent(new ReturnStatement("titleRow"));
         javaClass.addContent(masterFunction).addContent(EMPTY_LINE);
@@ -133,7 +133,7 @@ public class BaseMasterTableViewSourceFile extends BeanCodeWithDBInfo {
                 )
         ).addContent(EMPTY_LINE);
 
-        final FunctionDeclaration masterFunction = getMasterFunction("getTableLine", "line", false);
+        final FunctionDeclaration masterFunction = getMasterFunction("TableLine", "line", false);
         addFunctionCallsTo(masterFunction);
         masterFunction.addContent(new ReturnStatement("line"));
         javaClass.addContent(masterFunction).addContent(EMPTY_LINE);
