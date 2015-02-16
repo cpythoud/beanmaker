@@ -1992,6 +1992,17 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
     private void addGetIdNamePairs() {
         javaClass.addContent(
+                new FunctionDeclaration("getIdNamePairs", "List<IdNamePair>").markAsStatic().addArguments(
+                        new FunctionArgument("List<String>", "dataFields"),
+                        new FunctionArgument("List<String>", "orderingFields")
+                ).addContent(
+                        new ReturnStatement(
+                                new FunctionCall("getIdNamePairs").addArguments("null", "dataFields", "orderingFields")
+                        )
+                )
+        ).addContent(EMPTY_LINE);
+
+        javaClass.addContent(
                 new FunctionDeclaration("getIdNamePairs", "List<IdNamePair>").visibility(Visibility.PROTECTED).markAsStatic().addArguments(
                         new FunctionArgument("String", "whereClause"),
                         new FunctionArgument("List<String>", "dataFields"),

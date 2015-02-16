@@ -73,4 +73,9 @@ public abstract class BaseCode {
     protected void addInheritableProperty(final String type, final String var, final ObjectCreation object) {
         addInheritableProperty(new VarDeclaration(type, var, object));
     }
+
+    protected String getVarNameForClass(final String className) {
+        final String[] parts = className.split("\\.");
+        return Strings.uncapitalize(parts[parts.length - 1]);
+    }
 }

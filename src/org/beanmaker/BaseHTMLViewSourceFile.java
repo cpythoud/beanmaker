@@ -232,7 +232,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         final String associatedBeanClass = column.getAssociatedBeanClass();
         final String bundleKey = uncapitalize(SourceFiles.chopId(field));
         final String parametersClass = associatedBeanClass + "Parameters";
-        final String parametersVar = uncapitalize(associatedBeanClass) + "Parameters";
+        final String parametersVar = uncapitalize(getVarNameForClass(associatedBeanClass)) + "Parameters";
 
         final FunctionDeclaration functionDeclaration = new FunctionDeclaration("compose" + capitalize(field) + "FormElement")
                 .visibility(Visibility.PROTECTED)
@@ -250,7 +250,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         ).addContent(
                 new FunctionCall("addAll", "pairs").byItself()
                         .addArgument(new FunctionCall("getIdNamePairs", associatedBeanClass)
-                                .addArgument("null")
+                                /*.addArgument("null")*/
                                 .addArgument(new FunctionCall("getNamingFields", parametersVar))
                                 .addArgument(new FunctionCall("getOrderingFields", parametersVar)))
         ).addContent(EMPTY_LINE).addContent(
