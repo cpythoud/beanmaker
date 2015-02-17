@@ -39,6 +39,9 @@ public class ErrorMessage {
     }
 
     public static String toJson(final List<ErrorMessage> errorMessages) {
+        if (errorMessages.isEmpty())
+            throw new IllegalArgumentException("List of error messages is empty.");
+
         final StringBuilder buf = new StringBuilder();
 
         buf.append("\"errors\": [ ");
