@@ -218,8 +218,12 @@ public class HtmlFormHelper {
         return "col-" + horizontalSizeShift + "-" + horizontalFieldWidth;
     }
 
+    public ButtonTag getSubmitButtonTag(final String beanName, final long id, final String buttonLabel) {
+        return new ButtonTag(ButtonTag.ButtonType.SUBMIT, buttonLabel).id(getHtmlId(beanName + "_submit", id)).cssClass("btn btn-default");
+    }
+
     public Tag getSubmitButton(final String beanName, final long id, final String buttonLabel) {
-        final ButtonTag submit = new ButtonTag(ButtonTag.ButtonType.SUBMIT, buttonLabel).id(getHtmlId(beanName + "_submit", id)).cssClass("btn btn-default");
+        final ButtonTag submit = getSubmitButtonTag(beanName, id, buttonLabel);
 
         if (horizontal)
             return getFormGroup().child(new DivTag().cssClass(getHorizontalFieldClassesWithOffset()).child(submit));
