@@ -164,7 +164,7 @@ public class HtmlFormHelper {
         final String fieldId = getFieldId(field, idBean);
         final LabelTag label = getLabel(fieldLabel, fieldId, required);
 
-        final InputTag input = new InputTag(type).cssClass("form-control").id(fieldId).name(field).value(value);
+        final InputTag input = getInputTag(type, fieldId, field, value);
         if (required && useRequiredInHtml)
             input.required();
         if (placeholder != null)
@@ -175,6 +175,10 @@ public class HtmlFormHelper {
 
     protected String getFieldId(final String field, final long idBean) {
         return field + "_" + idBean;
+    }
+
+    protected InputTag getInputTag(final InputTag.InputType type, final String id, final String name, final String value) {
+        return new InputTag(type).cssClass("form-control").id(id).name(name).value(value);
     }
 
     protected DivTag getFormGroup() {
@@ -243,7 +247,7 @@ public class HtmlFormHelper {
         final String fieldId = getFieldId(field, idBean);
         final LabelTag label = getLabel(fieldLabel, fieldId, required);
 
-        final SelectTag select = new SelectTag(field).cssClass("form-control").id(fieldId);
+        final SelectTag select = getSelectTag(field, fieldId);
         if (required && useRequiredInHtml)
             select.required();
 
@@ -257,15 +261,23 @@ public class HtmlFormHelper {
         return getFormGroup(label, select);
     }
 
+    protected SelectTag getSelectTag(final String name, final String id) {
+        return new SelectTag(name).cssClass("form-control").id(id);
+    }
+
     public DivTag getTextAreaField(final String field, final long idBean, final String value, final String fieldLabel, final boolean required) {
         final String fieldId = getFieldId(field, idBean);
         final LabelTag label = getLabel(fieldLabel, fieldId, required);
 
-        final TextareaTag textarea = new TextareaTag(value).cssClass("form-control").id(fieldId).name(field);
+        final TextareaTag textarea = getTextAreaTag(fieldId, field, value);
         if (required && useRequiredInHtml)
             textarea.required();
 
         return getFormGroup(label, textarea);
+    }
+
+    protected TextareaTag getTextAreaTag(final String id, final String name, final String value) {
+        return new TextareaTag(value).cssClass("form-control").id(id).name(name);
     }
 
     public DivTag getCheckboxField(final String field, final long idBean, final boolean checked, final String fieldLabel) {
