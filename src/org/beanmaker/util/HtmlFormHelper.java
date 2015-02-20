@@ -34,6 +34,10 @@ public class HtmlFormHelper {
     private int horizontalFieldWidth = 8;
 
 
+    private InputTag.InputType inputTypeForDateFields = null;
+    private String cssClassForDateFields = null;
+
+
     public String getNotRequiredExtension() {
         return notRequiredExtension;
     }
@@ -134,6 +138,23 @@ public class HtmlFormHelper {
         return horizontalFieldWidth;
     }
 
+    public void setInputTypeForDateFields(final InputTag.InputType inputTypeForDateFields) {
+        this.inputTypeForDateFields = inputTypeForDateFields;
+    }
+
+    public InputTag.InputType getInputTypeForDateFields() {
+        return inputTypeForDateFields;
+    }
+
+    public void setCssClassForDateFields(final String cssClassForDateFields) {
+        this.cssClassForDateFields = cssClassForDateFields;
+    }
+
+    public String getCssClassForDateFields() {
+        return cssClassForDateFields;
+    }
+
+
     public FormTag getForm(final String beanName, final long id) {
         inline = false;
         horizontal = false;
@@ -178,7 +199,12 @@ public class HtmlFormHelper {
     }
 
     protected InputTag getInputTag(final InputTag.InputType type, final String id, final String name, final String value) {
-        return new InputTag(type).cssClass("form-control").id(id).name(name).value(value);
+        if (type != InputTag.InputType.DATE)
+            return new InputTag(type).cssClass("form-control").id(id).name(name).value(value);
+
+        return new InputTag(inputTypeForDateFields == null ? type : inputTypeForDateFields)
+                .cssClass(cssClassForDateFields == null ? "form-control" : "form-control " + cssClassForDateFields)
+                .id(id).name(name).value(value);
     }
 
     protected DivTag getFormGroup() {
