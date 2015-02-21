@@ -241,10 +241,14 @@ public class HtmlFormHelper {
     }
 
     protected String getHorizontalLabelClasses() {
-        return "col-" + horizontalSizeShift + "-" + horizontalLabelWidth + " control-label";
+        return getHorizontalLabelClass() + " control-label";
     }
 
-    protected String getHorizontalFieldClass() {
+    public String getHorizontalLabelClass() {
+        return "col-" + horizontalSizeShift + "-" + horizontalLabelWidth;
+    }
+
+    public String getHorizontalFieldClass() {
         return "col-" + horizontalSizeShift + "-" + horizontalFieldWidth;
     }
 
