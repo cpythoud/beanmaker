@@ -2,11 +2,7 @@ package org.beanmaker.util;
 
 import javax.servlet.ServletContext;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class BaseHTMLView extends BaseEditableView {
-    protected List<ErrorMessage> errorMessages = new ArrayList<ErrorMessage>();
 
     protected boolean captchaControl = false;
     protected String captchaValue = "";
