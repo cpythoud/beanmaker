@@ -1623,7 +1623,10 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
         final FunctionDeclaration createRecordFunction = new FunctionDeclaration("createRecord").visibility(Visibility.PRIVATE).addContent(
                 new VarDeclaration("DBTransaction", "transaction", new FunctionCall("createDBTransaction")).markAsFinal()).addContent(
-                new VarDeclaration("long", "id", new FunctionCall("createRecord").addArgument("transaction")).markAsFinal());
+                new FunctionCall("preCreateExtraDbActions").byItself().addArgument("transaction")
+        ).addContent(
+                new VarDeclaration("long", "id", new FunctionCall("createRecord").addArgument("transaction")).markAsFinal()
+        );
 
         addOneToManyRelationshipDBUpdateFunctionCalls(createRecordFunction);
 
@@ -1674,6 +1677,11 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         javaClass.addContent(createRecordFunctionWithTransaction).addContent(EMPTY_LINE);
 
         javaClass.addContent(
+                new FunctionDeclaration("preCreateExtraDbActions")
+                        .addArgument(new FunctionArgument("DBTransaction", "transaction")).visibility(Visibility.PROTECTED)
+        ).addContent(EMPTY_LINE);
+
+        javaClass.addContent(
                 new FunctionDeclaration("createExtraDbActions")
                         .addArgument(new FunctionArgument("DBTransaction", "transaction"))
                         .addArgument(new FunctionArgument("long", "id")).visibility(Visibility.PROTECTED)
@@ -1697,6 +1705,8 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         final FunctionDeclaration updateRecordFunction = new FunctionDeclaration("updateRecord").visibility(Visibility.PRIVATE).addContent(
                 new VarDeclaration("DBTransaction", "transaction", new FunctionCall("createDBTransaction")).markAsFinal()
         ).addContent(
+                new FunctionCall("preUpdateExtraDbActions").byItself().addArgument("transaction")
+        ).addContent(
                 new FunctionCall("updateRecord").byItself().addArgument("transaction")
         );
 
@@ -1718,6 +1728,11 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                                 .addArgument(quickQuote(getUpdateSQLQuery()))
                                 .addArgument(new ObjectCreation("RecordUpdateSetup"))
                 )
+        ).addContent(EMPTY_LINE);
+
+        javaClass.addContent(
+                new FunctionDeclaration("preUpdateExtraDbActions").visibility(Visibility.PROTECTED)
+                        .addArgument(new FunctionArgument("DBTransaction", "transaction"))
         ).addContent(EMPTY_LINE);
 
         javaClass.addContent(
