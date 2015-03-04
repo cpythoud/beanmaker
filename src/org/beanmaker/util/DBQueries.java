@@ -21,7 +21,15 @@ import java.util.List;
 public class DBQueries {
 
     public static int getIntCount(final DB db, final String table) {
-        return new DBAccess(db).processQuery("SELECT COUNT(id) FROM " + table, new DBQueryRetrieveData<Integer>() {
+        return getIntCount(db, table, null);
+    }
+
+    public static long getLongCount(final DB db, final String table) {
+        return getLongCount(db, table, null);
+    }
+
+    public static int getIntCount(final DB db, final String table, final String whereClause) {
+        return new DBAccess(db).processQuery(getCountQuery(table, whereClause), new DBQueryRetrieveData<Integer>() {
             @Override
             public Integer processResultSet(ResultSet rs) throws SQLException {
                 rs.next();
@@ -30,14 +38,24 @@ public class DBQueries {
         });
     }
 
-    public static long getLongCount(final DB db, final String table) {
-        return new DBAccess(db).processQuery("SELECT COUNT(id) FROM " + table, new DBQueryRetrieveData<Long>() {
+    public static long getLongCount(final DB db, final String table, final String whereClause) {
+        return new DBAccess(db).processQuery(getCountQuery(table, whereClause), new DBQueryRetrieveData<Long>() {
             @Override
             public Long processResultSet(ResultSet rs) throws SQLException {
                 rs.next();
                 return rs.getLong(1);
             }
         });
+    }
+
+    private static String getCountQuery(final String table, final String whereClause) {
+        final StringBuilder query = new StringBuilder();
+
+        query.append("SELECT COUNT(id) FROM ").append(table);
+        if (whereClause != null)
+            query.append(" WHERE ").append(whereClause);
+
+        return query.toString();
     }
 
 
