@@ -9,6 +9,17 @@ import java.util.Set;
 
 
 public class Columns {
+
+    private DatabaseServer server;
+    private String db;
+    private String table;
+
+    private final List<Column> columns;
+    private final List<OneToManyRelationship> oneToManyRelationships;
+    private final List<ExtraField> extraFields = new ArrayList<ExtraField>();
+
+    private static final List<String> NAMING_CANDIDATE_FIELDS = Arrays.asList("name", "description");
+
 	
 	public Columns(final DatabaseServer server, final String db, final String table) {
 		this.server = server;
@@ -18,14 +29,18 @@ public class Columns {
 		oneToManyRelationships = server.getDetectedOneToManyRelationship(db, table);
 	}
 	
-	public Columns(final Columns cols) {
+	/*public Columns(final Columns cols) {
 		server = cols.server;
 		db = cols.db;
 		table = cols.table;
 		columns = cols.getList();
-	}
-	
-	public List<Column> getList() {
+	}*/
+
+    public String getTable() {
+        return table;
+    }
+
+    public List<Column> getList() {
 		List<Column> copy = new ArrayList<Column>();
 		
 		for (Column column: columns)
@@ -268,14 +283,51 @@ public class Columns {
 
         throw new IllegalArgumentException("Column set does not contain an item order field.");
     }
-	
-	private DatabaseServer server;
-	private String db;
-	private String table;
-	
-	private List<Column> columns;
-	private List<OneToManyRelationship> oneToManyRelationships;
-	
-	private static final List<String> NAMING_CANDIDATE_FIELDS = Arrays.asList("name", "description");
+
+    public List<ExtraField> getExtraFields() {
+        return Collections.unmodifiableList(extraFields);
+    }
+
+    public void addExtraField(final ExtraField extraField) {
+        if (isAlreadyPresent(extraField))
+            throw new IllegalArgumentException("An extra field with name " + extraField.getName() + " already exists.");
+
+        extraFields.add(extraField);
+    }
+
+    private boolean isAlreadyPresent(final ExtraField extraField) {
+        for (ExtraField ef: extraFields)
+            if (ef.getName().equals(extraField.getName()))
+                return true;
+
+        return false;
+    }
+
+    public void removeExtrafield(final String name) {
+        final int index = getExtraFieldIndex(name);
+        if (index > -1)
+            extraFields.remove(index);
+        else
+            throw new IllegalArgumentException("No extra field with name " + name);
+    }
+
+    private int getExtraFieldIndex(final String name) {
+        int index = 0;
+        for (ExtraField ef: extraFields) {
+            ++index;
+            if (ef.getName().equals(name))
+                return index;
+        }
+
+        return -1;
+    }
+
+    public void removeExtraField(final ExtraField extraField) {
+        removeExtrafield(extraField.getName());
+    }
+
+    public boolean hasExtraFields() {
+        return extraFields.size() > 0;
+    }
 }
 

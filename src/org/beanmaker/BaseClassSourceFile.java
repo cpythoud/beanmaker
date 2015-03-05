@@ -156,8 +156,20 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         javaClass.addContent(
                 new VarDeclaration(parametersClass, parametersVar,
                         new ObjectCreation(parametersClass)).markAsFinal().markAsStatic().visibility(Visibility.PROTECTED)
-        );
-        newLine();
+        ).addContent(EMPTY_LINE);
+
+        if (columns.hasExtraFields()) {
+            for (ExtraField extraField: columns.getExtraFields()) {
+                javaClass.addContent(new LineOfCode(extraField.toString()));
+                if (extraField.requiresImport())
+                    importsManager.addImport(extraField.getRequiredImport());
+                if (extraField.requiresSecondaryImport())
+                    importsManager.addImport(extraField.getSecondaryRequiredImport());
+                if (extraField.requiresTernaryImport())
+                    importsManager.addImport(extraField.getTernaryRequiredImport());
+            }
+            newLine();
+        }
     }
 
     private String getStaticFieldList() {
