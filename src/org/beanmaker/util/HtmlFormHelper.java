@@ -36,6 +36,8 @@ public class HtmlFormHelper {
 
     private InputTag.InputType inputTypeForDateFields = null;
     private String cssClassForDateFields = null;
+    private InputTag.InputType inputTypeForTimeFields = null;
+    private String cssClassForTimeFields = null;
 
 
     public String getNotRequiredExtension() {
@@ -154,6 +156,21 @@ public class HtmlFormHelper {
         return cssClassForDateFields;
     }
 
+    public void setInputTypeForTimeFields(final InputTag.InputType inputTypeForTimeFields) {
+        this.inputTypeForTimeFields = inputTypeForTimeFields;
+    }
+
+    public InputTag.InputType getInputTypeForTimeFields() {
+        return inputTypeForTimeFields;
+    }
+
+    public void setCssClassForTimeFields(final String cssClassForTimeFields) {
+        this.cssClassForTimeFields = cssClassForTimeFields;
+    }
+
+    public String getCssClassForTimeFields() {
+        return cssClassForTimeFields;
+    }
 
     public FormTag getForm(final String beanName, final long id) {
         inline = false;
@@ -199,12 +216,17 @@ public class HtmlFormHelper {
     }
 
     protected InputTag getInputTag(final InputTag.InputType type, final String id, final String name, final String value) {
-        if (type != InputTag.InputType.DATE)
-            return new InputTag(type).cssClass("form-control").id(id).name(name).value(value);
+        if (type == InputTag.InputType.DATE)
+            return new InputTag(inputTypeForDateFields == null ? type : inputTypeForDateFields)
+                    .cssClass(cssClassForDateFields == null ? "form-control" : "form-control " + cssClassForDateFields)
+                    .id(id).name(name + "Str").value(value);
 
-        return new InputTag(inputTypeForDateFields == null ? type : inputTypeForDateFields)
-                .cssClass(cssClassForDateFields == null ? "form-control" : "form-control " + cssClassForDateFields)
-                .id(id).name(name).value(value);
+        if (type == InputTag.InputType.TIME)
+            return new InputTag(inputTypeForTimeFields == null ? type : inputTypeForTimeFields)
+                    .cssClass(cssClassForTimeFields == null ? "form-control" : "form-control " + cssClassForTimeFields)
+                    .id(id).name(name + "Str").value(value);
+
+        return new InputTag(type).cssClass("form-control").id(id).name(name).value(value);
     }
 
     protected DivTag getFormGroup() {
