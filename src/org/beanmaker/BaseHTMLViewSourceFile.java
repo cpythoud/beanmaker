@@ -250,7 +250,6 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         ).addContent(
                 new FunctionCall("addAll", "pairs").byItself()
                         .addArgument(new FunctionCall("getIdNamePairs", associatedBeanClass)
-                                /*.addArgument("null")*/
                                 .addArgument(new FunctionCall("getNamingFields", parametersVar))
                                 .addArgument(new FunctionCall("getOrderingFields", parametersVar)))
         ).addContent(EMPTY_LINE).addContent(

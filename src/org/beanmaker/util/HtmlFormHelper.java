@@ -219,12 +219,12 @@ public class HtmlFormHelper {
         if (type == InputTag.InputType.DATE)
             return new InputTag(inputTypeForDateFields == null ? type : inputTypeForDateFields)
                     .cssClass(cssClassForDateFields == null ? "form-control" : "form-control " + cssClassForDateFields)
-                    .id(id).name(name + "Str").value(value);
+                    .id(id).name(name).value(value);
 
         if (type == InputTag.InputType.TIME)
             return new InputTag(inputTypeForTimeFields == null ? type : inputTypeForTimeFields)
                     .cssClass(cssClassForTimeFields == null ? "form-control" : "form-control " + cssClassForTimeFields)
-                    .id(id).name(name + "Str").value(value);
+                    .id(id).name(name).value(value);
 
         return new InputTag(type).cssClass("form-control").id(id).name(name).value(value);
     }
