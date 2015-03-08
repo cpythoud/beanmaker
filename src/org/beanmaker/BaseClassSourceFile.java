@@ -663,7 +663,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                                 .addContent(VarDeclaration.createListDeclaration(beanClass, listName).markAsFinal())
                                 .addContent(EMPTY_LINE)
                                 .addContent(dbAccessFunction
-                                        .addArgument(new OperatorExpression(quickQuote("SELECT id FROM " + relationship.getTable() + " WHERE " + relationship.getIdSqlName() + "=? ORDER BY "),
+                                        .addArgument(new OperatorExpression(quickQuote("SELECT ") + " + " + beanClass + ".DATABASE_FIELD_LIST + " + quickQuote(" FROM " + relationship.getTable() + " WHERE " + relationship.getIdSqlName() + "=? ORDER BY "),
                                                 new FunctionCall("getOrderByFields", beanClass + "." + Strings.uncamelize(beanClass).toUpperCase() + "_PARAMETERS"),
                                                 OperatorExpression.Operator.ADD))
                                         .addArgument(new AnonymousClassCreation("DBQuerySetupProcess").setContext(dbAccessFunction)
