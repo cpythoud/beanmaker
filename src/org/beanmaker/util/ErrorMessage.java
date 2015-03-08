@@ -28,12 +28,24 @@ public class ErrorMessage {
 	}
 
     public String toJson() {
+        return "{ \"idBean\": " + beanId + ", " + "\"fieldName\": \"" + fieldName + "\", " + "\"fieldLabel\": \"" + fieldLabel + "\", " + "\"message\": \"" + message + "\" }";
+    }
+
+    @Override
+    public String toString() {
+        return "ErrorMessage{" +
+                "beanId=" + beanId +
+                ", fieldName='" + fieldName + '\'' +
+                ", fieldLabel='" + fieldLabel + '\'' +
+                ", message='" + message + '\'' +
+                '}';
+    }
+
+    public static String toStrings(final List<ErrorMessage> errorMessages) {
         final StringBuilder buf = new StringBuilder();
 
-        buf.append("{ \"idBean\": ").append(beanId).append(", ");
-        buf.append("\"fieldName\": \"").append(fieldName).append("\", ");
-        buf.append("\"fieldLabel\": \"").append(fieldLabel).append("\", ");
-        buf.append("\"message\": \"").append(message).append("\" }");
+        for (ErrorMessage errorMessage: errorMessages)
+            buf.append(errorMessage).append("\n");
 
         return buf.toString();
     }
