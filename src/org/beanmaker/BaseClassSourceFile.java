@@ -676,8 +676,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                                                         .addContent(new WhileBlock(new Condition("rs.next()"))
                                                                 .addContent(new FunctionCall("add", listName).byItself()
                                                                         .addArgument(new ObjectCreation(beanClass)
-                                                                                .addArgument(new FunctionCall("getLong", "rs")
-                                                                                        .addArgument("1"))))))))
+                                                                                .addArgument("rs")))))))
                                 .addContent(EMPTY_LINE)
                                 .addContent(new ReturnStatement(listName));
                 javaClass.addContent(listGetter).addContent(EMPTY_LINE);
