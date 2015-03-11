@@ -1,6 +1,7 @@
 package org.beanmaker.util;
 
 import org.dbbeans.util.Strings;
+
 import org.jcodegen.html.ATag;
 import org.jcodegen.html.InputTag;
 import org.jcodegen.html.OptionTag;
@@ -54,6 +55,9 @@ public abstract class BaseMasterTableView extends BaseView {
 
     protected boolean displayId = false;
 
+    protected int columnCount = 2;
+    protected String noDataMessage = "NO DATA";
+
     public BaseMasterTableView(final String resourceBundleName, final String tableId) {
         super(resourceBundleName);
         this.tableId = tableId;
@@ -79,13 +83,34 @@ public abstract class BaseMasterTableView extends BaseView {
     protected TbodyTag getBody() {
         final TbodyTag body = new TbodyTag();
 
-        for (TrTag tr: getData())
+        int count = 0;
+        for (TrTag tr: getData()) {
             body.child(tr);
+            ++count;
+        }
+        if (count == 0)
+            body.child(getNoDataAvailableLine());
 
         return body;
     }
 
     protected abstract List<TrTag> getData();
+
+    protected TrTag getNoDataAvailableLine() {
+        return getNoDataAvailableLine(noDataMessage);
+    }
+
+    protected TrTag getNoDataAvailableLine(final String message) {
+        return getNoDataAvailableLine(message, columnCount);
+    }
+
+    protected TrTag getNoDataAvailableLine(final String message, final int columnCount) {
+        return new TrTag().child(
+                new TdTag().cssClass(tdResetCssClass)
+        ).child(
+                new TdTag(message).colspan(columnCount)
+        );
+    }
 
     protected TrTag getFilterRow() {
         return getDefaultStartOfFilterRow();
