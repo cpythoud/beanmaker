@@ -631,12 +631,12 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
     private void addRequiredIndicators() {
         for (Column column: columns.getList())
-            addIndicator(column.getJavaName(), "Required", column.isRequired(), true);
+            addIndicator(column.getJavaName(), "Required", column.isRequired(), false);
     }
 
     private void addUniqueIndicators() {
         for (Column column: columns.getList())
-            addIndicator(column.getJavaName(), "ToBeUnique", column.isUnique(), true);
+            addIndicator(column.getJavaName(), "ToBeUnique", column.isUnique(), false);
     }
 
 	private void addOneToManyRelationshipManagement() {
