@@ -498,9 +498,13 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                         .addArgument(new FunctionArgument(type, field));
                 if (JAVA_TEMPORAL_TYPES.contains(type))
                     setter.addContent(
-                            new Assignment("this." + field,
-                                    new ObjectCreation(type)
-                                            .addArgument(new FunctionCall("getTime", field)))
+                            new IfBlock(new Condition(new Comparison(field, "null"))).addContent(
+                                    new Assignment("this." + field, "null")
+                            ).elseClause(new ElseBlock().addContent(
+                                    new Assignment("this." + field,
+                                            new ObjectCreation(type)
+                                                    .addArgument(new FunctionCall("getTime", field)))
+                            ))
                     );
                 else
                     setter.addContent(
