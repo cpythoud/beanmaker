@@ -198,7 +198,18 @@ public class HtmlFormHelper {
         return getTextField(field, idBean, value, fieldLabel, type, required, null);
     }
 
-    public DivTag getTextField(final String field, final long idBean, final String value, final String fieldLabel, final InputTag.InputType type, final boolean required, final String placeholder) {
+    public DivTag getTextField(final String field, final long idBean, final String value, final String fieldLabel, final InputTag.InputType type, final boolean required,
+                               final boolean disabled) {
+        return getTextField(field, idBean, value, fieldLabel, type, required, null, disabled);
+    }
+
+    public DivTag getTextField(final String field, final long idBean, final String value, final String fieldLabel, final InputTag.InputType type, final boolean required,
+                               final String placeholder) {
+        return getTextField(field, idBean, value, fieldLabel, type, required, placeholder, false);
+    }
+
+    public DivTag getTextField(final String field, final long idBean, final String value, final String fieldLabel, final InputTag.InputType type, final boolean required,
+                               final String placeholder, final boolean disabled) {
         final String fieldId = getFieldId(field, idBean);
         final LabelTag label = getLabel(fieldLabel, fieldId, required);
 
@@ -207,6 +218,8 @@ public class HtmlFormHelper {
             input.required();
         if (placeholder != null)
             input.placeholder(placeholder);
+        if (disabled)
+            input.disabled();
 
         return getFormGroup(label, input);
     }
@@ -279,7 +292,14 @@ public class HtmlFormHelper {
     }
 
     public Tag getSubmitButton(final String beanName, final long id, final String buttonLabel) {
+        return getSubmitButton(beanName, id, buttonLabel, false);
+    }
+
+    public Tag getSubmitButton(final String beanName, final long id, final String buttonLabel, final boolean disabled) {
         final ButtonTag submit = getSubmitButtonTag(beanName, id, buttonLabel);
+
+        if (disabled)
+            submit.disabled();
 
         if (horizontal)
             return getFormGroup().child(new DivTag().cssClass(getHorizontalFieldClassesWithOffset()).child(submit));
@@ -295,13 +315,25 @@ public class HtmlFormHelper {
         return getSelectField(field, idBean, Long.toString(selected), fieldLabel, pairs, required);
     }
 
+    public DivTag getSelectField(final String field, final long idBean, final long selected, final String fieldLabel, final List<IdNamePair> pairs, final boolean required,
+                                 final boolean disabled) {
+        return getSelectField(field, idBean, Long.toString(selected), fieldLabel, pairs, required, disabled);
+    }
+
     public DivTag getSelectField(final String field, final long idBean, final String selected, final String fieldLabel, final List<IdNamePair> pairs, final boolean required) {
+        return getSelectField(field, idBean, selected, fieldLabel, pairs, required, false);
+    }
+
+    public DivTag getSelectField(final String field, final long idBean, final String selected, final String fieldLabel, final List<IdNamePair> pairs, final boolean required,
+                                 final boolean disabled) {
         final String fieldId = getFieldId(field, idBean);
         final LabelTag label = getLabel(fieldLabel, fieldId, required);
 
         final SelectTag select = getSelectTag(field, fieldId);
         if (required && useRequiredInHtml)
             select.required();
+        if (disabled)
+            select.disabled();
 
         for (IdNamePair pair: pairs) {
             final OptionTag optionTag = new OptionTag(pair.getName(), pair.getId());
@@ -318,12 +350,18 @@ public class HtmlFormHelper {
     }
 
     public DivTag getTextAreaField(final String field, final long idBean, final String value, final String fieldLabel, final boolean required) {
+        return getTextAreaField(field, idBean, value, fieldLabel, required, false);
+    }
+
+    public DivTag getTextAreaField(final String field, final long idBean, final String value, final String fieldLabel, final boolean required, final boolean disabled) {
         final String fieldId = getFieldId(field, idBean);
         final LabelTag label = getLabel(fieldLabel, fieldId, required);
 
         final TextareaTag textarea = getTextAreaTag(fieldId, field, value);
         if (required && useRequiredInHtml)
             textarea.required();
+        if (disabled)
+            textarea.disabled();
 
         return getFormGroup(label, textarea);
     }
@@ -333,7 +371,11 @@ public class HtmlFormHelper {
     }
 
     public DivTag getCheckboxField(final String field, final long idBean, final boolean checked, final String fieldLabel) {
-        final DivTag innerPart = getCheckbox(field, idBean, checked, fieldLabel);
+        return getCheckboxField(field, idBean, checked, fieldLabel, false);
+    }
+
+    public DivTag getCheckboxField(final String field, final long idBean, final boolean checked, final String fieldLabel, final boolean disabled) {
+        final DivTag innerPart = getCheckbox(field, idBean, checked, fieldLabel, disabled);
 
         if (horizontal)
             return getFormGroup().child(new DivTag().cssClass(getHorizontalFieldClassesWithOffset()).child(innerPart));
@@ -342,9 +384,15 @@ public class HtmlFormHelper {
     }
 
     protected DivTag getCheckbox(final String field, final long idBean, final boolean checked, final String fieldLabel) {
+        return getCheckbox(field, idBean, checked, fieldLabel, false);
+    }
+
+    protected DivTag getCheckbox(final String field, final long idBean, final boolean checked, final String fieldLabel, final boolean disabled) {
         final InputTag checkbox = new InputTag(InputTag.InputType.CHECKBOX).name(field).id(getFieldId(field, idBean));
         if (checked)
             checkbox.checked();
+        if (disabled)
+            checkbox.disabled();
 
         return new DivTag().cssClass("checkbox").child(new LabelTag().child(checkbox).child(new CData(" " + fieldLabel)));
     }
