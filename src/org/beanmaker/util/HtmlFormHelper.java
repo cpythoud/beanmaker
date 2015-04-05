@@ -400,56 +400,5 @@ public class HtmlFormHelper {
     protected String getHtmlId(final String beanName, final long id) {
         return beanName + "_" + id;
     }
-
-	
-	/*public void radioButtons(final StringBuilder buf, final String field, final long idBean, final long checked, final String label, final List<IdNamePair> pairs, final boolean required) {
-		radioButtons(buf, field, idBean, Long.toString(checked), label, pairs, required);
-	}
-	
-	public void radioButtons(final StringBuilder buf, final String field, final long idBean, final String checked, final String label, final List<IdNamePair> pairs, final boolean required) {
-        final LabelTag mainLabelTag = getLabelTag(field, idBean, label, required);
-
-        final HtmlCodeFragment htmlCodeFragment = new HtmlCodeFragment();
-        for (IdNamePair pair: pairs) {
-            final LabelTag labelTag = getLabelTag(field, idBean, pair.getId());
-            final InputTag radioTag = getRadioTag(field, idBean, pair.getId()).name(field).value(pair.getId());
-            if (pair.getId().equals(checked))
-                radioTag.checked();
-            htmlCodeFragment.addTag(labelTag.child(radioTag).child(new CData("&nbsp;" + pair.getName())));
-            htmlCodeFragment.addTag(new BrTag());
-        }
-        htmlCodeFragment.removeLastTag();
-
-        append(buf, field, mainLabelTag, htmlCodeFragment);
-	}
-
-    private InputTag getRadioTag(final String field, final long idBean, final String idPair) {
-        return new InputTag(InputTag.InputType.RADIO).id(getHtmlId(field, idBean, idPair));
-    }
-
-	public void radio(final StringBuilder buf, final String field, final long idBean, final boolean checked, final String label) {
-        final InputTag radioTag = new InputTag(InputTag.InputType.RADIO).id(getHtmlId(field, idBean)).name(field);
-        if (checked)
-            radioTag.checked();
-        final LabelTag labelTag = new LabelTag(label, getHtmlId(field, idBean));
-
-        if (useTables) {
-            final TrTag trTag = new TrTag().child(getLabelTableCell());
-            final TdTag tdTag = new TdTag().child(radioTag).child(labelTag);
-            buf.append(trTag.child(tdTag));
-        } else {
-            buf.append(radioTag);
-            buf.append(labelTag);
-        }
-	}*/
-
-
-    /*private void addExtraParameters(final InputTag inputTag, final Map<String, String> parameters) {
-        if (parameters == null || parameters.isEmpty())
-            return;
-
-        for (String key: parameters.keySet())
-            inputTag.attribute(key, parameters.get(key));
-    }*/
 }
 
