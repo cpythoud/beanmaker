@@ -208,6 +208,9 @@ public abstract class BaseMasterTableView extends BaseView {
     }
 
     protected TdTag getTableCell(final String name, final Date value) {
+        if (value == null)
+            return getTableCell(name, "");
+
         if (dateFormat == null)
             dateFormat = DateFormat.getDateInstance();
 
@@ -215,6 +218,9 @@ public abstract class BaseMasterTableView extends BaseView {
     }
 
     protected TdTag getTableCell(final String name, final Time value) {
+        if (value == null)
+            return getTableCell(name, "");
+
         if (timeFormat == null)
             timeFormat = DateFormat.getTimeInstance();
 
@@ -222,6 +228,9 @@ public abstract class BaseMasterTableView extends BaseView {
     }
 
     protected TdTag getTableCell(final String name, final Timestamp value) {
+        if (value == null)
+            return getTableCell(name, "");
+
         if (datetimeFormat == null)
             datetimeFormat = DateFormat.getDateTimeInstance();
 
