@@ -200,56 +200,92 @@ public abstract class BaseMasterTableView extends BaseView {
     }
 
     protected TdTag getTableCell(final String name, final Tag content) {
-        return new TdTag().child(content).cssClass("tb-" + name);
+        return getTableCell(name, content, null);
+    }
+
+    protected TdTag getTableCell(final String name, final Tag content, final String extraCssClasses) {
+        return new TdTag().child(content).cssClass(getTableCellCssClasses(name, extraCssClasses));
     }
 
     protected TdTag getTableCell(final String name, final String value) {
-        return new TdTag(value).cssClass("tb-" + name);
+        return getTableCell(name, value, null);
+    }
+
+    protected TdTag getTableCell(final String name, final String value, final String extraCssClasses) {
+        return new TdTag(value).cssClass(getTableCellCssClasses(name, extraCssClasses));
+    }
+
+    private String getTableCellCssClasses(final String name, final String extraCssClasses) {
+        return "tb-" + name + (extraCssClasses == null ? "" : " " + extraCssClasses);
     }
 
     protected TdTag getTableCell(final String name, final Date value) {
+        return getTableCell(name, value, null);
+    }
+
+    protected TdTag getTableCell(final String name, final Date value, final String extraCssClasses) {
         if (value == null)
             return getTableCell(name, "");
 
         if (dateFormat == null)
             dateFormat = DateFormat.getDateInstance();
 
-        return getTableCell(name, dateFormat.format(value)).attribute("data-sort-value", value.toString());
+        return getTableCell(name, dateFormat.format(value), extraCssClasses).attribute("data-sort-value", value.toString());
     }
 
     protected TdTag getTableCell(final String name, final Time value) {
+        return getTableCell(name, value, null);
+    }
+
+    protected TdTag getTableCell(final String name, final Time value, final String extraCssClasses) {
         if (value == null)
             return getTableCell(name, "");
 
         if (timeFormat == null)
             timeFormat = DateFormat.getTimeInstance();
 
-        return getTableCell(name, timeFormat.format(value)).attribute("data-sort-value", value.toString());
+        return getTableCell(name, timeFormat.format(value), extraCssClasses).attribute("data-sort-value", value.toString());
     }
 
     protected TdTag getTableCell(final String name, final Timestamp value) {
+        return getTableCell(name, value, null);
+    }
+
+    protected TdTag getTableCell(final String name, final Timestamp value, final String extraCssClasses) {
         if (value == null)
             return getTableCell(name, "");
 
         if (datetimeFormat == null)
             datetimeFormat = DateFormat.getDateTimeInstance();
 
-        return getTableCell(name, datetimeFormat.format(value)).attribute("data-sort-value", value.toString());
+        return getTableCell(name, datetimeFormat.format(value), extraCssClasses).attribute("data-sort-value", value.toString());
     }
 
     protected TdTag getTableCell(final String name, final boolean value) {
-        if (value)
-            return getTableBooleanCell(name, yesDisplay, yesValue);
+        return getTableCell(name, value, null);
+    }
 
-        return getTableBooleanCell(name, noDisplay, noValue);
+    protected TdTag getTableCell(final String name, final boolean value, final String extraCssClasses) {
+        if (value)
+            return getTableBooleanCell(name, yesDisplay, yesValue, extraCssClasses);
+
+        return getTableBooleanCell(name, noDisplay, noValue, extraCssClasses);
     }
 
     protected TdTag getTableBooleanCell(final String name, final String value, final String sortnfilter) {
-        return new TdTag(value).cssClass(booleanCenterValueCssClass + " tb-" + name)
+        return getTableBooleanCell(name, value, sortnfilter,null);
+    }
+
+    protected TdTag getTableBooleanCell(final String name, final String value, final String sortnfilter, final String extraCssClasses) {
+        return new TdTag(value).cssClass(booleanCenterValueCssClass + " " + getTableCellCssClasses(name, extraCssClasses))
                 .attribute("data-filter-value", sortnfilter).attribute("data-sort-value", sortnfilter);
     }
 
     protected TdTag getTableCell(final String name, final long value) {
-        return getTableCell(name, Long.toString(value)).attribute("data-sort-value", Strings.zeroFill(value, zeroFilledMaxDigits));
+        return getTableCell(name, value, null);
+    }
+
+    protected TdTag getTableCell(final String name, final long value, final String extraCssClasses) {
+        return getTableCell(name, Long.toString(value), extraCssClasses).attribute("data-sort-value", Strings.zeroFill(value, zeroFilledMaxDigits));
     }
 }
