@@ -388,13 +388,22 @@ public class HtmlFormHelper {
     }
 
     protected DivTag getCheckbox(final String field, final long idBean, final boolean checked, final String fieldLabel, final boolean disabled) {
+        return new DivTag()
+                .cssClass("checkbox")
+                .child(new LabelTag()
+                        .child(getCheckboxTag(field, idBean, checked, disabled))
+                        .child(new CData(" " + fieldLabel))
+                );
+    }
+
+    protected InputTag getCheckboxTag(final String field, final long idBean, final boolean checked, final boolean disabled) {
         final InputTag checkbox = new InputTag(InputTag.InputType.CHECKBOX).name(field).id(getFieldId(field, idBean));
         if (checked)
             checkbox.checked();
         if (disabled)
             checkbox.disabled();
 
-        return new DivTag().cssClass("checkbox").child(new LabelTag().child(checkbox).child(new CData(" " + fieldLabel)));
+        return checkbox;
     }
 
     protected String getHtmlId(final String beanName, final long id) {
