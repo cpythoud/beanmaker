@@ -72,7 +72,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
         importsManager.addImport("org.dbbeans.util.Strings");
 
-        if (columns.containNumericalData())
+        if (columns.containsNumericalData())
             importsManager.addImport("org.beanmaker.util.FormatCheckHelper");
 
         if (types.contains("Date")) {

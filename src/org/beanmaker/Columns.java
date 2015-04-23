@@ -194,7 +194,7 @@ public class Columns {
 		return types;
 	}
 
-    public boolean containNumericalData() {
+    public boolean containsNumericalData() {
         for (Column column: columns)
             if (column.getJavaType().equals("int") || column.getJavaType().equals("long"))
                 if (!column.isSpecial() && !column.getJavaName().startsWith("id"))
