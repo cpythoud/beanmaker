@@ -192,6 +192,18 @@ public class ParametersBaseSourceFile extends BeanCodeWithDBInfo {
         addFunctionReturningQueryAsString("getPushItemOrdersDownQueryWithNullSecondaryField", query);
     }
 
+    private void addDefaultMoneyFormatGetter() {
+        importsManager.addImport("org.dbbeans.util.MoneyFormat");
+        newLine();
+        javaClass.addContent(
+                new FunctionDeclaration("getDefaultMoneyFormat", "MoneyFormat").addContent(
+                        new ReturnStatement(
+                                new FunctionCall("getDefault", "MoneyFormat")
+                        )
+                )
+        );
+    }
+
     private void createSourceCode() {
         sourceFile.setStartComment(SourceFiles.getCommentAndVersion());
 
@@ -222,6 +234,8 @@ public class ParametersBaseSourceFile extends BeanCodeWithDBInfo {
                 addPushItemOrdersDownQueryGetterWithNullSecondaryField();
             }
         }
+        if (columns.containsFinancialData())
+            addDefaultMoneyFormatGetter();
     }
 
     private void appendSecondaryFieldCondition(final StringBuilder query, final boolean isNull, final boolean firstCondition) {

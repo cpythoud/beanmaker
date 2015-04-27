@@ -1,5 +1,6 @@
 package org.beanmaker.util;
 
+import org.dbbeans.util.Money;
 import org.dbbeans.util.Strings;
 
 import org.jcodegen.html.ATag;
@@ -287,5 +288,13 @@ public abstract class BaseMasterTableView extends BaseView {
 
     protected TdTag getTableCell(final String name, final long value, final String extraCssClasses) {
         return getTableCell(name, Long.toString(value), extraCssClasses).attribute("data-sort-value", Strings.zeroFill(value, zeroFilledMaxDigits));
+    }
+
+    protected TdTag getTableCell(final String name, final Money value) {
+        return getTableCell(name, value, null);
+    }
+
+    protected TdTag getTableCell(final String name, final Money value, final String extraCssClasses) {
+        return getTableCell(name, value.toString(), extraCssClasses).attribute("data-sort-value", Strings.zeroFill(value.getVal(), zeroFilledMaxDigits));
     }
 }

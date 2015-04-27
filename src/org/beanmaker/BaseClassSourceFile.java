@@ -116,7 +116,9 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
             if (type.equals("String"))
                 declaration = new VarDeclaration("String", field, EMPTY_STRING);
             else if (type.equals("Money"))
-                declaration = new VarDeclaration("Money", field, new ObjectCreation("Money").addArgument("0").addArgument(new FunctionCall("getDefaultMoneyFormat")));
+                declaration = new VarDeclaration("Money", field, new ObjectCreation("Money")
+                        .addArgument("0")
+                        .addArgument(new FunctionCall("getDefaultMoneyFormat", parametersVar)));
             else
                 declaration = new VarDeclaration(type, field);
 
@@ -270,8 +272,13 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
         final FunctionCall thisCall = new FunctionCall("this").byItself();
         int index = 0;
-        for (Column column: columns.getList())
-            thisCall.addArgument(new FunctionCall("get" + capitalize(column.getJavaType()), "rs").addArgument(Integer.toString(++index)));
+        for (Column column: columns.getList()) {
+            if (column.getJavaType().equals("Money"))
+                thisCall.addArgument(new ObjectCreation("Money")
+                        .addArgument(new FunctionCall("getLong", "rs").addArgument(Integer.toString(++index))));
+            else
+                thisCall.addArgument(new FunctionCall("get" + capitalize(column.getJavaType()), "rs").addArgument(Integer.toString(++index)));
+        }
         for (OneToManyRelationship relationship: columns.getOneToManyRelationships())
             if (!relationship.isListOnly())
                 thisCall.addArgument(relationship.getJavaName());
@@ -316,12 +323,12 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 ++index;
                 if (type.equals("Money"))
                     ifRsNext.addContent(new Assignment(field, new ObjectCreation("Money")
-                            .addArgument(new FunctionCall("getLong")
-                                    .addArgument(Integer.toString(index))
-                                    .addArgument(new FunctionCall("getDefaultMoneyFormat")))));
+                            .addArgument(new FunctionCall("getLong", "rs").addArgument(Integer.toString(index)))
+                            .addArgument(new FunctionCall("getDefaultMoneyFormat", parametersVar))));
                 else {
                     final String getterName = "get" + capitalize(type);
-                    ifRsNext.addContent(new Assignment(field, new FunctionCall(getterName, "rs").addArgument(Integer.toString(index))));
+                    ifRsNext.addContent(new Assignment(field, new FunctionCall(getterName, "rs")
+                            .addArgument(Integer.toString(index))));
                 }
             }
         }
@@ -1228,7 +1235,9 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                     );
                 if (type.equals("Money"))
                     preUpdateConversionsFunction.addContent(
-                            new Assignment(field, new ObjectCreation("Money").addArgument(field + "Str").addArgument(new FunctionCall("getDefaultMoneyFormat")))
+                            new Assignment(field, new ObjectCreation("Money")
+                                    .addArgument(field + "Str")
+                                    .addArgument(new FunctionCall("getDefaultMoneyFormat", parametersVar)))
                     );
             }
         }
@@ -1356,7 +1365,10 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 }
 
                 else if (type.equals("Money")) {
-                    isOKFunction.addContent(new ReturnStatement(new FunctionCall("isValOK", "getDefaultMoneyFormat()").addArgument(field + "Str")));
+                    isOKFunction.addContent(
+                            new ReturnStatement(new FunctionCall("isValOK", parametersVar + ".getDefaultMoneyFormat()")
+                                    .addArgument(field + "Str"))
+                    );
                 }
 
                 else
@@ -1442,7 +1454,9 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 else if (type.equals("String"))
                     resetFunction.addContent(new Assignment(field, EMPTY_STRING));
                 else if (type.equals("Money"))
-                    resetFunction.addContent(new Assignment(field, new ObjectCreation("Money").addArgument("0").addArgument(new FunctionCall("getDefaultMoneyFormat"))));
+                    resetFunction.addContent(new Assignment(field, new ObjectCreation("Money")
+                            .addArgument("0")
+                            .addArgument(new FunctionCall("getDefaultMoneyFormat", parametersVar))));
                 else
                     resetFunction.addContent(new Assignment(field, "null"));
 
@@ -1942,27 +1956,43 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         for (Column column: columns.getList()) {
             final String javaType = column.getJavaType();
             if (javaType.equals("Money"))
-                throw new UnsupportedOperationException("Money not supported for now."); // for now...
+                newBeanFromFields
+                        .addArgument(new ObjectCreation("Money")
+                                .addArgument(new FunctionCall("getLong", "rs").addArgument(Integer.toString(index)))
+                                .addArgument(new FunctionCall("getDefaultMoneyFormat", parametersVar)));
+            else
+                newBeanFromFields
+                        .addArgument(new FunctionCall("get" + capitalize(javaType), "rs")
+                                .addArguments(Integer.toString(index)));
             ++index;
-            newBeanFromFields.addArgument(new FunctionCall("get" + capitalize(javaType), "rs").addArguments(Integer.toString(index)));
         }
         for (OneToManyRelationship relationship: columns.getOneToManyRelationships())
             if (!relationship.isListOnly())
                 newBeanFromFields.addArgument(new FunctionCall("getSelection", relationship.getBeanClass())
                         .addArgument(new OperatorExpression("\"id_" + uncamelize(beanVarName) + "=\"", new FunctionCall("getLong", "rs").addArgument("1"), OperatorExpression.Operator.ADD)));
         javaClass.addContent(
-                new JavaClass("GetSelectionQueryProcess").implementsInterface("DBQueryRetrieveData<List<" + beanName + ">>").visibility(Visibility.PRIVATE).markAsStatic().addContent(
-                        new FunctionDeclaration("processResultSet", "List<" + beanName + ">").annotate("@Override").addException("SQLException")
-                                .addArgument(new FunctionArgument("ResultSet", "rs")).addContent(
-                                VarDeclaration.createListDeclaration(beanName, "list").markAsFinal()
-                        ).addContent(EMPTY_LINE).addContent(
-                            new WhileBlock(new Condition(new FunctionCall("next", "rs"))).addContent(
-                                    new FunctionCall("add", "list").byItself().addArgument(newBeanFromFields)
-                            )
-                        ).addContent(EMPTY_LINE).addContent(
-                                new ReturnStatement("list")
+                new JavaClass("GetSelectionQueryProcess")
+                        .implementsInterface("DBQueryRetrieveData<List<" + beanName + ">>")
+                        .visibility(Visibility.PRIVATE)
+                        .markAsStatic()
+                        .addContent(
+                                new FunctionDeclaration("processResultSet", "List<" + beanName + ">")
+                                        .annotate("@Override")
+                                        .addException("SQLException")
+                                        .addArgument(new FunctionArgument("ResultSet", "rs"))
+                                        .addContent(
+                                                VarDeclaration.createListDeclaration(beanName, "list")
+                                                        .markAsFinal()
+                                ).addContent(EMPTY_LINE).addContent(
+                                        new WhileBlock(new Condition(new FunctionCall("next", "rs"))).addContent(
+                                                new FunctionCall("add", "list")
+                                                        .byItself()
+                                                        .addArgument(newBeanFromFields)
+                                        )
+                                ).addContent(EMPTY_LINE).addContent(
+                                        new ReturnStatement("list")
+                                )
                         )
-                )
         ).addContent(EMPTY_LINE);
 
         javaClass.addContent(

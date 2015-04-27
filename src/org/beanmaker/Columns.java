@@ -202,6 +202,14 @@ public class Columns {
 
         return false;
     }
+
+	public boolean containsFinancialData() {
+		for (Column column: columns)
+			if (column.getJavaType().equals("Money"))
+				return true;
+
+		return false;
+	}
 	
 	public Set<String> getSqlTypes() {
 		Set<String> types = new HashSet<String>();
