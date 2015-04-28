@@ -1954,6 +1954,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         final ObjectCreation newBeanFromFields = new ObjectCreation(beanName);
         int index = 0;
         for (Column column: columns.getList()) {
+            ++index;
             final String javaType = column.getJavaType();
             if (javaType.equals("Money"))
                 newBeanFromFields
@@ -1964,7 +1965,6 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 newBeanFromFields
                         .addArgument(new FunctionCall("get" + capitalize(javaType), "rs")
                                 .addArguments(Integer.toString(index)));
-            ++index;
         }
         for (OneToManyRelationship relationship: columns.getOneToManyRelationships())
             if (!relationship.isListOnly())
@@ -1983,7 +1983,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                                         .addContent(
                                                 VarDeclaration.createListDeclaration(beanName, "list")
                                                         .markAsFinal()
-                                ).addContent(EMPTY_LINE).addContent(
+                                        ).addContent(EMPTY_LINE).addContent(
                                         new WhileBlock(new Condition(new FunctionCall("next", "rs"))).addContent(
                                                 new FunctionCall("add", "list")
                                                         .byItself()
