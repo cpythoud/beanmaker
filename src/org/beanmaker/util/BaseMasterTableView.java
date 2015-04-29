@@ -34,6 +34,7 @@ public abstract class BaseMasterTableView extends BaseView {
     protected String thFilterCssClass = null;
     protected String tdFilterCssClass = null;
     protected String thTitleCssClass = "tb-sort";
+    protected String thSuperTitleCssClass = null;
 
     protected String formElementFilterCssClass = "tb-filter";
     protected String removeFilteringLinkCssClass = "tb-nofilter";
@@ -274,7 +275,7 @@ public abstract class BaseMasterTableView extends BaseView {
     }
 
     protected TdTag getTableBooleanCell(final String name, final String value, final String sortnfilter) {
-        return getTableBooleanCell(name, value, sortnfilter,null);
+        return getTableBooleanCell(name, value, sortnfilter, null);
     }
 
     protected TdTag getTableBooleanCell(final String name, final String value, final String sortnfilter, final String extraCssClasses) {
@@ -296,5 +297,37 @@ public abstract class BaseMasterTableView extends BaseView {
 
     protected TdTag getTableCell(final String name, final Money value, final String extraCssClasses) {
         return getTableCell(name, value.toString(), extraCssClasses).attribute("data-sort-value", Strings.zeroFill(value.getVal(), zeroFilledMaxDigits));
+    }
+
+    protected TheadTag getThreeLineHead() {
+        final TheadTag head = new TheadTag();
+
+        head.child(getFilterRow());
+        head.child(getSuperTitleRow());
+        head.child(getTitleRow());
+
+        return head;
+    }
+
+    protected TrTag getSuperTitleRow() {
+        return getDefautStartSuperTitleRow();
+    }
+
+    protected TrTag getDefautStartSuperTitleRow() {
+        final TrTag row = new TrTag().child(new ThTag().cssClass(thResetCssClass));
+
+        if (displayId)
+            row.child(new ThTag());
+
+        return row;
+    }
+
+    protected ThTag getMultiColTitle(final String text, final int colspan) {
+        final ThTag multiColTitle = new ThTag(text).colspan(colspan);
+
+        if (thSuperTitleCssClass != null)
+            multiColTitle.cssClass(thSuperTitleCssClass);
+
+        return multiColTitle;
     }
 }
