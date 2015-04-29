@@ -2093,11 +2093,20 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
     private void addHumanReadableTitle() {
         javaClass.addContent(
-                new FunctionDeclaration("getHumanReadableTitle", "String").markAsStatic().addArgument(new FunctionArgument("long", "id")).addContent(
-                        new ReturnStatement(new FunctionCall("getHumanReadableTitle", "DBQueries")
-                                .addArguments("db", quickQuote(tableName), "id")
-                                .addArgument(new FunctionCall("getNamingFields", parametersVar)))
-                )
+                new FunctionDeclaration("getHumanReadableTitle", "String")
+                        .markAsStatic()
+                        .addArgument(new FunctionArgument("long", "id"))
+                        .addContent(
+                                new IfBlock(new Condition("id == 0")).addContent(
+                                        new ReturnStatement("\"\"")
+                                )
+                        )
+                        .addContent(EMPTY_LINE)
+                        .addContent(
+                                new ReturnStatement(new FunctionCall("getHumanReadableTitle", "DBQueries")
+                                        .addArguments("db", quickQuote(tableName), "id")
+                                        .addArgument(new FunctionCall("getNamingFields", parametersVar)))
+                        )
         ).addContent(EMPTY_LINE);
     }
 
