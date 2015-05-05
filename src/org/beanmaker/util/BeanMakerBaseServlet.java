@@ -92,4 +92,21 @@ public abstract class BeanMakerBaseServlet extends HttpServlet {
 
         return getStartJsonErrors() + ErrorMessage.toJson(htmlView.getErrorMessages()) + " }";
     }
+
+    protected Pair<String, Long> getBeanAndId(final HttpServletRequest request) throws ServletException {
+        final String beanName = request.getParameter("bean");
+        if (beanName == null)
+            throw new ServletException("Missing bean parameter.");
+
+        final long id = getBeanId(request, "id");
+        if (id == 0)
+            throw new ServletException("Missing id parameter or id == 0");
+
+        return new Pair<String, Long>(beanName, id);
+    }
+
+    protected String deleteBean(final DbBeanInterface bean) {
+        bean.delete();
+        return getJsonOk();
+    }
 }
