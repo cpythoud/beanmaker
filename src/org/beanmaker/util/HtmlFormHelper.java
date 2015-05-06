@@ -1,5 +1,6 @@
 package org.beanmaker.util;
 
+import org.dbbeans.util.Strings;
 import org.jcodegen.html.ButtonTag;
 import org.jcodegen.html.CData;
 import org.jcodegen.html.DivTag;
@@ -38,6 +39,8 @@ public class HtmlFormHelper {
     private String cssClassForDateFields = null;
     private InputTag.InputType inputTypeForTimeFields = null;
     private String cssClassForTimeFields = null;
+
+    private String cssClassForFileFields = "file";
 
 
     public String getNotRequiredExtension() {
@@ -172,10 +175,29 @@ public class HtmlFormHelper {
         return cssClassForTimeFields;
     }
 
+    public void setCssClassForFileFields(final String cssClassForFileFields) {
+        this.cssClassForFileFields = cssClassForFileFields;
+    }
+
+    public String getCssClassForFileFields() {
+        return cssClassForFileFields;
+    }
+
     public FormTag getForm(final String beanName, final long id) {
+        final FormTag form =
+                new FormTag()
+                        .role("form")
+                        .id(getHtmlId(beanName, id))
+                        .name(beanName)
+                        .method(FormTag.Method.POST);
+
         inline = false;
         horizontal = false;
-        return new FormTag().role("form").id(getHtmlId(beanName, id)).name(beanName).method(FormTag.Method.POST);
+
+        if (htmlFormMultipart)
+            return form.enctype(FormTag.EncodingType.MULTIPART);
+
+        return form;
     }
 
     public FormTag getInlineForm(final String beanName, final long id) {
@@ -238,6 +260,15 @@ public class HtmlFormHelper {
             return new InputTag(inputTypeForTimeFields == null ? type : inputTypeForTimeFields)
                     .cssClass(cssClassForTimeFields == null ? "form-control" : "form-control " + cssClassForTimeFields)
                     .id(id).name(name).value(value);
+
+        if (type == InputTag.InputType.FILE) {
+            final InputTag fileInput = new InputTag(InputTag.InputType.FILE);
+            if (!Strings.isEmpty(cssClassForFileFields))
+                fileInput.cssClass(cssClassForFileFields);
+            if (!Strings.isEmpty(value))
+                fileInput.placeholder(value);
+            return fileInput.id(id).name(name);
+        }
 
         return new InputTag(type).cssClass("form-control").id(id).name(name).value(value);
     }
@@ -391,8 +422,8 @@ public class HtmlFormHelper {
         return new DivTag()
                 .cssClass("checkbox")
                 .child(new LabelTag()
-                        .child(getCheckboxTag(field, idBean, checked, disabled))
-                        .child(new CData(" " + fieldLabel))
+                                .child(getCheckboxTag(field, idBean, checked, disabled))
+                                .child(new CData(" " + fieldLabel))
                 );
     }
 
@@ -408,6 +439,25 @@ public class HtmlFormHelper {
 
     protected String getHtmlId(final String beanName, final long id) {
         return beanName + "_" + id;
+    }
+
+    public DivTag getFileField(final String field, final long idBean, final String currentFile,
+                               final String fieldLabel, final boolean required) {
+        return getFileField(field, idBean, currentFile, fieldLabel, required, false);
+    }
+
+    public DivTag getFileField(final String field, final long idBean, final String currentFile,
+                               final String fieldLabel, final boolean required, final boolean disabled) {
+        final String fieldId = getFieldId(field, idBean);
+        final LabelTag label = getLabel(fieldLabel, fieldId, required);
+
+        final InputTag input = getInputTag(InputTag.InputType.FILE, fieldId, field, currentFile);
+        if (required && useRequiredInHtml)
+            input.required();
+        if (disabled)
+            input.disabled();
+
+        return getFormGroup(label, input);
     }
 }
 
