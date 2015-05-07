@@ -4,6 +4,7 @@ import org.dbbeans.util.Money;
 import org.dbbeans.util.Strings;
 
 import org.jcodegen.html.ATag;
+import org.jcodegen.html.HtmlCodeFragment;
 import org.jcodegen.html.InputTag;
 import org.jcodegen.html.OptionTag;
 import org.jcodegen.html.SelectTag;
@@ -297,6 +298,14 @@ public abstract class BaseMasterTableView extends BaseView {
 
     protected TdTag getTableCell(final String name, final Money value, final String extraCssClasses) {
         return getTableCell(name, value.toString(), extraCssClasses).attribute("data-sort-value", Strings.zeroFill(value.getVal(), zeroFilledMaxDigits));
+    }
+
+    protected TdTag getTableCell(final String name, final HtmlCodeFragment content) {
+        return getTableCell(name, content, null);
+    }
+
+    protected TdTag getTableCell(final String name, final HtmlCodeFragment content, final String extraCssClasses) {
+        return new TdTag().addCodeFragment(content).cssClass(getTableCellCssClasses(name, extraCssClasses));
     }
 
     protected TheadTag getThreeLineHead() {
