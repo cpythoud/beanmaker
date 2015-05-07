@@ -163,7 +163,7 @@ public abstract class BaseMasterTableView extends BaseView {
 
     protected ThTag getBooleanFilterCell(final String name) {
         return getTableFilterCell().child(
-                new SelectTag().name(name).cssClass(formElementFilterCssClass).child(
+                new SelectTag().name("tb-" + name).cssClass(formElementFilterCssClass).child(
                         new OptionTag("", "").selected()
                 ).child(
                         new OptionTag(yesName, yesValue)
@@ -279,8 +279,48 @@ public abstract class BaseMasterTableView extends BaseView {
         return getTableBooleanCell(name, value, sortnfilter, null);
     }
 
-    protected TdTag getTableBooleanCell(final String name, final String value, final String sortnfilter, final String extraCssClasses) {
-        return new TdTag(value).cssClass(booleanCenterValueCssClass + " " + getTableCellCssClasses(name, extraCssClasses))
+    protected TdTag getTableBooleanCell(
+            final String name,
+            final String value,
+            final String sortnfilter,
+            final String extraCssClasses)
+    {
+        return decorateBooleanCell(new TdTag(value), name, sortnfilter, extraCssClasses);
+    }
+
+    protected TdTag getTableBooleanCell(final String name, final Tag value, final String sortnfilter) {
+        return getTableBooleanCell(name, value, sortnfilter, null);
+    }
+
+    protected TdTag getTableBooleanCell(
+            final String name,
+            final Tag value,
+            final String sortnfilter,
+            final String extraCssClasses)
+    {
+        return decorateBooleanCell(new TdTag().child(value), name, sortnfilter, extraCssClasses);
+    }
+
+    protected TdTag getTableBooleanCell(final String name, final HtmlCodeFragment value, final String sortnfilter) {
+        return getTableBooleanCell(name, value, sortnfilter, null);
+    }
+
+    protected TdTag getTableBooleanCell(
+            final String name,
+            final HtmlCodeFragment value,
+            final String sortnfilter,
+            final String extraCssClasses) {
+        return decorateBooleanCell(new TdTag().addCodeFragment(value), name, sortnfilter, extraCssClasses);
+    }
+
+    private TdTag decorateBooleanCell(
+            final TdTag cell,
+            final String name,
+            final String sortnfilter,
+            final String extraCssClasses)
+    {
+        return cell
+                .cssClass(booleanCenterValueCssClass + " " + getTableCellCssClasses(name, extraCssClasses))
                 .attribute("data-filter-value", sortnfilter).attribute("data-sort-value", sortnfilter);
     }
 
