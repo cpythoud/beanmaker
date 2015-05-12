@@ -9,6 +9,7 @@ import org.jcodegen.html.InputTag;
 import org.jcodegen.html.LabelTag;
 import org.jcodegen.html.OptionTag;
 import org.jcodegen.html.SelectTag;
+import org.jcodegen.html.SpanTag;
 import org.jcodegen.html.Tag;
 import org.jcodegen.html.TextareaTag;
 
@@ -319,7 +320,20 @@ public class HtmlFormHelper {
     }
 
     public ButtonTag getSubmitButtonTag(final String beanName, final long id, final String buttonLabel) {
-        return new ButtonTag(ButtonTag.ButtonType.SUBMIT, buttonLabel).id(getHtmlId(beanName + "_submit", id)).cssClass("btn btn-default");
+        return getSubmitButtonTag(beanName, id, buttonLabel, null);
+    }
+
+    public ButtonTag getSubmitButtonTag(
+            final String beanName,
+            final long id,
+            final String buttonLabel,
+            final String extraCssClasses)
+    {
+        return new ButtonTag(ButtonTag.ButtonType.SUBMIT)
+                .child(new SpanTag().cssClass("loading"))
+                .child(new CData(buttonLabel))
+                .id(getHtmlId(beanName + "_submit", id))
+                .cssClass("btn btn-default" + (extraCssClasses == null ? "" : " " + extraCssClasses));
     }
 
     public Tag getSubmitButton(final String beanName, final long id, final String buttonLabel) {
