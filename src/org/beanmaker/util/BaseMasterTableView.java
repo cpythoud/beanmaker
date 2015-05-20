@@ -67,7 +67,11 @@ public abstract class BaseMasterTableView extends BaseView {
     }
 
     public String getMasterTable() {
-        return getTable().child(getHead()).child(getBody()).toString();
+        return getMasterTableTag().toString();
+    }
+
+    public TableTag getMasterTableTag() {
+        return getTable().child(getHead()).child(getBody());
     }
 
     protected TableTag getTable() {
