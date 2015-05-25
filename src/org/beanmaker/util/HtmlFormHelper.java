@@ -122,8 +122,8 @@ public class HtmlFormHelper {
             throw new IllegalArgumentException("Illegal column index for label width: " + horizontalLabelWidth);
         if (horizontalFieldWidth < 0 || horizontalFieldWidth > 12)
             throw new IllegalArgumentException("Illegal column index for field width:" + horizontalFieldWidth);
-        if (horizontalLabelWidth + horizontalFieldWidth != 12)
-            throw new IllegalArgumentException("Column count for label + field is incorrest (not 12): " + horizontalLabelWidth + " + " + horizontalFieldWidth + " = " + (horizontalLabelWidth + horizontalFieldWidth));
+        if (horizontalLabelWidth + horizontalFieldWidth > 12)
+            throw new IllegalArgumentException("Column count for label + field is incorrect (> 12): " + horizontalLabelWidth + " + " + horizontalFieldWidth + " = " + (horizontalLabelWidth + horizontalFieldWidth));
 
         this.horizontalSizeShift = horizontalSizeShift;
         this.horizontalLabelWidth = horizontalLabelWidth;
