@@ -182,11 +182,20 @@ public abstract class BaseMasterTableView extends BaseView {
     }
 
     protected ThTag getTitleCell(final String name,  final String adhocTitle) {
-        return new ThTag(adhocTitle).cssClass(thTitleCssClass).attribute("data-sort-class", "tb-" + name);
+        return new ThTag(adhocTitle)
+                .cssClass(getTitleCellCssClasses(name))
+                .attribute("data-sort-class", "tb-" + name);
     }
 
     protected ThTag getTitleCell(final String name, final Tag adhocTitle) {
-        return new ThTag().cssClass(thTitleCssClass).attribute("data-sort-class", "tb-" + name).child(adhocTitle);
+        return new ThTag()
+                .cssClass(getTitleCellCssClasses(name))
+                .attribute("data-sort-class", "tb-" + name)
+                .child(adhocTitle);
+    }
+
+    protected String getTitleCellCssClasses(final String name) {
+        return thTitleCssClass + " th-" + name;
     }
 
     protected TrTag getTableLine() {
