@@ -1345,7 +1345,17 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
                 if ((type.equals("int") || type.equals("long"))) {
                     if (field.startsWith("id"))
-                        isOKFunction.addContent(new ReturnStatement(new FunctionCall("isIdOK", column.getAssociatedBeanClass()).addArgument(field)));
+                        isOKFunction.addContent(
+                                new IfBlock(new Condition("id == 0")).addContent(
+                                        new ReturnStatement(
+                                                new Comparison(field, "0", Comparison.Comparator.GREATER_THAN)
+                                        )
+                                )
+                        ).addContent(EMPTY_LINE).addContent(
+                                new ReturnStatement(
+                                        new FunctionCall("isIdOK", column.getAssociatedBeanClass())
+                                                .addArgument(field))
+                        );
                     else {
                         importsManager.addImport("org.beanmaker.util.FormatCheckHelper");
                         isOKFunction.addContent(new ReturnStatement(new FunctionCall("isNumber", "FormatCheckHelper").addArgument(field + "Str")));
