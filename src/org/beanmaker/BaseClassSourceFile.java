@@ -1213,7 +1213,9 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         final FunctionDeclaration preUpdateConversionsFunction = new FunctionDeclaration("preUpdateConversions");
         preUpdateConversionsFunction.addContent(
                 ifNotDataOK().addContent(
-                        ExceptionThrow.getThrowExpression("IllegalArgumentException", "BAD DATA")
+                        new ExceptionThrow("IllegalArgumentException")
+                                .addArgument(new FunctionCall("toStrings", "ErrorMessage")
+                                        .addArgument(new FunctionCall("getErrorMessages")))
                 )
         ).addContent(EMPTY_LINE);
         for (Column column: columns.getList()) {
