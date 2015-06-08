@@ -35,6 +35,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         importsManager.addImport("javax.servlet.ServletRequest");
 
         importsManager.addImport("org.jcodegen.html.FormTag");
+        importsManager.addImport("org.jcodegen.html.Tag");
     }
 
     private void addClassModifiers() {
@@ -125,7 +126,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         javaClass.addContent(
                 new FunctionDeclaration("composeHiddenSubmitField")
                         .visibility(Visibility.PROTECTED)
-                        .addArgument(new FunctionArgument("FormTag", "form"))
+                        .addArgument(new FunctionArgument("Tag", "form"))
                         .addContent(
                                 new FunctionCall("child", "form").byItself()
                                         .addArgument(new FunctionCall("getHiddenSubmitInput", "htmlFormHelper")
@@ -142,7 +143,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
 
         javaClass.addContent(
                 new FunctionDeclaration("composeAdditionalHtmlFormFields").visibility(Visibility.PROTECTED)
-                        .addArgument(new FunctionArgument("FormTag", "form"))
+                        .addArgument(new FunctionArgument("Tag", "form"))
         ).addContent(EMPTY_LINE);
 
         /*javaClass.addContent(
@@ -157,14 +158,14 @@ public class BaseHTMLViewSourceFile extends ViewCode {
 
         javaClass.addContent(
                 new FunctionDeclaration("composeButtons").visibility(Visibility.PROTECTED)
-                        .addArgument(new FunctionArgument("FormTag", "form"))
+                        .addArgument(new FunctionArgument("Tag", "form"))
                         .addContent(new FunctionCall("composeSubmitButton").byItself().addArgument("form"))
                         .addContent(new FunctionCall("composeResetButton").byItself().addArgument("form"))
         ).addContent(EMPTY_LINE);
 
         javaClass.addContent(
                 new FunctionDeclaration("composeSubmitButton").visibility(Visibility.PROTECTED)
-                        .addArgument(new FunctionArgument("FormTag", "form"))
+                        .addArgument(new FunctionArgument("Tag", "form"))
                         .addContent(
                                 new FunctionCall("child", "form").byItself()
                                         .addArgument(new FunctionCall("getSubmitButton", "htmlFormHelper")
@@ -176,7 +177,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
 
         javaClass.addContent(
                 new FunctionDeclaration("composeResetButton").visibility(Visibility.PROTECTED)
-                        .addArgument(new FunctionArgument("FormTag", "form"))
+                        .addArgument(new FunctionArgument("Tag", "form"))
         ).addContent(EMPTY_LINE);
 	}
 
@@ -236,7 +237,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
 
         final FunctionDeclaration functionDeclaration = new FunctionDeclaration("compose" + capitalize(field) + "FormElement")
                 .visibility(Visibility.PROTECTED)
-                .addArgument(new FunctionArgument("FormTag", "form"));
+                .addArgument(new FunctionArgument("Tag", "form"));
 
         functionDeclaration.addContent(
                 new VarDeclaration(parametersClass, parametersVar, new ObjectCreation(parametersClass)).markAsFinal()
@@ -278,7 +279,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         importsManager.addImport("org.jcodegen.html.InputTag");
 
         final FunctionDeclaration functionDeclaration = new FunctionDeclaration("compose" + capitalize(field) + "FormElement").visibility(Visibility.PROTECTED)
-                .addArgument(new FunctionArgument("FormTag", "form"));
+                .addArgument(new FunctionArgument("Tag", "form"));
 
         final String fieldVar;
         if (!inputType.equals("TEXT") && !inputType.equals("EMAIL"))
@@ -308,7 +309,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
 
     private FunctionDeclaration getTextAreaFormElement(final String field) {
         final FunctionDeclaration functionDeclaration =  new FunctionDeclaration("compose" + capitalize(field) + "FormElement").visibility(Visibility.PROTECTED)
-                .addArgument(new FunctionArgument("FormTag", "form"));
+                .addArgument(new FunctionArgument("Tag", "form"));
 
         functionDeclaration.addContent(
                 new FunctionCall("child", "form").byItself().addArgument(
@@ -327,7 +328,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
     private FunctionDeclaration getCheckboxFormElement(final String field) {
         return new FunctionDeclaration("compose" + capitalize(field) + "FormElement")
                 .visibility(Visibility.PROTECTED)
-                .addArgument(new FunctionArgument("FormTag", "form"))
+                .addArgument(new FunctionArgument("Tag", "form"))
                 .addContent(
                         new FunctionCall("child", "form").byItself().addArgument(
                                 new FunctionCall("getCheckboxField", "htmlFormHelper")
