@@ -57,6 +57,10 @@ public abstract class BeanMakerBaseServlet extends HttpServlet {
         return getJsonSimpleStatus("ok");
     }
 
+    protected String getJsonNoSession() {
+        return getJsonSimpleStatus("no session");
+    }
+
     protected String getStartJsonErrors() {
         return "{ \"status\": \"errors\", ";
     }
