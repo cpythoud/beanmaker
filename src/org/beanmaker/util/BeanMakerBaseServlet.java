@@ -113,4 +113,10 @@ public abstract class BeanMakerBaseServlet extends HttpServlet {
         bean.delete();
         return getJsonOk();
     }
+
+    protected void disableCaching(final HttpServletResponse response) {
+        response.setHeader("Pragma", "no-cache");
+        response.setHeader("Cache-Control", "no-cache");
+        response.setDateHeader("Expires", 0);
+    }
 }
