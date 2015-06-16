@@ -133,6 +133,14 @@ public class BaseMasterTableViewSourceFile extends BeanCodeWithDBInfo {
                 )
         ).addContent(EMPTY_LINE);
 
+        javaClass.addContent(
+                new FunctionDeclaration("getLineCount", "long").visibility(Visibility.PROTECTED).annotate("@Override").addContent(
+                        new ReturnStatement(
+                                new FunctionCall("getCount", beanName)
+                        )
+                )
+        ).addContent(EMPTY_LINE);
+
         final FunctionDeclaration masterFunction = getMasterFunction("TableLine", "line", false);
         addFunctionCallsTo(masterFunction);
         masterFunction.addContent(new ReturnStatement("line"));

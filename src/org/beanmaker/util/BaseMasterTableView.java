@@ -4,9 +4,11 @@ import org.dbbeans.util.Money;
 import org.dbbeans.util.Strings;
 
 import org.jcodegen.html.ATag;
+import org.jcodegen.html.CData;
 import org.jcodegen.html.HtmlCodeFragment;
 import org.jcodegen.html.InputTag;
 import org.jcodegen.html.OptionTag;
+import org.jcodegen.html.PTag;
 import org.jcodegen.html.SelectTag;
 import org.jcodegen.html.SpanTag;
 import org.jcodegen.html.TableTag;
@@ -61,6 +63,10 @@ public abstract class BaseMasterTableView extends BaseView {
     protected int columnCount = 2;
     protected String noDataMessage = "NO DATA";
 
+    protected String summaryTotalLabel = "items in table,";
+    protected String summaryShownLabel = "items shown,";
+    protected String summaryFilteredOutLabel = "items filtered out.";
+
     public BaseMasterTableView(final String resourceBundleName, final String tableId) {
         super(resourceBundleName);
         this.tableId = tableId;
@@ -102,6 +108,8 @@ public abstract class BaseMasterTableView extends BaseView {
     }
 
     protected abstract List<TrTag> getData();
+
+    protected abstract long getLineCount();
 
     protected TrTag getNoDataAvailableLine() {
         return getNoDataAvailableLine(noDataMessage);
@@ -391,5 +399,26 @@ public abstract class BaseMasterTableView extends BaseView {
             multiColTitle.cssClass(thSuperTitleCssClass);
 
         return multiColTitle;
+    }
+
+    public String getSummaryInfo() {
+        return getSummaryInfoCode().toString();
+    }
+
+    public Tag getSummaryInfoCode() {
+        final long count = getLineCount();
+
+        return new PTag().cssClass("cctable-summary")
+                .child(getSummarySpan(count, "_total"))
+                .child(new CData(summaryTotalLabel))
+                .child(getSummarySpan(count, "_shown"))
+                .child(new CData(summaryShownLabel))
+                .child(getSummarySpan(0, "_filtered_out"))
+                .child(new CData(summaryFilteredOutLabel));
+    }
+
+    protected SpanTag getSummarySpan(final long count, final String idPostfix) {
+        return new SpanTag(Long.toString(count))
+                .id(tableId + idPostfix);
     }
 }
