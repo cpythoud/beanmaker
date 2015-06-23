@@ -1,6 +1,9 @@
 package org.beanmaker.util;
 
+import org.dbbeans.util.HTMLText;
+
 import javax.servlet.ServletContext;
+import javax.servlet.ServletRequest;
 
 public class BaseHTMLView extends BaseEditableView {
 
@@ -34,5 +37,13 @@ public class BaseHTMLView extends BaseEditableView {
 
     public void setServletContext(final ServletContext servletContext) {
         this.servletContext = servletContext;
+    }
+
+    protected String getParameter(final ServletRequest request, final String parameterName) {
+        final String value = request.getParameter(parameterName);
+        if (value == null)
+            return null;
+
+        return HTMLText.escapeEssentialHTMLtext(value);
     }
 }

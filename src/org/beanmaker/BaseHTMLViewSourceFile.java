@@ -422,7 +422,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
     }
 
     private FunctionCall getRequestParameterFunctionCall(final String param) {
-        return new FunctionCall("getParameter", "request").addArgument(quickQuote(param));
+        return new FunctionCall("getParameter").addArguments("request", quickQuote(param));
     }
 
     private void addDataOKChecker() {
