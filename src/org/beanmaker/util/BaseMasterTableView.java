@@ -39,6 +39,10 @@ public abstract class BaseMasterTableView extends BaseView {
     protected String thTitleCssClass = "tb-sort";
     protected String thSuperTitleCssClass = null;
 
+    protected String trFilterCssClass = null;
+    protected String trTitleCssClass = null;
+    protected String trSuperTitleCssClass = null;
+
     protected String formElementFilterCssClass = "tb-filter";
     protected String removeFilteringLinkCssClass = "tb-nofilter";
     protected Tag removeFilteringHtmlTags = new SpanTag().cssClass("glyphicon glyphicon-remove").title("Remove Filtering");
@@ -136,11 +140,21 @@ public abstract class BaseMasterTableView extends BaseView {
     }
 
     protected TrTag getDefaultStartOfFilterRow() {
-        return new TrTag().child(getRemoveFilteringCellWithLink());
+        final TrTag filterRow = new TrTag().child(getRemoveFilteringCellWithLink());
+
+        if (trFilterCssClass != null)
+            filterRow.cssClass(trFilterCssClass);
+
+        return filterRow;
     }
 
     protected TrTag getDefaultStartOfTitleRow() {
-        return new TrTag().child(getRemoveFilteringCell());
+        final TrTag titleRow = new TrTag().child(getRemoveFilteringCell());
+
+        if (trTitleCssClass != null)
+            titleRow.cssClass(trTitleCssClass);
+
+        return titleRow;
     }
 
     protected ThTag getRemoveFilteringCellWithLink() {
@@ -385,6 +399,9 @@ public abstract class BaseMasterTableView extends BaseView {
 
     protected TrTag getDefautStartSuperTitleRow() {
         final TrTag row = new TrTag().child(new ThTag().cssClass(thResetCssClass));
+
+        if (trSuperTitleCssClass != null)
+            row.cssClass(trSuperTitleCssClass);
 
         if (displayId)
             row.child(new ThTag());
