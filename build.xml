@@ -23,7 +23,7 @@
 
     <target name="native2ascii">
         <mkdir dir="${src-ascii.dir}" />
-        <native2ascii src="${src.dir}" dest="${src-ascii.dir}" includes="**/*.java" />
+        <native2ascii src="${src.dir}" dest="${src-ascii.dir}" includes="**/*.java" encoding="utf-8" />
     </target>
 
     <target name="cleanup" description="Clean up compiled files">
