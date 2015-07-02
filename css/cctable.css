@@ -1,0 +1,7 @@
+.tb-filtered {
+    display: none;
+}
+
+.tb-sort {
+    cursor: pointer;
+}
