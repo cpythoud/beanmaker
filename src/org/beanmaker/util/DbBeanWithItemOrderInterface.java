@@ -2,6 +2,8 @@ package org.beanmaker.util;
 
 public interface DbBeanWithItemOrderInterface<T> extends DbBeanInterface {
 
+    long getItemOrder();
+
     boolean isFirstItemOrder();
     boolean isLastItemOrder();
 
