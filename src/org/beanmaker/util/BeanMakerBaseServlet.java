@@ -119,4 +119,26 @@ public abstract class BeanMakerBaseServlet extends HttpServlet {
         response.setHeader("Cache-Control", "no-cache");
         response.setDateHeader("Expires", 0);
     }
+
+    protected int getItemOrderDirectionChangeParameter(HttpServletRequest request) throws ServletException {
+        final String direction = request.getParameter("direction");
+
+        if (direction == null)
+            throw new ServletException("Missing direction parameter");
+
+        return Strings.getIntVal(direction);
+    }
+
+    protected String singleStepItemOrderChangeFor(final DbBeanWithItemOrderInterface bean, final int direction) {
+        if (direction == 0)
+            throw new IllegalArgumentException(
+                    "Illegal direction parameter value: must be a non zero positive or negative integer.");
+
+        if (direction > 0)
+            bean.itemOrderMoveUp();
+        else
+            bean.itemOrderMoveDown();
+
+        return getJsonOk();
+    }
 }

@@ -151,3 +151,17 @@ BEANMAKER.postToNewLocation = function(href, parameters) {
     $('body').append(tempForm);
     tempForm.submit();
 };
+
+BEANMAKER.ajaxItemOrderMoveOneStep = function(servlet, bean, id, direction, doneFunction) {
+    $.ajax({
+        url: servlet,
+        type: 'post',
+        dataType: 'json',
+        data: {
+            bean: bean,
+            id: id,
+            direction: direction
+        },
+        success: doneFunction
+    });
+}
