@@ -5,23 +5,23 @@ import java.util.Locale;
 
 public interface DbBeanInterface {
 
-    public void setId(final long id);
+    void setId(final long id);
 
-    public void resetId();
+    void resetId();
 
-    public void updateDB();
+    void updateDB();
 
-    public void preUpdateConversions();
+    void preUpdateConversions();
 
-    public boolean isDataOK();
+    boolean isDataOK();
 
-    public List<ErrorMessage> getErrorMessages();
+    List<ErrorMessage> getErrorMessages();
 
-    public void reset();
+    void reset();
 
-    public void fullReset();
+    void fullReset();
 
-    public void delete();
+    void delete();
 
-    public void setLocale(final Locale locale);
+    void setLocale(final Locale locale);
 }

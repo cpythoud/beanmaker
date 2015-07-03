@@ -7,35 +7,35 @@ import java.util.Locale;
 
 public interface DbBeanHTMLViewInterface {
 
-    public void setLocale(final Locale locale);
+    void setLocale(final Locale locale);
 
-    public List<ErrorMessage> getErrorMessages();
+    List<ErrorMessage> getErrorMessages();
 
-    public void resetId();
+    void resetId();
 
-    public void setResetId(final String dummy);
+    void setResetId(final String dummy);
 
-    public void setId(final long id);
+    void setId(final long id);
 
-    public String getHtmlForm();
+    String getHtmlForm();
 
-    public void setAllFields(final ServletRequest request);
+    void setAllFields(final ServletRequest request);
 
-    public boolean isDataOK();
+    boolean isDataOK();
 
-    public void updateDB();
+    void updateDB();
 
-    public void setUpdateDB(final String dummy);
+    void setUpdateDB(final String dummy);
 
-    public void reset();
+    void reset();
 
-    public void fullReset();
+    void fullReset();
 
-    public void setReset(final String dummy);
+    void setReset(final String dummy);
 
-    public void setFullReset(final String dummy);
+    void setFullReset(final String dummy);
 
-    public void delete();
+    void delete();
 
-    public void setDelete(final String dummy);
+    void setDelete(final String dummy);
 }
