@@ -8,6 +8,7 @@ import org.jcodegen.html.FormTag;
 import org.jcodegen.html.InputTag;
 import org.jcodegen.html.LabelTag;
 import org.jcodegen.html.OptionTag;
+import org.jcodegen.html.PTag;
 import org.jcodegen.html.SelectTag;
 import org.jcodegen.html.SpanTag;
 import org.jcodegen.html.Tag;
@@ -217,22 +218,64 @@ public class HtmlFormHelper {
         return new InputTag(InputTag.InputType.HIDDEN).name("submitted" + beanName).value(Long.toString(id));
     }
 
-    public DivTag getTextField(final String field, final long idBean, final String value, final String fieldLabel, final InputTag.InputType type, final boolean required) {
+    public DivTag getTextField(
+            final String field,
+            final long idBean,
+            final String value,
+            final String fieldLabel,
+            final InputTag.InputType type,
+            final boolean required)
+    {
         return getTextField(field, idBean, value, fieldLabel, type, required, null);
     }
 
-    public DivTag getTextField(final String field, final long idBean, final String value, final String fieldLabel, final InputTag.InputType type, final boolean required,
-                               final boolean disabled) {
+    public DivTag getTextField(
+            final String field,
+            final long idBean,
+            final String value,
+            final String fieldLabel,
+            final InputTag.InputType type,
+            final boolean required,
+            final boolean disabled) {
         return getTextField(field, idBean, value, fieldLabel, type, required, null, disabled);
     }
 
-    public DivTag getTextField(final String field, final long idBean, final String value, final String fieldLabel, final InputTag.InputType type, final boolean required,
-                               final String placeholder) {
+    public DivTag getTextField(
+            final String field,
+            final long idBean,
+            final String value,
+            final String fieldLabel,
+            final InputTag.InputType type,
+            final boolean required,
+            final String placeholder)
+    {
         return getTextField(field, idBean, value, fieldLabel, type, required, placeholder, false);
     }
 
-    public DivTag getTextField(final String field, final long idBean, final String value, final String fieldLabel, final InputTag.InputType type, final boolean required,
-                               final String placeholder, final boolean disabled) {
+    public DivTag getTextField(
+            final String field,
+            final long idBean,
+            final String value,
+            final String fieldLabel,
+            final InputTag.InputType type,
+            final boolean required,
+            final String placeholder,
+            final boolean disabled)
+    {
+        return getTextField(field, idBean, value, fieldLabel, type, required, placeholder, disabled, null);
+    }
+
+    public DivTag getTextField(
+            final String field,
+            final long idBean,
+            final String value,
+            final String fieldLabel,
+            final InputTag.InputType type,
+            final boolean required,
+            final String placeholder,
+            final boolean disabled,
+            final String helpText)
+    {
         final String fieldId = getFieldId(field, idBean);
         final LabelTag label = getLabel(fieldLabel, fieldId, required);
 
@@ -244,7 +287,7 @@ public class HtmlFormHelper {
         if (disabled)
             input.disabled();
 
-        return getFormGroup(label, input);
+        return getFormGroup(label, input, helpText);
     }
 
     protected String getFieldId(final String field, final long idBean) {
@@ -279,14 +322,34 @@ public class HtmlFormHelper {
     }
 
     protected DivTag getFormGroup(final LabelTag label, final Tag field) {
-        final DivTag formGroup = new DivTag().cssClass("form-group");
+        return getFormGroup(label, field, null);
+    }
 
-        if (horizontal)
-            formGroup.child(label).child(new DivTag().cssClass(getHorizontalFieldClass()).child(field));
-        else
-            formGroup.child(label).child(field);
+    protected DivTag getFormGroup(final LabelTag label, final Tag field, final String helpText) {
+        final DivTag formGroup =
+                new DivTag().cssClass("form-group")
+                        .child(label);
+
+        if (horizontal) {
+            final DivTag formElements =
+                    new DivTag().cssClass(getHorizontalFieldClass())
+                            .child(field);
+            if (helpText != null)
+                formElements.child(getHelperBlock(helpText));
+            formGroup.child(formElements);
+        } else {
+            formGroup
+                    .child(label)
+                    .child(field);
+            if (helpText != null)
+                formGroup.child(getHelperBlock(helpText));
+        }
 
         return formGroup;
+    }
+
+    protected Tag getHelperBlock(final String helpText) {
+        return new PTag(helpText).cssClass("helpBlock");
     }
 
     protected LabelTag getLabel(final String fieldLabel, final String fieldId, final boolean required) {
@@ -356,21 +419,75 @@ public class HtmlFormHelper {
         return "col-" + horizontalSizeShift + "-offset-" + horizontalLabelWidth + " col-" + horizontalSizeShift + "-" + horizontalFieldWidth;
     }
 
-    public DivTag getSelectField(final String field, final long idBean, final long selected, final String fieldLabel, final List<IdNamePair> pairs, final boolean required) {
+    public DivTag getSelectField(
+            final String field,
+            final long idBean,
+            final long selected,
+            final String fieldLabel,
+            final List<IdNamePair> pairs,
+            final boolean required)
+    {
         return getSelectField(field, idBean, Long.toString(selected), fieldLabel, pairs, required);
     }
 
-    public DivTag getSelectField(final String field, final long idBean, final long selected, final String fieldLabel, final List<IdNamePair> pairs, final boolean required,
-                                 final boolean disabled) {
+    public DivTag getSelectField(
+            final String field,
+            final long idBean,
+            final long selected,
+            final String fieldLabel,
+            final List<IdNamePair> pairs,
+            final boolean required,
+            final boolean disabled)
+    {
         return getSelectField(field, idBean, Long.toString(selected), fieldLabel, pairs, required, disabled);
     }
 
-    public DivTag getSelectField(final String field, final long idBean, final String selected, final String fieldLabel, final List<IdNamePair> pairs, final boolean required) {
+    public DivTag getSelectField(
+            final String field,
+            final long idBean,
+            final long selected,
+            final String fieldLabel,
+            final List<IdNamePair> pairs,
+            final boolean required,
+            final boolean disabled,
+            final String helpText)
+    {
+        return getSelectField(field, idBean, Long.toString(selected), fieldLabel, pairs, required, disabled, helpText);
+    }
+
+    public DivTag getSelectField(
+            final String field,
+            final long idBean,
+            final String selected,
+            final String fieldLabel,
+            final List<IdNamePair> pairs,
+            final boolean required)
+    {
         return getSelectField(field, idBean, selected, fieldLabel, pairs, required, false);
     }
 
-    public DivTag getSelectField(final String field, final long idBean, final String selected, final String fieldLabel, final List<IdNamePair> pairs, final boolean required,
-                                 final boolean disabled) {
+    public DivTag getSelectField(
+            final String field,
+            final long idBean,
+            final String selected,
+            final String fieldLabel,
+            final List<IdNamePair> pairs,
+            final boolean required,
+            final boolean disabled)
+    {
+        return getSelectField(field, idBean, selected, fieldLabel, pairs, required, disabled, null);
+    }
+
+    public DivTag getSelectField(
+            final String field,
+            final long idBean,
+            final String selected,
+            final String fieldLabel,
+            final List<IdNamePair> pairs,
+            final boolean required,
+            final boolean disabled,
+            final String helpText)
+    {
         final String fieldId = getFieldId(field, idBean);
         final LabelTag label = getLabel(fieldLabel, fieldId, required);
 
@@ -387,18 +504,43 @@ public class HtmlFormHelper {
             select.child(optionTag);
         }
 
-        return getFormGroup(label, select);
+        return getFormGroup(label, select, helpText);
     }
 
     protected SelectTag getSelectTag(final String name, final String id) {
         return new SelectTag(name).cssClass("form-control").id(id);
     }
 
-    public DivTag getTextAreaField(final String field, final long idBean, final String value, final String fieldLabel, final boolean required) {
+    public DivTag getTextAreaField(
+            final String field,
+            final long idBean,
+            final String value,
+            final String fieldLabel,
+            final boolean required)
+    {
         return getTextAreaField(field, idBean, value, fieldLabel, required, false);
     }
 
-    public DivTag getTextAreaField(final String field, final long idBean, final String value, final String fieldLabel, final boolean required, final boolean disabled) {
+    public DivTag getTextAreaField(
+            final String field,
+            final long idBean,
+            final String value,
+            final String fieldLabel,
+            final boolean required,
+            final boolean disabled)
+    {
+        return getTextAreaField(field, idBean, value, fieldLabel, required, disabled, null);
+    }
+
+    public DivTag getTextAreaField(
+            final String field,
+            final long idBean,
+            final String value,
+            final String fieldLabel,
+            final boolean required,
+            final boolean disabled,
+            final String helpText)
+    {
         final String fieldId = getFieldId(field, idBean);
         final LabelTag label = getLabel(fieldLabel, fieldId, required);
 
@@ -408,7 +550,7 @@ public class HtmlFormHelper {
         if (disabled)
             textarea.disabled();
 
-        return getFormGroup(label, textarea);
+        return getFormGroup(label, textarea, helpText);
     }
 
     protected TextareaTag getTextAreaTag(final String id, final String name, final String value) {
