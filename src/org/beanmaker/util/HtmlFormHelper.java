@@ -317,15 +317,15 @@ public class HtmlFormHelper {
         return new InputTag(type).cssClass("form-control").id(id).name(name).value(value);
     }
 
-    protected DivTag getFormGroup() {
+    public DivTag getFormGroup() {
         return new DivTag().cssClass("form-group");
     }
 
-    protected DivTag getFormGroup(final LabelTag label, final Tag field) {
+    public DivTag getFormGroup(final LabelTag label, final Tag field) {
         return getFormGroup(label, field, null);
     }
 
-    protected DivTag getFormGroup(final LabelTag label, final Tag field, final String helpText) {
+    public DivTag getFormGroup(final LabelTag label, final Tag field, final String helpText) {
         final DivTag formGroup =
                 new DivTag().cssClass("form-group")
                         .child(label);
@@ -392,11 +392,27 @@ public class HtmlFormHelper {
             final String buttonLabel,
             final String extraCssClasses)
     {
-        return new ButtonTag(ButtonTag.ButtonType.SUBMIT)
-                .child(new SpanTag().cssClass("loading"))
+        return getButtonTag(
+                ButtonTag.ButtonType.SUBMIT,
+                beanName,
+                id,
+                "submit",
+                buttonLabel,
+                "btn btn-default" + (extraCssClasses == null ? "" : " " + extraCssClasses));
+    }
+
+    public ButtonTag getButtonTag(
+            final ButtonTag.ButtonType type,
+            final String beanName,
+            final long id,
+            final String functionName,
+            final String buttonLabel,
+            final String cssClasses)
+    {
+        return new ButtonTag(type)
                 .child(new CData(buttonLabel))
-                .id(getHtmlId(beanName + "_submit", id))
-                .cssClass("btn btn-default" + (extraCssClasses == null ? "" : " " + extraCssClasses));
+                .id(getHtmlId(beanName + "_" + functionName, id))
+                .cssClass(cssClasses);
     }
 
     public Tag getSubmitButton(final String beanName, final long id, final String buttonLabel) {
@@ -415,7 +431,7 @@ public class HtmlFormHelper {
         return submit;
     }
 
-    protected String getHorizontalFieldClassesWithOffset() {
+    public String getHorizontalFieldClassesWithOffset() {
         return "col-" + horizontalSizeShift + "-offset-" + horizontalLabelWidth + " col-" + horizontalSizeShift + "-" + horizontalFieldWidth;
     }
 
