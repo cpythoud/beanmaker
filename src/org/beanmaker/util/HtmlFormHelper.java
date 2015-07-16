@@ -10,7 +10,6 @@ import org.jcodegen.html.LabelTag;
 import org.jcodegen.html.OptionTag;
 import org.jcodegen.html.PTag;
 import org.jcodegen.html.SelectTag;
-import org.jcodegen.html.SpanTag;
 import org.jcodegen.html.Tag;
 import org.jcodegen.html.TextareaTag;
 
@@ -30,6 +29,7 @@ public class HtmlFormHelper {
 
 
     private boolean inline = false;
+    private boolean inlineWithoutLabels = false;
     private boolean horizontal = false;
 
     private String horizontalSizeShift = "sm";
@@ -102,6 +102,10 @@ public class HtmlFormHelper {
 
     public boolean isInline() {
         return inline;
+    }
+
+    public boolean isInlineWithoutLabels() {
+        return inlineWithoutLabels;
     }
 
     public void setHorizontal(final boolean horizontal) {
@@ -205,6 +209,13 @@ public class HtmlFormHelper {
     public FormTag getInlineForm(final String beanName, final long id) {
         final FormTag form = getForm(beanName, id);
         inline = true;
+        return form.cssClass("form-inline");
+    }
+
+    public FormTag getInlineFormWithoutLabels(final String beanName, final long id) {
+        final FormTag form = getForm(beanName, id);
+        inline = true;
+        inlineWithoutLabels = true;
         return form.cssClass("form-inline");
     }
 
@@ -353,7 +364,7 @@ public class HtmlFormHelper {
     protected LabelTag getLabel(final String fieldLabel, final String fieldId, final boolean required) {
         final LabelTag label = new LabelTag(getLabelText(fieldLabel, required), fieldId);
 
-        if (inline)
+        if (inlineWithoutLabels)
             label.cssClass("sr-only");
         if (horizontal)
             label.cssClass(getHorizontalLabelClasses());
