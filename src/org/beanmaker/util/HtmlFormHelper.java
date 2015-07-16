@@ -338,9 +338,7 @@ public class HtmlFormHelper {
                 formElements.child(getHelperBlock(helpText));
             formGroup.child(formElements);
         } else {
-            formGroup
-                    .child(label)
-                    .child(field);
+            formGroup.child(field);
             if (helpText != null)
                 formGroup.child(getHelperBlock(helpText));
         }
