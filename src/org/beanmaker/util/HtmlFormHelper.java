@@ -1,6 +1,7 @@
 package org.beanmaker.util;
 
 import org.dbbeans.util.Strings;
+
 import org.jcodegen.html.ButtonTag;
 import org.jcodegen.html.CData;
 import org.jcodegen.html.DivTag;
@@ -43,6 +44,8 @@ public class HtmlFormHelper {
     private String cssClassForTimeFields = null;
 
     private String cssClassForFileFields = "file";
+
+    private String extraFormCssClasses = null;
 
 
     public String getNotRequiredExtension() {
@@ -98,10 +101,20 @@ public class HtmlFormHelper {
         this.inline = inline;
         if (inline)
             horizontal = false;
+        else
+            inlineWithoutLabels = false;
     }
 
     public boolean isInline() {
         return inline;
+    }
+
+    public void setInlineWithoutLabels(final boolean inlineWithoutLabels) {
+        this.inlineWithoutLabels = inlineWithoutLabels;
+        if (inlineWithoutLabels) {
+            horizontal = false;
+            inline = true;
+        }
     }
 
     public boolean isInlineWithoutLabels() {
@@ -110,8 +123,10 @@ public class HtmlFormHelper {
 
     public void setHorizontal(final boolean horizontal) {
         this.horizontal = horizontal;
-        if (horizontal)
+        if (horizontal) {
             inline = false;
+            inlineWithoutLabels = false;
+        }
     }
 
     public boolean isHorizontal() {
@@ -189,6 +204,15 @@ public class HtmlFormHelper {
         return cssClassForFileFields;
     }
 
+    public void setExtraFormCssClasses(final String extraFormCssClasses) {
+        this.extraFormCssClasses = extraFormCssClasses;
+    }
+
+    public String getExtraFormCssClasses() {
+        return extraFormCssClasses;
+    }
+
+
     public FormTag getForm(final String beanName, final long id) {
         final FormTag form =
                 new FormTag()
@@ -198,10 +222,14 @@ public class HtmlFormHelper {
                         .method(FormTag.Method.POST);
 
         inline = false;
+        inlineWithoutLabels = false;
         horizontal = false;
 
         if (htmlFormMultipart)
             return form.enctype(FormTag.EncodingType.MULTIPART);
+
+        if (extraFormCssClasses != null)
+            form.cssClass(extraFormCssClasses);
 
         return form;
     }
@@ -209,20 +237,33 @@ public class HtmlFormHelper {
     public FormTag getInlineForm(final String beanName, final long id) {
         final FormTag form = getForm(beanName, id);
         inline = true;
-        return form.cssClass("form-inline");
+
+        return getInlineForm(form);
     }
 
     public FormTag getInlineFormWithoutLabels(final String beanName, final long id) {
         final FormTag form = getForm(beanName, id);
         inline = true;
         inlineWithoutLabels = true;
-        return form.cssClass("form-inline");
+
+        return getInlineForm(form);
+    }
+
+    private FormTag getInlineForm(final FormTag form) {
+        if (extraFormCssClasses == null)
+            return form.cssClass("form-inline");
+
+        return form.changeCssClasses("form-inline " + extraFormCssClasses);
     }
 
     public FormTag getHorizontalForm(final String beanName, final long id) {
         final FormTag form = getForm(beanName, id);
         horizontal = true;
-        return form.cssClass("form-horizontal");
+
+        if (extraFormCssClasses == null)
+            return form.cssClass("form-horizontal");
+
+        return form.changeCssClasses("form-horizontal " + extraFormCssClasses);
     }
 
     public InputTag getHiddenSubmitInput(final String beanName, final long id) {
