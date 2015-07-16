@@ -220,12 +220,25 @@ public abstract class BaseMasterTableView extends BaseView {
         return thTitleCssClass + " th-" + name;
     }
 
+    @Deprecated
     protected TrTag getTableLine() {
         final TrTag line = new TrTag();
 
         line.child(getTableCellForRemoveFilteringPlaceholder());
 
         return line;
+    }
+
+    protected TrTag getTableLine(final long id) {
+        final TrTag line = getTrTag(id);
+
+        line.child(getTableCellForRemoveFilteringPlaceholder());
+
+        return line;
+    }
+
+    protected TrTag getTrTag(final long id) {
+        return new TrTag().id(tableId + "_row_" + id);
     }
 
     protected TdTag getTableCellForRemoveFilteringPlaceholder() {
