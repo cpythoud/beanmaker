@@ -164,4 +164,24 @@ BEANMAKER.ajaxItemOrderMoveOneStep = function(servlet, bean, id, direction, done
         },
         success: doneFunction
     });
-}
+};
+
+BEANMAKER.ajaxExecuteOperation = function(servlet, idBean, operation, doneFunction) {
+    $.ajax({
+        url: servlet,
+        type: 'post',
+        dataType: 'json',
+        data: {
+            idBean: idBean,
+            operation: operation
+        },
+        success: doneFunction
+    });
+};
+
+BEANMAKER.loadOperation = function(idContainer, servlet, idBean, operation, doneFunction) {
+    $('#' + idContainer).load(servlet, {
+            idBean: idBean,
+            operation: operation
+        }, doneFunction);
+};
