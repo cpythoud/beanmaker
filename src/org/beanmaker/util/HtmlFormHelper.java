@@ -213,7 +213,23 @@ public class HtmlFormHelper {
     }
 
 
-    public FormTag getForm(final String beanName, final long id) {
+    protected String getFormCssClasses(final String beanName) {
+        final StringBuilder formCssClasses = new StringBuilder();
+
+        formCssClasses.append(beanName).append("-form");
+
+        if (inline)
+            formCssClasses.append(" form-inline");
+        if (horizontal)
+            formCssClasses.append(" form-horizontal");
+
+        if (extraFormCssClasses != null)
+            formCssClasses.append(" ").append(extraFormCssClasses);
+
+        return formCssClasses.toString();
+    }
+
+    protected FormTag getFormTag(final String beanName, final long id) {
         final FormTag form =
                 new FormTag()
                         .role("form")
@@ -221,49 +237,52 @@ public class HtmlFormHelper {
                         .name(beanName)
                         .method(FormTag.Method.POST);
 
-        inline = false;
-        inlineWithoutLabels = false;
-        horizontal = false;
-
         if (htmlFormMultipart)
             return form.enctype(FormTag.EncodingType.MULTIPART);
-
-        if (extraFormCssClasses != null)
-            form.cssClass(extraFormCssClasses);
 
         return form;
     }
 
+    protected void resetFormTypeFlags() {
+        inline = false;
+        inlineWithoutLabels = false;
+        horizontal = false;
+    }
+
+    public FormTag getForm(final String beanName, final long id) {
+        final FormTag form = getFormTag(beanName, id);
+
+        resetFormTypeFlags();
+
+        return form.cssClass(getFormCssClasses(beanName));
+    }
+
     public FormTag getInlineForm(final String beanName, final long id) {
-        final FormTag form = getForm(beanName, id);
+        final FormTag form = getFormTag(beanName, id);
+
+        resetFormTypeFlags();
         inline = true;
 
-        return getInlineForm(form);
+        return form.cssClass(getFormCssClasses(beanName));
     }
 
     public FormTag getInlineFormWithoutLabels(final String beanName, final long id) {
-        final FormTag form = getForm(beanName, id);
+        final FormTag form = getFormTag(beanName, id);
+
+        resetFormTypeFlags();
         inline = true;
         inlineWithoutLabels = true;
 
-        return getInlineForm(form);
-    }
-
-    private FormTag getInlineForm(final FormTag form) {
-        if (extraFormCssClasses == null)
-            return form.cssClass("form-inline");
-
-        return form.changeCssClasses("form-inline " + extraFormCssClasses);
+        return form.cssClass(getFormCssClasses(beanName));
     }
 
     public FormTag getHorizontalForm(final String beanName, final long id) {
-        final FormTag form = getForm(beanName, id);
+        final FormTag form = getFormTag(beanName, id);
+
+        resetFormTypeFlags();
         horizontal = true;
 
-        if (extraFormCssClasses == null)
-            return form.cssClass("form-horizontal");
-
-        return form.changeCssClasses("form-horizontal " + extraFormCssClasses);
+        return form.cssClass(getFormCssClasses(beanName));
     }
 
     public InputTag getHiddenSubmitInput(final String beanName, final long id) {
