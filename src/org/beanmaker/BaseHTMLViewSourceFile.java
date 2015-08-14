@@ -83,7 +83,13 @@ public class BaseHTMLViewSourceFile extends ViewCode {
     }
 
     private void addHTMLFormGetter() {
-        final FunctionDeclaration getHtmlFormFunction = new FunctionDeclaration("getHtmlForm", "String").addContent(
+        javaClass.addContent(
+                new FunctionDeclaration("getHtmlForm", "String").addContent(
+                        new ReturnStatement("getHtmlFormTag().toString()")
+                )
+        ).addContent(EMPTY_LINE);
+
+        final FunctionDeclaration getHtmlFormFunction = new FunctionDeclaration("getHtmlFormTag", "FormTag").addContent(
                 new VarDeclaration("FormTag", "form", new FunctionCall("getFormStart")).markAsFinal()
         ).addContent(
                 new FunctionCall("composeHiddenSubmitField").byItself()
@@ -106,7 +112,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
                 new FunctionCall("composeButtons").byItself()
                         .addArgument("form")
         ).addContent(EMPTY_LINE).addContent(
-                new ReturnStatement(new FunctionCall("toString", "form"))
+                new ReturnStatement("form")
         );
 
         javaClass.addContent(getHtmlFormFunction).addContent(EMPTY_LINE);
