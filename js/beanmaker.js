@@ -80,7 +80,11 @@ BEANMAKER.ajaxSubmitDefaults = {
 BEANMAKER.ajaxSubmit = function(event, nonDefaultParams, refreshOnSuccessFunction, $this) {
     var params = $.extend({}, BEANMAKER.ajaxSubmitDefaults, nonDefaultParams);
     event.preventDefault();
-    var $form = $('form[name="' + params.formName + '"]');
+    var $form;
+    if (params.formID)
+        $form = $('#' + params.formID);
+    else
+        $form = $('form[name="' + params.formName + '"]');
     BEANMAKER.setLoadingStatus($form);
     $.ajax({
         url: params.action,
