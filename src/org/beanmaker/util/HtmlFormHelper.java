@@ -362,7 +362,14 @@ public class HtmlFormHelper {
     }
 
     protected String getFieldId(final String field, final long idBean) {
-        return field + "_" + idBean;
+        return getFieldId(field, idBean, null);
+    }
+
+    protected String getFieldId(final String field, final long idBean, final String idNamePostfix) {
+        if (Strings.isEmpty(idNamePostfix))
+            return field + "_" + idBean;
+
+        return field + "_" + idNamePostfix + "_" + idBean;
     }
 
     protected InputTag getInputTag(final InputTag.InputType type, final String id, final String name, final String value) {
@@ -642,12 +649,46 @@ public class HtmlFormHelper {
         return new TextareaTag(value).cssClass("form-control").id(id).name(name);
     }
 
-    public DivTag getCheckboxField(final String field, final long idBean, final boolean checked, final String fieldLabel) {
+    public DivTag getCheckboxField(
+            final String field,
+            final long idBean,
+            final boolean checked,
+            final String fieldLabel)
+    {
         return getCheckboxField(field, idBean, checked, fieldLabel, false);
     }
 
-    public DivTag getCheckboxField(final String field, final long idBean, final boolean checked, final String fieldLabel, final boolean disabled) {
-        final DivTag innerPart = getCheckbox(field, idBean, checked, fieldLabel, disabled);
+    public DivTag getCheckboxField(
+            final String field,
+            final long idBean,
+            final boolean checked,
+            final String fieldLabel,
+            final boolean disabled)
+    {
+        return getCheckboxField(field, idBean, checked, fieldLabel, disabled, null);
+    }
+
+    public DivTag getCheckboxField(
+            final String field,
+            final long idBean,
+            final boolean checked,
+            final String fieldLabel,
+            final boolean disabled,
+            final String value)
+    {
+        return getCheckboxField(field, idBean, checked, fieldLabel, disabled, value, null);
+    }
+
+    public DivTag getCheckboxField(
+            final String field,
+            final long idBean,
+            final boolean checked,
+            final String fieldLabel,
+            final boolean disabled,
+            final String value,
+            final String idNameSuffix)
+    {
+        final DivTag innerPart = getCheckbox(field, idBean, checked, fieldLabel, disabled, value, idNameSuffix);
 
         if (horizontal)
             return getFormGroup().child(new DivTag().cssClass(getHorizontalFieldClassesWithOffset()).child(innerPart));
@@ -655,25 +696,87 @@ public class HtmlFormHelper {
         return innerPart;
     }
 
-    protected DivTag getCheckbox(final String field, final long idBean, final boolean checked, final String fieldLabel) {
+    protected DivTag getCheckbox(
+            final String field,
+            final long idBean,
+            final boolean checked,
+            final String fieldLabel)
+    {
         return getCheckbox(field, idBean, checked, fieldLabel, false);
     }
 
-    protected DivTag getCheckbox(final String field, final long idBean, final boolean checked, final String fieldLabel, final boolean disabled) {
+    protected DivTag getCheckbox(
+            final String field,
+            final long idBean,
+            final boolean checked,
+            final String fieldLabel,
+            final boolean disabled)
+    {
+        return getCheckbox(field, idBean, checked, fieldLabel, disabled, null);
+    }
+
+    protected DivTag getCheckbox(
+            final String field,
+            final long idBean,
+            final boolean checked,
+            final String fieldLabel,
+            final boolean disabled,
+            final String value)
+    {
+        return getCheckbox(field, idBean, checked, fieldLabel, disabled, value, null);
+    }
+
+    protected DivTag getCheckbox(
+            final String field,
+            final long idBean,
+            final boolean checked,
+            final String fieldLabel,
+            final boolean disabled,
+            final String value,
+            final String idNameSuffix)
+    {
         return new DivTag()
                 .cssClass("checkbox")
                 .child(new LabelTag()
-                                .child(getCheckboxTag(field, idBean, checked, disabled))
+                                .child(getCheckboxTag(field, idBean, checked, disabled, value, idNameSuffix))
                                 .child(new CData(" " + fieldLabel))
                 );
     }
 
-    protected InputTag getCheckboxTag(final String field, final long idBean, final boolean checked, final boolean disabled) {
-        final InputTag checkbox = new InputTag(InputTag.InputType.CHECKBOX).name(field).id(getFieldId(field, idBean));
+    protected InputTag getCheckboxTag(
+            final String field,
+            final long idBean,
+            final boolean checked,
+            final boolean disabled)
+    {
+        return getCheckboxTag(field, idBean, checked, disabled, null);
+    }
+
+    protected InputTag getCheckboxTag(
+            final String field,
+            final long idBean,
+            final boolean checked,
+            final boolean disabled,
+            final String value)
+    {
+        return getCheckboxTag(field, idBean, checked, disabled, value, null);
+    }
+
+    protected InputTag getCheckboxTag(
+            final String field,
+            final long idBean,
+            final boolean checked,
+            final boolean disabled,
+            final String value,
+            final String idNameSuffix)
+    {
+        final InputTag checkbox = new InputTag(InputTag.InputType.CHECKBOX).name(field).id(getFieldId(field, idBean, idNameSuffix));
         if (checked)
             checkbox.checked();
         if (disabled)
             checkbox.disabled();
+        if (value != null)
+            checkbox.value(value);
 
         return checkbox;
     }
