@@ -2206,6 +2206,35 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         ).addContent(EMPTY_LINE);
     }
 
+    private void addGetListFunction() {
+        javaClass.addContent(
+                new FunctionDeclaration("getList", new GenericType("List", beanName))
+                        .addArgument(new FunctionArgument("ResultSet", "rs"))
+                        .addException("SQLException")
+                        .markAsStatic()
+                        .addContent(
+                                VarDeclaration.createGenericContainerDeclaration(
+                                        "List",
+                                        "ArrayList",
+                                        beanName,
+                                        "list").markAsFinal()
+                        )
+                        .addContent(EMPTY_LINE)
+                        .addContent(
+                                new WhileBlock(new Condition(new FunctionCall("next", "rs"))).addContent(
+                                        new FunctionCall("add", "list")
+                                                .addArgument(new ObjectCreation(beanName)
+                                                        .addArgument("rs"))
+                                                .byItself()
+                                )
+                        )
+                        .addContent(EMPTY_LINE)
+                        .addContent(
+                                new ReturnStatement("list")
+                        )
+        ).addContent(EMPTY_LINE);
+    }
+
     private void addSetLocale() {
         javaClass.addContent(
                 new FunctionDeclaration("setLocale").addArgument(new FunctionArgument("Locale", "locale")).addContent(
@@ -2245,6 +2274,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 		addGetCount();
 		addIdOK();
 		addHumanReadableTitle();
+        addGetListFunction();
 		addSetLocale();
 	}
 	
