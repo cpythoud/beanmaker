@@ -660,6 +660,9 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 prefix = "get";
             final FunctionDeclaration getter = new FunctionDeclaration(prefix + capitalize(field), type);
 
+            if (field.equals("itemOrder"))
+                getter.annotate("@Override");
+
             if (JAVA_TEMPORAL_TYPES.contains(type))
                 getter.addContent(
                         new IfBlock(new Condition(new Comparison(field, "null"))).addContent(new ReturnStatement("null"))
@@ -857,16 +860,19 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         final Column itemOrderField = columns.getItemOrderField();
 
         javaClass.addContent(
-                new FunctionDeclaration("isFirstItemOrder", "boolean").addContent(
-                       checkForItemOrderOperationOnUninitializedBean()
+                new FunctionDeclaration("isFirstItemOrder", "boolean").annotate("@Override").addContent(
+                        checkForItemOrderOperationOnUninitializedBean()
                 ).addContent(EMPTY_LINE).addContent(
                         new ReturnStatement("itemOrder == 1")
                 )
         ).addContent(EMPTY_LINE);
 
-        final FunctionDeclaration isLastItemOrderFunction = new FunctionDeclaration("isLastItemOrder", "boolean").addContent(
-                checkForItemOrderOperationOnUninitializedBean()
-        ).addContent(EMPTY_LINE);
+        final FunctionDeclaration isLastItemOrderFunction =
+                new FunctionDeclaration("isLastItemOrder", "boolean")
+                        .annotate("@Override")
+                        .addContent(
+                                checkForItemOrderOperationOnUninitializedBean()
+                        ).addContent(EMPTY_LINE);
 
         if (!itemOrderField.isUnique())
             isLastItemOrderFunction.addContent(
@@ -882,7 +888,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         javaClass.addContent(isLastItemOrderFunction).addContent(EMPTY_LINE);
 
         javaClass.addContent(
-                new FunctionDeclaration("itemOrderMoveUp").addContent(
+                new FunctionDeclaration("itemOrderMoveUp").annotate("@Override").addContent(
                         checkForItemOrderOperationOnUninitializedBean()
                 ).addContent(EMPTY_LINE).addContent(
                         new IfBlock(new Condition(new FunctionCall("isFirstItemOrder"))).addContent(
@@ -896,7 +902,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         ).addContent(EMPTY_LINE);
 
         javaClass.addContent(
-                new FunctionDeclaration("itemOrderMoveDown").addContent(
+                new FunctionDeclaration("itemOrderMoveDown").annotate("@Override").addContent(
                         checkForItemOrderOperationOnUninitializedBean()
                 ).addContent(EMPTY_LINE).addContent(
                         new IfBlock(new Condition(new FunctionCall("isLastItemOrder"))).addContent(
@@ -911,7 +917,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
         if (itemOrderField.isUnique()) {
             javaClass.addContent(
-                    new FunctionDeclaration("itemOrderMoveAfter")
+                    new FunctionDeclaration("itemOrderMoveAfter").annotate("@Override")
                             .addArgument(new FunctionArgument(beanName, beanVarName))
                             .addContent(
                                     new IfBlock(new Condition(new Comparison("itemOrder", new FunctionCall("getItemOrder", beanVarName), Comparison.Comparator.GREATER_THAN))).addContent(
@@ -929,7 +935,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                                     ))
                             )
             ).addContent(EMPTY_LINE).addContent(
-                    new FunctionDeclaration("itemOrderMoveBefore")
+                    new FunctionDeclaration("itemOrderMoveBefore").annotate("@Override")
                             .addArgument(new FunctionArgument(beanName, beanVarName))
                             .addContent(
                                     new IfBlock(new Condition(new Comparison("itemOrder", new FunctionCall("getItemOrder", beanVarName), Comparison.Comparator.GREATER_THAN))).addContent(
@@ -957,7 +963,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
             final String associatedFieldJavaName = uncapitalize(camelize(itemOrderField.getItemOrderAssociatedField()));
             final String associatedFieldJavaFunction = "get" + camelize(itemOrderField.getItemOrderAssociatedField());
             javaClass.addContent(
-                    new FunctionDeclaration("itemOrderMoveAfter").addArgument(new FunctionArgument(beanName, beanVarName)).addContent(
+                    new FunctionDeclaration("itemOrderMoveAfter").annotate("@Override").addArgument(new FunctionArgument(beanName, beanVarName)).addContent(
                             new IfBlock(new Condition(new Comparison(associatedFieldJavaName, new FunctionCall(associatedFieldJavaFunction, beanVarName)))).addContent(
                                     new IfBlock(new Condition(new Comparison("itemOrder", new FunctionCall("getItemOrder", beanVarName), Comparison.Comparator.GREATER_THAN))).addContent(
                                             new IfBlock(new Condition(new Comparison(associatedFieldJavaName, "0"))).addContent(
@@ -997,7 +1003,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                             ))
                     )
             ).addContent(EMPTY_LINE).addContent(
-                    new FunctionDeclaration("itemOrderMoveBefore").addArgument(new FunctionArgument(beanName, beanVarName)).addContent(
+                    new FunctionDeclaration("itemOrderMoveBefore").annotate("@Override").addArgument(new FunctionArgument(beanName, beanVarName)).addContent(
                             new IfBlock(new Condition(new Comparison(associatedFieldJavaName, new FunctionCall(associatedFieldJavaFunction, beanVarName)))).addContent(
                                     new IfBlock(new Condition(new Comparison("itemOrder", new FunctionCall("getItemOrder", beanVarName), Comparison.Comparator.GREATER_THAN))).addContent(
                                             new IfBlock(new Condition(new Comparison(associatedFieldJavaName, "0"))).addContent(
@@ -2250,7 +2256,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                         .annotate("@Override")
                         .addArgument(new FunctionArgument("Locale", "locale"))
                         .addContent(
-                            new FunctionCall("setLocale", internalsVar).addArgument("locale").byItself()
+                                new FunctionCall("setLocale", internalsVar).addArgument("locale").byItself()
                 )
         ).addContent(EMPTY_LINE);
     }
