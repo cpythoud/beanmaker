@@ -207,8 +207,12 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
     }
 
     private ConstructorDeclaration getCopyConstructor() {
+        final String modelVarName = beanVarName + "Model";
+
         final ConstructorDeclaration copyConstructor = getBaseConstructor();
-        copyConstructor.addArgument(new FunctionArgument(beanName + "Base", "model")).addContent(new Assignment("id", "0"));
+        copyConstructor
+                .addArgument(new FunctionArgument(beanName + "Base", modelVarName))
+                .addContent(new Assignment("id", "0"));
         for (Column column: columns.getList()) {
             final String type = column.getJavaType();
             final String field = column.getJavaName();
@@ -216,9 +220,11 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 if (field.equals("itemOrder"))
                     copyConstructor.addContent(new Assignment("itemOrder", "0"));
                 else if (field.startsWith("id") || type.equals("boolean") || type.equals("String"))
-                    copyConstructor.addContent(new Assignment(field, "model." + field));
+                    copyConstructor.addContent(new Assignment(field, modelVarName + "." + field));
                 else
-                    copyConstructor.addContent(new FunctionCall("set" + capitalize(field)).addArgument("model." + field).byItself());
+                    copyConstructor
+                            .addContent(new FunctionCall("set" + capitalize(field))
+                                    .addArgument(modelVarName + "." + field).byItself());
             }
         }
 
@@ -228,7 +234,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 final String beanObject = uncapitalize(beanClass);
                 final String javaName = relationship.getJavaName();
                 copyConstructor.addContent(EMPTY_LINE).addContent(
-                        new ForLoop(beanClass + " " + beanObject + ": model." + javaName).addContent(
+                        new ForLoop(beanClass + " " + beanObject + ": " + modelVarName + "." + javaName).addContent(
                                 new FunctionCall("add", javaName).byItself().addArgument(
                                         new ObjectCreation(beanClass).addArgument(new FunctionCall("getId", beanObject))
                                 )

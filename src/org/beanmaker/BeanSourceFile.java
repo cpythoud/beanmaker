@@ -40,8 +40,10 @@ public class BeanSourceFile extends BeanCode {
     }
 
     private ConstructorDeclaration getCopyConstructor() {
-        return getBaseConstructor().addArgument(new FunctionArgument(beanName, "model")).addContent(
-                new FunctionCall("super").addArgument("model").byItself()
+        final String modelVarName = beanVarName + "Model";
+
+        return getBaseConstructor().addArgument(new FunctionArgument(beanName, modelVarName)).addContent(
+                new FunctionCall("super").addArgument(modelVarName).byItself()
         );
     }
 
