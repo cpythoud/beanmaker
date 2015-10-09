@@ -803,5 +803,9 @@ public class HtmlFormHelper {
 
         return getFormGroup(label, input);
     }
+
+    public Tag getHiddenInfo(final String name, final String value) {
+        return new InputTag(InputTag.InputType.HIDDEN).name(name).value(value);
+    }
 }
 
