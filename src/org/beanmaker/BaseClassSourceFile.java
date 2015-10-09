@@ -195,8 +195,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         javaClass.addContent(getBaseConstructor()).addContent(EMPTY_LINE);
         javaClass.addContent(getIdArgumentConstructor()).addContent(EMPTY_LINE);
         javaClass.addContent(getCopyConstructor()).addContent(EMPTY_LINE);
-        javaClass.addContent(getFieldConstructor()).addContent(EMPTY_LINE);
-        javaClass.addContent(getResultSetConstructor()).addContent(EMPTY_LINE);
+        addProtectedConstructors();
 	}
 
     private ConstructorDeclaration getBaseConstructor() {
@@ -240,7 +239,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         return copyConstructor;
     }
 
-    private ConstructorDeclaration getFieldConstructor() {
+    private ConstructorDeclaration getCommonFieldConstructor() {
         final ConstructorDeclaration fieldConstructor = getBaseConstructor().visibility(Visibility.PROTECTED);
         for (Column column: columns.getList())
             fieldConstructor.addArgument(new FunctionArgument(column.getJavaType(), column.getJavaName()));
@@ -254,29 +253,84 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 fieldConstructor.addContent(new FunctionCall("set" + capitalize(field)).addArgument(field).byItself());
         }
 
-        for (OneToManyRelationship relationship: columns.getOneToManyRelationships())
-            if (!relationship.isListOnly()) {
-                final String beanClass = relationship.getBeanClass();
-                final String beanObject = uncapitalize(beanClass);
-                final String javaName = relationship.getJavaName();
-                fieldConstructor.addArgument(new FunctionArgument(new GenericType("List", beanClass).toString(), javaName));
-                fieldConstructor.addContent(EMPTY_LINE).addContent(
-                        new ForLoop(beanClass + " " + beanObject + ": " + javaName).addContent(
-                                new FunctionCall("add", "this." + javaName).byItself().addArgument(beanObject)
-                                )
-                        );
-            }
-
         return fieldConstructor;
     }
 
-    private ConstructorDeclaration getResultSetConstructor() {
-        final ConstructorDeclaration rsConstructor = getBaseConstructor().visibility(Visibility.PROTECTED)
-                .addArgument(new FunctionArgument("ResultSet", "rs")).addException("SQLException");
-        for (OneToManyRelationship relationship: columns.getOneToManyRelationships())
-            if (!relationship.isListOnly())
-                rsConstructor.addArgument(new FunctionArgument(new GenericType("List", relationship.getBeanClass()).toString(), relationship.getJavaName()));
+    private void addProtectedConstructors() {
+        final ConstructorDeclaration fieldConstructor = getCommonFieldConstructor();
 
+        boolean needExtraConstructors = false;
+        for (OneToManyRelationship relationship: columns.getOneToManyRelationships())
+            if (!relationship.isListOnly()) {
+                if (!needExtraConstructors) {
+                    fieldConstructor.addContent(EMPTY_LINE);
+                    needExtraConstructors = true;
+                }
+                final String javaName = relationship.getJavaName();
+                fieldConstructor.addContent(
+                        new Assignment(
+                                javaName,
+                                new FunctionCall("initialized" + capitalize(javaName)).addArgument("id"))
+                );
+            }
+
+        javaClass.addContent(fieldConstructor).addContent(EMPTY_LINE);
+
+        if (needExtraConstructors) {
+            final ConstructorDeclaration extraFieldConstructor = getCommonFieldConstructor();
+
+            for (OneToManyRelationship relationship: columns.getOneToManyRelationships())
+                if (!relationship.isListOnly()) {
+                    final String beanClass = relationship.getBeanClass();
+                    final String beanObject = uncapitalize(beanClass);
+                    final String javaName = relationship.getJavaName();
+                    extraFieldConstructor.addArgument(
+                            new FunctionArgument(new GenericType("List", beanClass).toString(), javaName));
+                    extraFieldConstructor.addContent(EMPTY_LINE).addContent(
+                            new ForLoop(beanClass + " " + beanObject + ": " + javaName).addContent(
+                                    new FunctionCall("add", "this." + javaName).byItself().addArgument(beanObject)
+                            )
+                    );
+                }
+
+            javaClass.addContent(extraFieldConstructor).addContent(EMPTY_LINE);
+        }
+
+        javaClass
+                .addContent(getCommonResultSetConstructor()
+                        .addContent(getCommonResultSetConstructorThisCall()))
+                .addContent(EMPTY_LINE);
+
+        if (needExtraConstructors) {
+            final ConstructorDeclaration extraRsConstructor = getCommonResultSetConstructor();
+
+            for (OneToManyRelationship relationship: columns.getOneToManyRelationships())
+                if (!relationship.isListOnly())
+                    extraRsConstructor.addArgument(
+                            new FunctionArgument(
+                                    new GenericType(
+                                            "List",
+                                            relationship.getBeanClass()).toString(),
+                                    relationship.getJavaName()));
+
+            final FunctionCall thisCall = getCommonResultSetConstructorThisCall();
+
+            for (OneToManyRelationship relationship: columns.getOneToManyRelationships())
+                if (!relationship.isListOnly())
+                    thisCall.addArgument(relationship.getJavaName());
+
+            javaClass.addContent(extraRsConstructor.addContent(thisCall)).addContent(EMPTY_LINE);
+        }
+    }
+
+    private ConstructorDeclaration getCommonResultSetConstructor() {
+        return getBaseConstructor()
+                .visibility(Visibility.PROTECTED)
+                .addArgument(new FunctionArgument("ResultSet", "rs"))
+                .addException("SQLException");
+    }
+
+    private FunctionCall getCommonResultSetConstructorThisCall() {
         final FunctionCall thisCall = new FunctionCall("this").byItself();
         int index = 0;
         for (Column column: columns.getList()) {
@@ -286,11 +340,8 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
             else
                 thisCall.addArgument(new FunctionCall("get" + capitalize(column.getJavaType()), "rs").addArgument(Integer.toString(++index)));
         }
-        for (OneToManyRelationship relationship: columns.getOneToManyRelationships())
-            if (!relationship.isListOnly())
-                thisCall.addArgument(relationship.getJavaName());
 
-        return rsConstructor.addContent(thisCall);
+        return thisCall;
     }
 	
 	private void addSetIdFunction() {
@@ -344,26 +395,6 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         databaseInnerClass.addContent(processRS);
         function.addContent(databaseInnerClass).addContent(EMPTY_LINE);
 
-        // for objects containing one or more list of other kind of objects
-        for (OneToManyRelationship relationship: relationships) {
-            if (!relationship.isListOnly()) {
-                final JavaClass extraDBInnerClass = new JavaClass("DataFromDBQuery" + capitalize(relationship.getJavaName()))
-                        .visibility(Visibility.NONE).implementsInterface("DBQuerySetupProcess")
-                        .addContent(VarDeclaration.createListDeclaration(relationship.getBeanClass(), relationship.getJavaName()).markAsFinal())
-                        .addContent(EMPTY_LINE)
-                        .addContent(getInnerClassSetupPSWithIdFunction())
-                        .addContent(EMPTY_LINE);
-                final FunctionDeclaration processRSExtra = getInnerClassProcessRSFunctionStart()
-                        .addContent(new WhileBlock(new Condition("rs.next()"))
-                                .addContent(new FunctionCall("add", relationship.getJavaName())
-                                        .byItself()
-                                        .addArgument(new ObjectCreation(relationship.getBeanClass())
-                                                .addArgument("rs.getLong(1)"))));
-                extraDBInnerClass.addContent(processRSExtra);
-                function.addContent(extraDBInnerClass).addContent(EMPTY_LINE);
-            }
-        }
-
         // check for bad ID
         function.addContent(new IfBlock(new Condition("id <= 0")).addContent("throw new IllegalArgumentException(\"id = \" + id + \" <= 0\");"))
                 .addContent(EMPTY_LINE);
@@ -384,21 +415,6 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                         new ExceptionThrow("IllegalArgumentException").addArgument("\"id = \" + id + \" does not exist\"")
                 )
         ).addContent(EMPTY_LINE);
-
-        // for objects containing one or more list of other kind of objects
-        for (OneToManyRelationship relationship: relationships) {
-            if (!relationship.isListOnly()) {
-                final String cappedJavaName = capitalize(relationship.getJavaName());
-                function.addContent(
-                        new VarDeclaration("DataFromDBQuery" + cappedJavaName, "dataFromDBQuery" + cappedJavaName, new ObjectCreation("DataFromDBQuery" + cappedJavaName)).markAsFinal()
-                ).addContent(
-                        new FunctionCall("processQuery", "dbAccess")
-                                .byItself()
-                                .addArgument(quickQuote(getReadSQLQueryOneToManyRelationship(relationship.getTable(), relationship.getIdSqlName())))
-                                .addArgument("dataFromDBQuery" + cappedJavaName)
-                ).addContent(EMPTY_LINE);
-            }
-        }
 
         // extra DB actions
         function.addContent("initExtraDbActions(id);").addContent(EMPTY_LINE);
@@ -431,12 +447,73 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         for (OneToManyRelationship relationship: relationships)
             if (!relationship.isListOnly())
                 function.addContent(
-                        new Assignment("this." + relationship.getJavaName(), "dataFromDBQuery" + capitalize(relationship.getJavaName()) + "." + relationship.getJavaName())
-                );
+                        new Assignment(
+                                relationship.getJavaName(),
+                                new FunctionCall("initialized" + capitalize(relationship.getJavaName()))
+                                        .addArgument("id")
+                ));
 
         function.addContent(EMPTY_LINE).addContent("postInitActions();");
         javaClass.addContent(function).addContent(EMPTY_LINE);
 
+
+        // for objects containing one or more list of other kind of objects
+        for (OneToManyRelationship relationship: relationships)
+            if (!relationship.isListOnly()) {
+                final FunctionDeclaration initializedBeansFunction =
+                        new FunctionDeclaration(
+                                "initialized" + capitalize(relationship.getJavaName()),
+                                new GenericType("List", relationship.getBeanClass()))
+                                .addArgument(new FunctionArgument("long", "id"))
+                                .visibility(Visibility.PROTECTED);
+
+                final JavaClass extraDBInnerClass = new JavaClass("DataFromDBQuery" + capitalize(relationship.getJavaName()))
+                        .visibility(Visibility.NONE).implementsInterface("DBQuerySetupProcess")
+                        .addContent(VarDeclaration.createListDeclaration(
+                                relationship.getBeanClass(),
+                                relationship.getJavaName()).markAsFinal())
+                        .addContent(EMPTY_LINE)
+                        .addContent(getInnerClassSetupPSWithIdFunction())
+                        .addContent(EMPTY_LINE);
+                final FunctionDeclaration processRSExtra = getInnerClassProcessRSFunctionStart()
+                        .addContent(new WhileBlock(new Condition("rs.next()"))
+                                .addContent(new FunctionCall("add", relationship.getJavaName())
+                                        .byItself()
+                                        .addArgument(new ObjectCreation(relationship.getBeanClass())
+                                                .addArgument("rs.getLong(1)"))));
+                extraDBInnerClass.addContent(processRSExtra);
+
+                initializedBeansFunction
+                        .addContent(extraDBInnerClass)
+                        .addContent(EMPTY_LINE);
+
+                final String cappedJavaName = capitalize(relationship.getJavaName());
+                initializedBeansFunction.addContent(
+                        new VarDeclaration(
+                                "DataFromDBQuery" + cappedJavaName,
+                                "dataFromDBQuery" + cappedJavaName,
+                                new ObjectCreation("DataFromDBQuery" + cappedJavaName)).markAsFinal()
+                ).addContent(
+                        new FunctionCall("processQuery", "dbAccess")
+                                .byItself()
+                                .addArgument(quickQuote(
+                                        getReadSQLQueryOneToManyRelationship(
+                                                relationship.getTable(),
+                                                relationship.getIdSqlName())))
+                                .addArgument("dataFromDBQuery" + cappedJavaName)
+                ).addContent(EMPTY_LINE);
+
+
+                initializedBeansFunction
+                        .addContent(
+                                new ReturnStatement(
+                                        "dataFromDBQuery"
+                                                + capitalize(relationship.getJavaName())
+                                                + "."
+                                                + relationship.getJavaName()));
+
+                javaClass.addContent(initializedBeansFunction).addContent(EMPTY_LINE);
+            }
 
 		javaClass.addContent(
                 new FunctionDeclaration("initExtraDbActions")

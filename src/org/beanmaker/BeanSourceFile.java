@@ -26,8 +26,7 @@ public class BeanSourceFile extends BeanCode {
         javaClass.addContent(getBaseConstructor()).addContent(EMPTY_LINE);
         javaClass.addContent(getIdArgumentConstructor()).addContent(EMPTY_LINE);
         javaClass.addContent(getCopyConstructor()).addContent(EMPTY_LINE);
-        javaClass.addContent(getFieldConstructor()).addContent(EMPTY_LINE);
-        javaClass.addContent(getResultSetConstructor()).addContent(EMPTY_LINE);
+        addProtectedConstructors();
 	}
 
     private ConstructorDeclaration getBaseConstructor() {
@@ -46,7 +45,7 @@ public class BeanSourceFile extends BeanCode {
         );
     }
 
-    private ConstructorDeclaration getFieldConstructor() {
+    private ConstructorDeclaration getCommonFieldConstructor() {
         final ConstructorDeclaration fieldConstructor = getBaseConstructor().visibility(Visibility.PROTECTED);
         for (Column column: columns.getList()) {
             final String javaType = column.getJavaType();
@@ -57,38 +56,82 @@ public class BeanSourceFile extends BeanCode {
             fieldConstructor.addArgument(new FunctionArgument(javaType, column.getJavaName()));
         }
 
+        return fieldConstructor;
+    }
+
+    private FunctionCall getCommonFieldConstructorSuperCall() {
         final FunctionCall superCall = new FunctionCall("super").byItself();
         for (Column column: columns.getList())
             superCall.addArgument(column.getJavaName());
 
-        for (OneToManyRelationship relationship: columns.getOneToManyRelationships())
-            if (!relationship.isListOnly()) {
-                final String beanClass = relationship.getBeanClass();
-                final String javaName = relationship.getJavaName();
-                fieldConstructor.addArgument(new FunctionArgument(new GenericType("List", beanClass).toString(), javaName));
-                importsManager.addImport("java.util.List");
-                superCall.addArgument(javaName);
-            }
-
-        return fieldConstructor.addContent(superCall);
+        return superCall;
     }
 
-    private ConstructorDeclaration getResultSetConstructor() {
+    private void addProtectedConstructors() {
+        javaClass.addContent(
+                getCommonFieldConstructor()
+                        .addContent(getCommonFieldConstructorSuperCall()))
+                .addContent(EMPTY_LINE);
+
+        final ConstructorDeclaration extraFieldConstructor = getCommonFieldConstructor();
+        final FunctionCall extraFieldConstructorSuperCall = getCommonFieldConstructorSuperCall();
+        boolean needExtraConstructors = false;
+        for (OneToManyRelationship relationship: columns.getOneToManyRelationships())
+            if (!relationship.isListOnly()) {
+                needExtraConstructors = true;
+                final String beanClass = relationship.getBeanClass();
+                final String javaName = relationship.getJavaName();
+                extraFieldConstructor.addArgument(new FunctionArgument(new GenericType("List", beanClass).toString(), javaName));
+                importsManager.addImport("java.util.List");
+                extraFieldConstructorSuperCall.addArgument(javaName);
+            }
+
+        if (needExtraConstructors)
+            javaClass.addContent(
+                    extraFieldConstructor
+                            .addContent(extraFieldConstructorSuperCall))
+                    .addContent(EMPTY_LINE);
+
+
         importsManager.addImport("java.sql.SQLException");
         importsManager.addImport("java.sql.ResultSet");
 
-        final ConstructorDeclaration rsConstructor = getBaseConstructor().visibility(Visibility.PROTECTED)
-                .addArgument(new FunctionArgument("ResultSet", "rs")).addException("SQLException");
-        for (OneToManyRelationship relationship: columns.getOneToManyRelationships())
-            if (!relationship.isListOnly())
-                rsConstructor.addArgument(new FunctionArgument(new GenericType("List", relationship.getBeanClass()).toString(), relationship.getJavaName()));
+        javaClass.addContent(
+                getCommonResultSetConstructor()
+                        .addContent(getCommonResultSetConstructorSuperCall()))
+                .addContent(EMPTY_LINE);
 
-        final FunctionCall superCall = new FunctionCall("super").byItself().addArgument("rs");
-        for (OneToManyRelationship relationship: columns.getOneToManyRelationships())
-            if (!relationship.isListOnly())
-                superCall.addArgument(relationship.getJavaName());
+        if (needExtraConstructors) {
+            final ConstructorDeclaration extraRsConstructor = getCommonResultSetConstructor();
+            final FunctionCall extraRsConstructorSuperCall = getCommonResultSetConstructorSuperCall();
 
-        return rsConstructor.addContent(superCall);
+            for (OneToManyRelationship relationship: columns.getOneToManyRelationships())
+                if (!relationship.isListOnly()) {
+                    extraRsConstructor.addArgument(
+                            new FunctionArgument(
+                                    new GenericType(
+                                            "List",
+                                            relationship.getBeanClass()).toString(),
+                                    relationship.getJavaName()));
+                    extraRsConstructorSuperCall.addArgument(relationship.getJavaName());
+                }
+
+            javaClass.addContent(
+                    extraRsConstructor
+                            .addContent(extraRsConstructorSuperCall))
+                    .addContent(EMPTY_LINE);
+        }
+    }
+
+    private ConstructorDeclaration getCommonResultSetConstructor() {
+        return getBaseConstructor()
+                .visibility(Visibility.PROTECTED)
+                .addArgument(new FunctionArgument("ResultSet", "rs"))
+                .addException("SQLException");
+    }
+
+    private FunctionCall getCommonResultSetConstructorSuperCall() {
+        return new FunctionCall("super").byItself().addArgument("rs");
     }
 
     private void createSourceCode() {
