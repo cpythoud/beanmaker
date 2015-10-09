@@ -354,7 +354,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 		final List<OneToManyRelationship> relationships = columns.getOneToManyRelationships();
 
         final FunctionDeclaration function = new FunctionDeclaration("setId")
-                .addArgument(new FunctionArgument("long", "id"));
+                .addArgument(new FunctionArgument("long", "id")).annotate("@Override");
 
         // function inner class for database row retrieval
         final JavaClass databaseInnerClass = new JavaClass("DataFromDBQuery").visibility(Visibility.NONE)
@@ -533,7 +533,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         ).addContent(EMPTY_LINE);
 		
 		javaClass.addContent(
-                new FunctionDeclaration("resetId")
+                new FunctionDeclaration("resetId").annotate("@Override")
                         .addContent("id = 0;")
         ).addContent(EMPTY_LINE);
 	}
@@ -1240,7 +1240,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                     )
             ).addContent(EMPTY_LINE);
 
-        final FunctionDeclaration updateDBFunction = new FunctionDeclaration("updateDB");
+        final FunctionDeclaration updateDBFunction = new FunctionDeclaration("updateDB").annotate("@Override");
         if (columns.hasModifiedBy())
             updateDBFunction.addArgument(new FunctionArgument("String", "username"));
 
@@ -1300,7 +1300,8 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         javaClass.addContent(updateDBFunctionWithTransaction).addContent(EMPTY_LINE);
 
 
-        final FunctionDeclaration preUpdateConversionsFunction = new FunctionDeclaration("preUpdateConversions");
+        final FunctionDeclaration preUpdateConversionsFunction =
+                new FunctionDeclaration("preUpdateConversions").annotate("@Override");
         preUpdateConversionsFunction.addContent(
                 ifNotDataOK().addContent(
                         new ExceptionThrow("IllegalArgumentException")
@@ -1338,9 +1339,10 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 	}
 
     private void addDataOK() {
-        final FunctionDeclaration dataOKFunction = new FunctionDeclaration("isDataOK", "boolean").addContent(
-                new FunctionCall("clearErrorMessages", internalsVar).byItself()
-        ).addContent(
+        final FunctionDeclaration dataOKFunction =
+                new FunctionDeclaration("isDataOK", "boolean").annotate("@Override").addContent(
+                        new FunctionCall("clearErrorMessages", internalsVar).byItself()
+                ).addContent(
                 new VarDeclaration("boolean", "ok", "true")
         ).addContent(EMPTY_LINE);
 
@@ -1531,7 +1533,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         }
 
         javaClass.addContent(
-                new FunctionDeclaration("getErrorMessages", "List<ErrorMessage>").addContent(
+                new FunctionDeclaration("getErrorMessages", "List<ErrorMessage>").annotate("@Override").addContent(
                         new ReturnStatement(new FunctionCall("getErrorMessages", internalsVar))
                 )
         ).addContent(EMPTY_LINE);
@@ -1542,7 +1544,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
     }
 	
 	private void addReset() {
-        final FunctionDeclaration resetFunction = new FunctionDeclaration("reset");
+        final FunctionDeclaration resetFunction = new FunctionDeclaration("reset").annotate("@Override");
 
         for (Column column: columns.getList()) {
             if (!column.isSpecial()) {
@@ -1577,9 +1579,10 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         javaClass.addContent(resetFunction).addContent(EMPTY_LINE);
 
 
-		final FunctionDeclaration fullResetFunction = new FunctionDeclaration("fullReset").addContent(
-                new FunctionCall("reset").byItself()
-        ).addContent(
+		final FunctionDeclaration fullResetFunction =
+                new FunctionDeclaration("fullReset").annotate("@Override").addContent(
+                        new FunctionCall("reset").byItself()
+                ).addContent(
                 new Assignment("id", "0")
         );
 
@@ -1596,7 +1599,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 	}
 	
 	private void addDelete() {
-        final FunctionDeclaration deleteFunction = new FunctionDeclaration("delete");
+        final FunctionDeclaration deleteFunction = new FunctionDeclaration("delete").annotate("@Override");
         final FunctionCall accessDB = new FunctionCall("addUpdate", "transaction").byItself();
 
         deleteFunction.addContent(
@@ -2243,8 +2246,11 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
     private void addSetLocale() {
         javaClass.addContent(
-                new FunctionDeclaration("setLocale").addArgument(new FunctionArgument("Locale", "locale")).addContent(
-                        new FunctionCall("setLocale", internalsVar).addArgument("locale").byItself()
+                new FunctionDeclaration("setLocale")
+                        .annotate("@Override")
+                        .addArgument(new FunctionArgument("Locale", "locale"))
+                        .addContent(
+                            new FunctionCall("setLocale", internalsVar).addArgument("locale").byItself()
                 )
         ).addContent(EMPTY_LINE);
     }
