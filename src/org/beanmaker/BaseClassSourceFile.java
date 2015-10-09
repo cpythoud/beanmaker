@@ -480,7 +480,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                                 .addContent(new FunctionCall("add", relationship.getJavaName())
                                         .byItself()
                                         .addArgument(new ObjectCreation(relationship.getBeanClass())
-                                                .addArgument("rs.getLong(1)"))));
+                                                .addArgument("rs"))));
                 extraDBInnerClass.addContent(processRSExtra);
 
                 initializedBeansFunction
