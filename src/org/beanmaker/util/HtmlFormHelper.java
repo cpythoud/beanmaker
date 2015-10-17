@@ -372,7 +372,12 @@ public class HtmlFormHelper {
         return field + "_" + idNamePostfix + "_" + idBean;
     }
 
-    protected InputTag getInputTag(final InputTag.InputType type, final String id, final String name, final String value) {
+    protected InputTag getInputTag(
+            final InputTag.InputType type,
+            final String id,
+            final String name,
+            final String value)
+    {
         if (type == InputTag.InputType.DATE)
             return new InputTag(inputTypeForDateFields == null ? type : inputTypeForDateFields)
                     .cssClass(cssClassForDateFields == null ? "form-control" : "form-control " + cssClassForDateFields)
@@ -480,14 +485,14 @@ public class HtmlFormHelper {
     public ButtonTag getButtonTag(
             final ButtonTag.ButtonType type,
             final String beanName,
-            final long id,
+            final long idBean,
             final String functionName,
             final String buttonLabel,
             final String cssClasses)
     {
         return new ButtonTag(type)
                 .child(new CData(buttonLabel))
-                .id(getHtmlId(beanName + "_" + functionName, id))
+                .id(getHtmlId(beanName + "_" + functionName, idBean))
                 .cssClass(cssClasses);
     }
 
@@ -785,13 +790,24 @@ public class HtmlFormHelper {
         return beanName + "_" + id;
     }
 
-    public DivTag getFileField(final String field, final long idBean, final String currentFile,
-                               final String fieldLabel, final boolean required) {
+    public DivTag getFileField(
+            final String field,
+            final long idBean,
+            final String currentFile,
+            final String fieldLabel,
+            final boolean required)
+    {
         return getFileField(field, idBean, currentFile, fieldLabel, required, false);
     }
 
-    public DivTag getFileField(final String field, final long idBean, final String currentFile,
-                               final String fieldLabel, final boolean required, final boolean disabled) {
+    public DivTag getFileField(
+            final String field,
+            final long idBean,
+            final String currentFile,
+            final String fieldLabel,
+            final boolean required,
+            final boolean disabled)
+    {
         final String fieldId = getFieldId(field, idBean);
         final LabelTag label = getLabel(fieldLabel, fieldId, required);
 
