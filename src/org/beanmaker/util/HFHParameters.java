@@ -21,7 +21,7 @@ public class HFHParameters {
     private String helpText;
 
     // selects
-    private long selected = -1;
+    private String selected;
     private List<IdNamePair> selectPairs;
     
     // checkboxes
@@ -204,15 +204,21 @@ public class HFHParameters {
         return this;
     }
 
-    public long getSelected() {
-        if (selected == -1)
+    public String getSelected() {
+        if (selected == null)
             throw new HFHParameterMissingException("selected");
 
         return selected;
     }
 
-    public HFHParameters setSelected(long selected) {
+    public HFHParameters setSelected(final String selected) {
         this.selected = selected;
+
+        return this;
+    }
+
+    public HFHParameters setSelected(final long selected) {
+        this.selected = Long.toString(selected);
 
         return this;
     }
