@@ -37,7 +37,6 @@ public class HFHParameters {
     private String functionName;
     private String cssClasses;
     private String buttonLabel;
-    private String extraCssClasses;
 
     // extra parameters
     private Map<String, String> extraParams;
@@ -73,7 +72,6 @@ public class HFHParameters {
         functionName = params.functionName;
         cssClasses = params.cssClasses;
         buttonLabel = params.buttonLabel;
-        extraCssClasses = params.extraCssClasses;
 
         if (params.extraParams != null) {
             initExtraParamMap();
@@ -311,16 +309,6 @@ public class HFHParameters {
 
     public HFHParameters setButtonLabel(String buttonLabel) {
         this.buttonLabel = buttonLabel;
-
-        return this;
-    }
-
-    public String getExtraCssClasses() {
-        return extraCssClasses;
-    }
-
-    public HFHParameters setExtraCssClasses(String extraCssClasses) {
-        this.extraCssClasses = extraCssClasses;
 
         return this;
     }
