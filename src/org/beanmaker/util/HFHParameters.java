@@ -106,7 +106,7 @@ public class HFHParameters {
         return field;
     }
 
-    public HFHParameters setField(String field) {
+    public HFHParameters setField(final String field) {
         this.field = field;
 
         return this;
@@ -119,7 +119,7 @@ public class HFHParameters {
         return idBean;
     }
 
-    public HFHParameters setIdBean(long idBean) {
+    public HFHParameters setIdBean(final long idBean) {
         this.idBean = idBean;
 
         return this;
@@ -132,7 +132,7 @@ public class HFHParameters {
         return value;
     }
 
-    public HFHParameters setValue(String value) {
+    public HFHParameters setValue(final String value) {
         this.value = value;
 
         return this;
@@ -145,7 +145,7 @@ public class HFHParameters {
         return fieldLabel;
     }
 
-    public HFHParameters setFieldLabel(String fieldLabel) {
+    public HFHParameters setFieldLabel(final String fieldLabel) {
         this.fieldLabel = fieldLabel;
 
         return this;
@@ -158,7 +158,7 @@ public class HFHParameters {
         return inputType;
     }
 
-    public HFHParameters setInputType(InputTag.InputType inputType) {
+    public HFHParameters setInputType(final InputTag.InputType inputType) {
         this.inputType = inputType;
 
         return this;
@@ -168,7 +168,7 @@ public class HFHParameters {
         return required;
     }
 
-    public HFHParameters setRequired(boolean required) {
+    public HFHParameters setRequired(final boolean required) {
         this.required = required;
 
         return this;
@@ -178,7 +178,7 @@ public class HFHParameters {
         return disabled;
     }
 
-    public HFHParameters setDisabled(boolean disabled) {
+    public HFHParameters setDisabled(final boolean disabled) {
         this.disabled = disabled;
 
         return this;
@@ -188,7 +188,7 @@ public class HFHParameters {
         return placeholder;
     }
 
-    public HFHParameters setPlaceholder(String placeholder) {
+    public HFHParameters setPlaceholder(final String placeholder) {
         this.placeholder = placeholder;
 
         return this;
@@ -198,7 +198,7 @@ public class HFHParameters {
         return helpText;
     }
 
-    public HFHParameters setHelpText(String helpText) {
+    public HFHParameters setHelpText(final String helpText) {
         this.helpText = helpText;
 
         return this;
@@ -230,7 +230,7 @@ public class HFHParameters {
         return selectPairs;
     }
 
-    public HFHParameters setSelectPairs(List<IdNamePair> selectPairs) {
+    public HFHParameters setSelectPairs(final List<IdNamePair> selectPairs) {
         this.selectPairs = selectPairs;
 
         return this;
@@ -240,7 +240,7 @@ public class HFHParameters {
         return checked;
     }
 
-    public HFHParameters setChecked(boolean checked) {
+    public HFHParameters setChecked(final boolean checked) {
         this.checked = checked;
 
         return this;
@@ -250,7 +250,7 @@ public class HFHParameters {
         return idNameSuffix;
     }
 
-    public HFHParameters setIdNameSuffix(String idNameSuffix) {
+    public HFHParameters setIdNameSuffix(final String idNameSuffix) {
         this.idNameSuffix = idNameSuffix;
 
         return this;
@@ -260,7 +260,7 @@ public class HFHParameters {
         return currentFile;
     }
 
-    public HFHParameters setCurrentFile(String currentFile) {
+    public HFHParameters setCurrentFile(final String currentFile) {
         this.currentFile = currentFile;
 
         return this;
@@ -273,7 +273,7 @@ public class HFHParameters {
         return buttonType;
     }
 
-    public HFHParameters setButtonType(ButtonTag.ButtonType buttonType) {
+    public HFHParameters setButtonType(final ButtonTag.ButtonType buttonType) {
         this.buttonType = buttonType;
 
         return this;
@@ -283,7 +283,7 @@ public class HFHParameters {
         return beanName;
     }
 
-    public HFHParameters setBeanName(String beanName) {
+    public HFHParameters setBeanName(final String beanName) {
         this.beanName = beanName;
 
         return this;
@@ -293,7 +293,7 @@ public class HFHParameters {
         return functionName;
     }
 
-    public HFHParameters setFunctionName(String functionName) {
+    public HFHParameters setFunctionName(final String functionName) {
         this.functionName = functionName;
 
         return this;
@@ -303,7 +303,7 @@ public class HFHParameters {
         return cssClasses;
     }
 
-    public HFHParameters setCssClasses(String cssClasses) {
+    public HFHParameters setCssClasses(final String cssClasses) {
         this.cssClasses = cssClasses;
 
         return this;
@@ -313,7 +313,7 @@ public class HFHParameters {
         return buttonLabel;
     }
 
-    public HFHParameters setButtonLabel(String buttonLabel) {
+    public HFHParameters setButtonLabel(final String buttonLabel) {
         this.buttonLabel = buttonLabel;
 
         return this;
