@@ -42,6 +42,45 @@ public class HFHParameters {
     // extra parameters
     private Map<String, String> extraParams;
 
+
+    public HFHParameters() { }
+
+    public HFHParameters(final HFHParameters params) {
+        field = params.field;
+        idBean = params.idBean;
+        value = params.value;
+        fieldLabel = params.fieldLabel;
+        inputType = params.inputType;
+        required = params.required;
+        disabled = params.disabled;
+        placeholder = params.placeholder;
+        helpText = params.helpText;
+
+        // selects
+        selected = params.selected;
+        selectPairs.addAll(params.selectPairs);
+
+        // checkboxes
+        checked = params.checked;
+        idNameSuffix = params.idNameSuffix;
+
+        // file inputs
+        currentFile = params.currentFile;
+
+        // buttons
+        buttonType = params.buttonType;
+        beanName = params.beanName;
+        functionName = params.functionName;
+        cssClasses = params.cssClasses;
+        buttonLabel = params.buttonLabel;
+        extraCssClasses = params.extraCssClasses;
+
+        if (params.extraParams != null) {
+            initExtraParamMap();
+            extraParams.putAll(params.extraParams);
+        }
+    }
+
     private synchronized void initExtraParamMap() {
         if (extraParams == null)
             extraParams = new HashMap<String, String>();
