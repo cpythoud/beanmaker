@@ -27,6 +27,7 @@ public class HFHParameters {
     // checkboxes
     private boolean checked;
     private String idNameSuffix;
+    private String checkboxValue;
 
     // file inputs
     private String currentFile;
@@ -62,6 +63,7 @@ public class HFHParameters {
         // checkboxes
         checked = params.checked;
         idNameSuffix = params.idNameSuffix;
+        checkboxValue = params.checkboxValue;
 
         // file inputs
         currentFile = params.currentFile;
@@ -252,6 +254,16 @@ public class HFHParameters {
 
     public HFHParameters setIdNameSuffix(final String idNameSuffix) {
         this.idNameSuffix = idNameSuffix;
+
+        return this;
+    }
+
+    public String getCheckboxValue() {
+        return checkboxValue;
+    }
+
+    public HFHParameters setCheckboxValue(final String checkboxValue) {
+        this.checkboxValue = checkboxValue;
 
         return this;
     }
