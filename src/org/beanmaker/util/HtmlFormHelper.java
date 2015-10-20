@@ -347,7 +347,7 @@ public class HtmlFormHelper {
             final boolean disabled,
             final String helpText)
     {
-        final String fieldId = getFieldId(field, idBean);
+        /*final String fieldId = getFieldId(field, idBean);
         final LabelTag label = getLabel(fieldLabel, fieldId, required);
 
         final InputTag input = getInputTag(type, fieldId, field, value);
@@ -358,7 +358,34 @@ public class HtmlFormHelper {
         if (disabled)
             input.disabled();
 
-        return getFormGroup(label, input, helpText);
+        return getFormGroup(label, input, helpText);*/
+
+        return getTextField(
+                new HFHParameters()
+                        .setField(field)
+                        .setIdBean(idBean)
+                        .setValue(value)
+                        .setFieldLabel(fieldLabel)
+                        .setInputType(type)
+                        .setRequired(required)
+                        .setPlaceholder(placeholder)
+                        .setDisabled(disabled)
+                        .setHelpText(helpText));
+    }
+
+    public DivTag getTextField(final HFHParameters params) {
+        final String fieldId = getFieldId(params.getField(), params.getIdBean());
+        final LabelTag label = getLabel(params.getFieldLabel(), fieldId, params.isRequired());
+
+        final InputTag input = getInputTag(params.getInputType(), fieldId, params.getField(), params.getValue());
+        if (params.isRequired() && useRequiredInHtml)
+            input.required();
+        if (params.getPlaceholder() != null)
+            input.placeholder(params.getPlaceholder());
+        if (params.isDisabled())
+            input.disabled();
+
+        return getFormGroup(label, input, params.getHelpText());
     }
 
     protected String getFieldId(final String field, final long idBean) {
@@ -463,23 +490,47 @@ public class HtmlFormHelper {
         return "col-" + horizontalSizeShift + "-" + horizontalFieldWidth;
     }
 
-    public ButtonTag getSubmitButtonTag(final String beanName, final long id, final String buttonLabel) {
-        return getSubmitButtonTag(beanName, id, buttonLabel, null);
+    public ButtonTag getSubmitButtonTag(final String beanName, final long idBean, final String buttonLabel) {
+        //return getSubmitButtonTag(beanName, idBean, buttonLabel, null);
+
+        return getSubmitButtonTag(
+                new HFHParameters()
+                        .setBeanName(beanName)
+                        .setIdBean(idBean)
+                        .setButtonLabel(buttonLabel));
+    }
+
+    public ButtonTag getSubmitButtonTag(final HFHParameters params) {
+        return getSubmitButtonTag(params, null);
     }
 
     public ButtonTag getSubmitButtonTag(
             final String beanName,
-            final long id,
+            final long idBean,
             final String buttonLabel,
             final String extraCssClasses)
     {
-        return getButtonTag(
+        /*return getButtonTag(
                 ButtonTag.ButtonType.SUBMIT,
                 beanName,
-                id,
+                idBean,
                 "submit",
                 buttonLabel,
-                "btn btn-default" + (extraCssClasses == null ? "" : " " + extraCssClasses));
+                "btn btn-default" + (extraCssClasses == null ? "" : " " + extraCssClasses));*/
+
+        return getSubmitButtonTag(
+                new HFHParameters()
+                        .setBeanName(beanName)
+                        .setIdBean(idBean)
+                        .setButtonLabel(buttonLabel), extraCssClasses);
+    }
+
+    public ButtonTag getSubmitButtonTag(final HFHParameters params, final String extraCssClasses) {
+        return getButtonTag(
+                new HFHParameters(params)
+                        .setButtonType(ButtonTag.ButtonType.SUBMIT)
+                        .setFunctionName("submit")
+                        .setCssClasses("btn btn-default" + (extraCssClasses == null ? "" : " " + extraCssClasses)));
     }
 
     public ButtonTag getButtonTag(
@@ -490,20 +541,60 @@ public class HtmlFormHelper {
             final String buttonLabel,
             final String cssClasses)
     {
-        return new ButtonTag(type)
+        /*return new ButtonTag(type)
                 .child(new CData(buttonLabel))
                 .id(getHtmlId(beanName + "_" + functionName, idBean))
-                .cssClass(cssClasses);
+                .cssClass(cssClasses);*/
+
+        return getButtonTag(
+                new HFHParameters()
+                        .setButtonType(type)
+                        .setBeanName(beanName)
+                        .setIdBean(idBean)
+                        .setFunctionName(functionName)
+                        .setButtonLabel(buttonLabel)
+                        .setCssClasses(cssClasses));
+    }
+
+    public ButtonTag getButtonTag(final HFHParameters params) {
+        return new ButtonTag(params.getButtonType())
+                .child(new CData(params.getButtonLabel()))
+                .id(getHtmlId(params.getBeanName() + "_" + params.getFunctionName(), params.getIdBean()))
+                .cssClass(params.getCssClasses());
     }
 
     public Tag getSubmitButton(final String beanName, final long id, final String buttonLabel) {
         return getSubmitButton(beanName, id, buttonLabel, false);
     }
 
-    public Tag getSubmitButton(final String beanName, final long id, final String buttonLabel, final boolean disabled) {
-        final ButtonTag submit = getSubmitButtonTag(beanName, id, buttonLabel);
+    public Tag getSubmitButton(
+            final String beanName,
+            final long idBean,
+            final String buttonLabel,
+            final boolean disabled)
+    {
+        /*final ButtonTag submit = getSubmitButtonTag(beanName, idBean, buttonLabel);
 
         if (disabled)
+            submit.disabled();
+
+        if (horizontal)
+            return getFormGroup().child(new DivTag().cssClass(getHorizontalFieldClassesWithOffset()).child(submit));
+
+        return submit;*/
+
+        return getSubmitButton(
+                new HFHParameters()
+                        .setBeanName(beanName)
+                        .setIdBean(idBean)
+                        .setButtonLabel(buttonLabel)
+                        .setDisabled(disabled));
+    }
+
+    public Tag getSubmitButton(final HFHParameters params) {
+        final ButtonTag submit = getSubmitButtonTag(params);
+
+        if (params.isDisabled())
             submit.disabled();
 
         if (horizontal)
@@ -585,7 +676,7 @@ public class HtmlFormHelper {
             final boolean disabled,
             final String helpText)
     {
-        final String fieldId = getFieldId(field, idBean);
+        /*final String fieldId = getFieldId(field, idBean);
         final LabelTag label = getLabel(fieldLabel, fieldId, required);
 
         final SelectTag select = getSelectTag(field, fieldId);
@@ -601,7 +692,38 @@ public class HtmlFormHelper {
             select.child(optionTag);
         }
 
-        return getFormGroup(label, select, helpText);
+        return getFormGroup(label, select, helpText);*/
+
+        return getSelectField(
+                new HFHParameters()
+                        .setField(field)
+                        .setIdBean(idBean)
+                        .setSelected(selected)
+                        .setFieldLabel(fieldLabel)
+                        .setSelectPairs(pairs)
+                        .setRequired(required)
+                        .setDisabled(disabled)
+                        .setHelpText(helpText));
+    }
+
+    public DivTag getSelectField(final HFHParameters params) {
+        final String fieldId = getFieldId(params.getField(), params.getIdBean());
+        final LabelTag label = getLabel(params.getFieldLabel(), fieldId, params.isRequired());
+
+        final SelectTag select = getSelectTag(params.getField(), fieldId);
+        if (params.isRequired() && useRequiredInHtml)
+            select.required();
+        if (params.isDisabled())
+            select.disabled();
+
+        for (IdNamePair pair: params.getSelectPairs()) {
+            final OptionTag optionTag = new OptionTag(pair.getName(), pair.getId());
+            if (pair.getId().equals(params.getSelected()))
+                optionTag.selected();
+            select.child(optionTag);
+        }
+
+        return getFormGroup(label, select, params.getHelpText());
     }
 
     protected SelectTag getSelectTag(final String name, final String id) {
@@ -638,7 +760,7 @@ public class HtmlFormHelper {
             final boolean disabled,
             final String helpText)
     {
-        final String fieldId = getFieldId(field, idBean);
+        /*final String fieldId = getFieldId(field, idBean);
         final LabelTag label = getLabel(fieldLabel, fieldId, required);
 
         final TextareaTag textarea = getTextAreaTag(fieldId, field, value);
@@ -647,7 +769,30 @@ public class HtmlFormHelper {
         if (disabled)
             textarea.disabled();
 
-        return getFormGroup(label, textarea, helpText);
+        return getFormGroup(label, textarea, helpText);*/
+
+        return getTextAreaField(
+                new HFHParameters()
+                        .setField(field)
+                        .setIdBean(idBean)
+                        .setValue(value)
+                        .setFieldLabel(fieldLabel)
+                        .setRequired(required)
+                        .setDisabled(disabled)
+                        .setHelpText(helpText));
+    }
+
+    public DivTag getTextAreaField(final HFHParameters params) {
+        final String fieldId = getFieldId(params.getField(), params.getIdBean());
+        final LabelTag label = getLabel(params.getFieldLabel(), fieldId, params.isRequired());
+
+        final TextareaTag textarea = getTextAreaTag(fieldId, params.getField(), params.getValue());
+        if (params.isRequired() && useRequiredInHtml)
+            textarea.required();
+        if (params.isDisabled())
+            textarea.disabled();
+
+        return getFormGroup(label, textarea, params.getHelpText());
     }
 
     protected TextareaTag getTextAreaTag(final String id, final String name, final String value) {
@@ -693,7 +838,26 @@ public class HtmlFormHelper {
             final String value,
             final String idNameSuffix)
     {
-        final DivTag innerPart = getCheckbox(field, idBean, checked, fieldLabel, disabled, value, idNameSuffix);
+        /*final DivTag innerPart = getCheckbox(field, idBean, checked, fieldLabel, disabled, value, idNameSuffix);
+
+        if (horizontal)
+            return getFormGroup().child(new DivTag().cssClass(getHorizontalFieldClassesWithOffset()).child(innerPart));
+
+        return innerPart;*/
+
+        return getCheckboxField(
+                new HFHParameters()
+                        .setField(field)
+                        .setIdBean(idBean)
+                        .setChecked(checked)
+                        .setFieldLabel(fieldLabel)
+                        .setDisabled(disabled)
+                        .setCheckboxValue(value)
+                        .setIdNameSuffix(idNameSuffix));
+    }
+
+    public DivTag getCheckboxField(final HFHParameters params) {
+        final DivTag innerPart = getCheckbox(params);
 
         if (horizontal)
             return getFormGroup().child(new DivTag().cssClass(getHorizontalFieldClassesWithOffset()).child(innerPart));
@@ -740,11 +904,30 @@ public class HtmlFormHelper {
             final String value,
             final String idNameSuffix)
     {
-        return new DivTag()
+        /*return new DivTag()
                 .cssClass("checkbox")
                 .child(new LabelTag()
                                 .child(getCheckboxTag(field, idBean, checked, disabled, value, idNameSuffix))
                                 .child(new CData(" " + fieldLabel))
+                );*/
+
+        return getCheckbox(
+                new HFHParameters()
+                        .setField(field)
+                        .setIdBean(idBean)
+                        .setChecked(checked)
+                        .setFieldLabel(fieldLabel)
+                        .setDisabled(disabled)
+                        .setCheckboxValue(value)
+                        .setIdNameSuffix(idNameSuffix));
+    }
+
+    protected DivTag getCheckbox(final HFHParameters params) {
+        return new DivTag()
+                .cssClass("checkbox")
+                .child(new LabelTag()
+                                .child(getCheckboxTag(params))
+                                .child(new CData(" " + params.getFieldLabel()))
                 );
     }
 
@@ -775,13 +958,38 @@ public class HtmlFormHelper {
             final String value,
             final String idNameSuffix)
     {
-        final InputTag checkbox = new InputTag(InputTag.InputType.CHECKBOX).name(field).id(getFieldId(field, idBean, idNameSuffix));
+        /*final InputTag checkbox = new InputTag(InputTag.InputType.CHECKBOX).name(field).id(getFieldId(field, idBean, idNameSuffix));
         if (checked)
             checkbox.checked();
         if (disabled)
             checkbox.disabled();
         if (value != null)
             checkbox.value(value);
+
+        return checkbox;*/
+
+        return getCheckboxTag(
+                new HFHParameters()
+                        .setField(field)
+                        .setIdBean(idBean)
+                        .setChecked(checked)
+                        .setDisabled(disabled)
+                        .setCheckboxValue(value)
+                        .setIdNameSuffix(idNameSuffix));
+    }
+
+    protected InputTag getCheckboxTag(final HFHParameters params) {
+        final InputTag checkbox =
+                new InputTag(InputTag.InputType.CHECKBOX)
+                        .name(params.getField())
+                        .id(getFieldId(params.getField(), params.getIdBean(), params.getIdNameSuffix()));
+
+        if (params.isChecked())
+            checkbox.checked();
+        if (params.isDisabled())
+            checkbox.disabled();
+        if (params.getCheckboxValue() != null)
+            checkbox.value(params.getCheckboxValue());
 
         return checkbox;
     }
@@ -808,13 +1016,41 @@ public class HtmlFormHelper {
             final boolean required,
             final boolean disabled)
     {
-        final String fieldId = getFieldId(field, idBean);
+        /*final String fieldId = getFieldId(field, idBean);
         final LabelTag label = getLabel(fieldLabel, fieldId, required);
 
         final InputTag input = getInputTag(InputTag.InputType.FILE, fieldId, field, currentFile);
         if (required && useRequiredInHtml)
             input.required();
         if (disabled)
+            input.disabled();
+
+        return getFormGroup(label, input);*/
+
+        return getFileField(
+                new HFHParameters()
+                        .setField(field)
+                        .setIdBean(idBean)
+                        .setCurrentFile(currentFile)
+                        .setFieldLabel(fieldLabel)
+                        .setRequired(required)
+                        .setDisabled(disabled));
+    }
+
+    public DivTag getFileField(final HFHParameters params) {
+        final String fieldId = getFieldId(params.getField(), params.getIdBean());
+        final LabelTag label = getLabel(params.getFieldLabel(), fieldId, params.isRequired());
+
+        final InputTag input =
+                getInputTag(
+                        InputTag.InputType.FILE,
+                        fieldId,
+                        params.getField(),
+                        params.getCurrentFile());
+
+        if (params.isRequired() && useRequiredInHtml)
+            input.required();
+        if (params.isDisabled())
             input.disabled();
 
         return getFormGroup(label, input);
