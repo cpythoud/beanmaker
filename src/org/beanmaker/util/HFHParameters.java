@@ -58,7 +58,8 @@ public class HFHParameters {
 
         // selects
         selected = params.selected;
-        selectPairs.addAll(params.selectPairs);
+        if (params.selectPairs != null)
+            selectPairs.addAll(params.selectPairs);
 
         // checkboxes
         checked = params.checked;
