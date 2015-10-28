@@ -1056,8 +1056,11 @@ public class HtmlFormHelper {
         return getFormGroup(label, input);
     }
 
-    public Tag getHiddenInfo(final String name, final String value) {
-        return new InputTag(InputTag.InputType.HIDDEN).name(name).value(value);
+    public Tag getHiddenInfo(final String field, final long idBean, final String value) {
+        return new InputTag(InputTag.InputType.HIDDEN)
+                .name(field)
+                .id(getFieldId(field, idBean))
+                .value(value);
     }
 }
 
