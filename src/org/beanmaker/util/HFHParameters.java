@@ -130,7 +130,7 @@ public class HFHParameters {
 
     public String getValue() {
         if (value == null)
-            throw new HFHParameterMissingException("value");
+            return "";
 
         return value;
     }
