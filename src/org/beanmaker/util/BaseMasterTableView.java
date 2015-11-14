@@ -29,7 +29,7 @@ import java.util.List;
 
 public abstract class BaseMasterTableView extends BaseView {
 
-    protected final String tableId;
+    protected String tableId = "";
 
     protected String tableCssClass = "cctable";
     protected String thResetCssClass = null;
