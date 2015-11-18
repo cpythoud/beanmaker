@@ -45,7 +45,8 @@ public abstract class BaseMasterTableView extends BaseView {
 
     protected String formElementFilterCssClass = "tb-filter";
     protected String removeFilteringLinkCssClass = "tb-nofilter";
-    protected Tag removeFilteringHtmlTags = new SpanTag().cssClass("glyphicon glyphicon-remove").title("Remove Filtering");
+    protected Tag removeFilteringHtmlTags =
+            new SpanTag().cssClass("glyphicon glyphicon-remove").title("Remove Filtering");
 
     protected String yesName = "yes";
     protected String noName = "no";
@@ -183,7 +184,10 @@ public abstract class BaseMasterTableView extends BaseView {
 
     protected ThTag getStringFilterCell(final String name) {
         return getTableFilterCell().child(
-                new InputTag(InputTag.InputType.TEXT).name("tb-" + name).cssClass(formElementFilterCssClass).attribute("autocomplete", "off")
+                new InputTag(InputTag.InputType.TEXT)
+                        .name("tb-" + name)
+                        .cssClass(formElementFilterCssClass)
+                        .attribute("autocomplete", "off")
         );
     }
 
@@ -281,7 +285,8 @@ public abstract class BaseMasterTableView extends BaseView {
         if (dateFormat == null)
             dateFormat = DateFormat.getDateInstance();
 
-        return getTableCell(name, dateFormat.format(value), extraCssClasses).attribute("data-sort-value", value.toString());
+        return getTableCell(name, dateFormat.format(value), extraCssClasses)
+                .attribute("data-sort-value", value.toString());
     }
 
     protected TdTag getTableCell(final String name, final Time value) {
@@ -295,7 +300,8 @@ public abstract class BaseMasterTableView extends BaseView {
         if (timeFormat == null)
             timeFormat = DateFormat.getTimeInstance();
 
-        return getTableCell(name, timeFormat.format(value), extraCssClasses).attribute("data-sort-value", value.toString());
+        return getTableCell(name, timeFormat.format(value), extraCssClasses)
+                .attribute("data-sort-value", value.toString());
     }
 
     protected TdTag getTableCell(final String name, final Timestamp value) {
@@ -309,7 +315,8 @@ public abstract class BaseMasterTableView extends BaseView {
         if (datetimeFormat == null)
             datetimeFormat = DateFormat.getDateTimeInstance();
 
-        return getTableCell(name, datetimeFormat.format(value), extraCssClasses).attribute("data-sort-value", value.toString());
+        return getTableCell(name, datetimeFormat.format(value), extraCssClasses)
+                .attribute("data-sort-value", value.toString());
     }
 
     protected TdTag getTableCell(final String name, final boolean value) {
@@ -377,7 +384,8 @@ public abstract class BaseMasterTableView extends BaseView {
     }
 
     protected TdTag getTableCell(final String name, final long value, final String extraCssClasses) {
-        return getTableCell(name, Long.toString(value), extraCssClasses).attribute("data-sort-value", Strings.zeroFill(value, zeroFilledMaxDigits));
+        return getTableCell(name, Long.toString(value), extraCssClasses)
+                .attribute("data-sort-value", Strings.zeroFill(value, zeroFilledMaxDigits));
     }
 
     protected TdTag getTableCell(final String name, final Money value) {
@@ -385,7 +393,8 @@ public abstract class BaseMasterTableView extends BaseView {
     }
 
     protected TdTag getTableCell(final String name, final Money value, final String extraCssClasses) {
-        return getTableCell(name, value.toString(), extraCssClasses).attribute("data-sort-value", Strings.zeroFill(value.getVal(), zeroFilledMaxDigits));
+        return getTableCell(name, value.toString(), extraCssClasses)
+                .attribute("data-sort-value", Strings.zeroFill(value.getVal(), zeroFilledMaxDigits));
     }
 
     protected TdTag getTableCell(final String name, final HtmlCodeFragment content) {
