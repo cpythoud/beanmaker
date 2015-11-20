@@ -1,6 +1,9 @@
 package org.beanmaker.util;
 
 public class IdNamePair {
+
+	private final String id;
+	private final String name;
 	
 	public IdNamePair(final int id, final String name) {
 		if (id < 0)
@@ -30,8 +33,5 @@ public class IdNamePair {
 	public String getName() {
 		return name;
 	}
-	
-	private final String id;
-	private final String name;
 }
 
