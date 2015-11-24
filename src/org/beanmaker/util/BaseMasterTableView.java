@@ -203,6 +203,28 @@ public abstract class BaseMasterTableView extends BaseView {
         );
     }
 
+    protected ThTag getBasicSelectFilterCell(final String name, final List<String> values) {
+        final SelectTag select = new SelectTag().name("tb-" + name).cssClass(formElementFilterCssClass);
+
+        select.child(new OptionTag("", "").selected());
+        for (String value: values)
+            select.child(new OptionTag(value));
+
+        return getTableFilterCell().child(select);
+    }
+
+    protected ThTag getAdvancedSelectFilterCell(final String name, final List<IdNamePair> pairs) {
+        final SelectTag select = new SelectTag().name("tb-" + name).cssClass(formElementFilterCssClass);
+
+        select.child(new OptionTag("", "").selected());
+        for (IdNamePair pair: pairs)
+            select.child(new OptionTag(
+                    pair.getName(),
+                    Strings.zeroFill(Long.valueOf(pair.getId()), zeroFilledMaxDigits)));
+
+        return getTableFilterCell().child(select);
+    }
+
     protected ThTag getTitleCell(final String name) {
         return getTitleCell(name, resourceBundle.getString(name));
     }
@@ -403,6 +425,15 @@ public abstract class BaseMasterTableView extends BaseView {
 
     protected TdTag getTableCell(final String name, final HtmlCodeFragment content, final String extraCssClasses) {
         return new TdTag().addCodeFragment(content).cssClass(getTableCellCssClasses(name, extraCssClasses));
+    }
+
+    protected TdTag getTableCell(final String name, final IdNamePair pair) {
+        return getTableCell(name, pair, null);
+    }
+
+    protected TdTag getTableCell(final String name, final IdNamePair pair, final String extraCssClasses) {
+        return getTableCell(name, pair.getName(), extraCssClasses)
+                .attribute("data-filter-value", Strings.zeroFill(Long.valueOf(pair.getId()), zeroFilledMaxDigits));
     }
 
     protected TheadTag getThreeLineHead() {
