@@ -502,10 +502,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 ).addContent(
                         new FunctionCall("processQuery", "dbAccess")
                                 .byItself()
-                                .addArgument(quickQuote(
-                                        getReadSQLQueryOneToManyRelationship(
-                                                relationship.getTable(),
-                                                relationship.getIdSqlName())))
+                                .addArgument(getReadSQLQueryOneToManyRelationship(relationship))
                                 .addArgument("dataFromDBQuery" + cappedJavaName)
                 ).addContent(EMPTY_LINE);
 
@@ -2335,8 +2332,10 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         return buf.toString();
     }
 
-    private String getReadSQLQueryOneToManyRelationship(final String tableName, final String indexField) {
-        return "SELECT id FROM " + tableName + " WHERE " + indexField + "=?";
+    private String getReadSQLQueryOneToManyRelationship(final OneToManyRelationship relationship) {
+        return "\"SELECT \" + " + relationship.getBeanClass() + ".DATABASE_FIELD_LIST + \" FROM "
+                + relationship.getTable()
+                + " WHERE " + relationship.getIdSqlName() + "=?\"";
     }
 	
 	private String getDeleteSQLQuery() {
