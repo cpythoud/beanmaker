@@ -2077,7 +2077,10 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         for (OneToManyRelationship relationship: columns.getOneToManyRelationships())
             if (!relationship.isListOnly())
                 newBeanFromFields.addArgument(new FunctionCall("getSelection", relationship.getBeanClass())
-                        .addArgument(new OperatorExpression("\"id_" + uncamelize(beanVarName) + "=\"", new FunctionCall("getLong", "rs").addArgument("1"), OperatorExpression.Operator.ADD)));
+                        .addArgument(new OperatorExpression(
+                                quickQuote(relationship.getIdSqlName() + "="),
+                                new FunctionCall("getLong", "rs").addArgument("1"),
+                                OperatorExpression.Operator.ADD)));
         javaClass.addContent(
                 new JavaClass("GetSelectionQueryProcess")
                         .implementsInterface("DBQueryRetrieveData<List<" + beanName + ">>")
