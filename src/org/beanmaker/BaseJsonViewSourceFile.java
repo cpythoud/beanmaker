@@ -108,13 +108,23 @@ public class BaseJsonViewSourceFile extends ViewCode {
                 if (field.startsWith("id") && column.hasAssociatedBean()) {
                     importsManager.addImport("org.dbbeans.util.json.JsonObjectElement");
                     final String associatedBeanClass = column.getAssociatedBeanClass();
-                    getJsonElementFunction = new FunctionDeclaration("get" + chopId(field) + "JsonElement", "JsonElement").visibility(Visibility.PROTECTED).addContent(
-                            new VarDeclaration(associatedBeanClass + "JsonView", uncapitalize(associatedBeanClass) + "JsonView",
-                                    new ObjectCreation(associatedBeanClass + "JsonView").addArgument(getFieldValue(chopId(field)))).markAsFinal()
+                    getJsonElementFunction = new FunctionDeclaration("get" + chopId(field) + "JsonElement", "JsonElement")
+                            .visibility(Visibility.PROTECTED)
+                            .addContent(
+                                    new VarDeclaration(
+                                            associatedBeanClass + "JsonView",
+                                            getVarNameForClass(associatedBeanClass) + "JsonView",
+                                            new ObjectCreation(associatedBeanClass + "JsonView")
+                                                    .addArgument(getFieldValue(chopId(field))))
+                                            .markAsFinal()
                     ).addContent(EMPTY_LINE).addContent(
-                            new ReturnStatement(new ObjectCreation("JsonObjectElement")
-                                    .addArgument(quickQuote(uncapitalize(chopId(field))))
-                                    .addArgument(new FunctionCall("getJsonObject", uncapitalize(associatedBeanClass) + "JsonView").addArgument("false")))
+                            new ReturnStatement(
+                                    new ObjectCreation("JsonObjectElement")
+                                            .addArgument(quickQuote(uncapitalize(chopId(field))))
+                                            .addArgument(new FunctionCall(
+                                                    "getJsonObject",
+                                                    getVarNameForClass(associatedBeanClass) + "JsonView")
+                                                    .addArgument("false")))
                     );
                 } else {
                     final ObjectCreation jsonElementCreation;
