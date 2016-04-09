@@ -72,6 +72,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         importsManager.addImport("org.dbbeans.sql.DBQuerySetup");
         importsManager.addImport("org.dbbeans.sql.DBQuerySetupProcess");
         importsManager.addImport("org.dbbeans.sql.DBTransaction");
+        importsManager.addImport("org.dbbeans.sql.queries.BooleanCheckQuery");
 
         importsManager.addImport("org.dbbeans.util.Strings");
 
@@ -1355,37 +1356,45 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 final String field = column.getJavaName();
                 final String fieldCap = capitalize(field);
 
-                final IfBlock checkRequired = new IfBlock(new Condition(new FunctionCall("is" + fieldCap + "Required"))).addContent(
-                        new FunctionCall("addErrorMessage", internalsVar).byItself()
-                                .addArgument("id")
-                                .addArgument(quickQuote(field))
-                                .addArgument(new FunctionCall("get" + fieldCap + "Label"))
-                                .addArgument(new FunctionCall("get" + fieldCap + "EmptyErrorMessage"))
-                ).addContent(new Assignment("ok", "false"));
+                final IfBlock checkRequired =
+                        new IfBlock(
+                                new Condition(new FunctionCall("is" + fieldCap + "Required"))
+                                        .andCondition(
+                                                new Condition(new FunctionCall("is" + fieldCap + "Empty"))
+                                        )
+                        ).addContent(
+                                new FunctionCall("addErrorMessage", internalsVar).byItself()
+                                        .addArgument("id")
+                                        .addArgument(quickQuote(field))
+                                        .addArgument(new FunctionCall("get" + fieldCap + "Label"))
+                                        .addArgument(new FunctionCall("get" + fieldCap + "EmptyErrorMessage"))
+                        ).addContent(new Assignment("ok", "false"));
 
-                final IfBlock checkOKAndUnique = new IfBlock(new Condition(new FunctionCall("is" + fieldCap + "OK"), true)).addContent(
-                        new FunctionCall("addErrorMessage", internalsVar).byItself()
-                                .addArgument("id")
-                                .addArgument(quickQuote(field))
-                                .addArgument(new FunctionCall("get" + fieldCap + "Label"))
-                                .addArgument(new FunctionCall("get" + fieldCap + "BadFormatErrorMessage"))
-                ).addContent(new Assignment("ok", "false"));
+                final ElseIfBlock checkOK =
+                        new ElseIfBlock(new Condition(new FunctionCall("is" + fieldCap + "OK"), true)).addContent(
+                                new FunctionCall("addErrorMessage", internalsVar).byItself()
+                                        .addArgument("id")
+                                        .addArgument(quickQuote(field))
+                                        .addArgument(new FunctionCall("get" + fieldCap + "Label"))
+                                        .addArgument(new FunctionCall("get" + fieldCap + "BadFormatErrorMessage"))
+                        ).addContent(new Assignment("ok", "false"));
 
-                if (column.isUnique())
-                    checkOKAndUnique.elseClause(new ElseBlock().addContent(
-                            new IfBlock(new Condition(new FunctionCall("is" + fieldCap + "Unique"), true)).addContent(
-                                    new FunctionCall("addErrorMessage", internalsVar).byItself()
-                                            .addArgument("id")
-                                            .addArgument(quickQuote(field))
-                                            .addArgument(new FunctionCall("get" + fieldCap + "Label"))
-                                            .addArgument(new FunctionCall("get" + fieldCap + "NotUniqueErrorMessage"))
-                            ).addContent(new Assignment("ok", "false"))
-                    ));
+                final ElseIfBlock checkUnique =
+                        new ElseIfBlock(
+                                new Condition(new FunctionCall("is" + fieldCap + "ToBeUnique"))
+                                        .andCondition(
+                                                new Condition(new FunctionCall("is" + fieldCap + "Unique"), true)))
+                                .addContent(
+                                        new FunctionCall("addErrorMessage", internalsVar).byItself()
+                                                .addArgument("id")
+                                                .addArgument(quickQuote(field))
+                                                .addArgument(new FunctionCall("get" + fieldCap + "Label"))
+                                                .addArgument(new FunctionCall("get" + fieldCap + "NotUniqueErrorMessage"))
+                                ).addContent(new Assignment("ok", "false"));
 
-                dataOKFunction.addContent(
-                        new IfBlock(new Condition(new FunctionCall("is" + fieldCap + "Empty"))).addContent(checkRequired)
-                                .elseClause(new ElseBlock().addContent(checkOKAndUnique))
-                ).addContent(EMPTY_LINE);
+                dataOKFunction
+                        .addContent(checkRequired.addElseIfClause(checkOK).addElseIfClause(checkUnique))
+                        .addContent(EMPTY_LINE);
             }
         }
 
@@ -1498,33 +1507,47 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         }
 
         for (Column column: columns.getList()) {
-            if (!column.isSpecial() && column.isUnique()) {
-                importsManager.addImport("org.dbbeans.sql.queries.BooleanCheckQuery");
+            if (!column.isSpecial() && !column.getJavaType().equals("boolean")) {
+
+                final FunctionCall setComparisonArgument;
+                if (column.getJavaType().equals("Money"))
+                    setComparisonArgument = new FunctionCall("setLong", "stat")
+                            .addArgument("1")
+                            .addArgument(new FunctionCall("getVal", column.getJavaName()))
+                            .byItself();
+                else
+                    setComparisonArgument = new FunctionCall("set" + capitalize(column.getJavaType()), "stat")
+                            .addArgument("1")
+                            .addArgument(column.getJavaName())
+                            .byItself();
+
                 final FunctionCall dbAccessFunctionCall = new FunctionCall("processQuery", "!dbAccess");
                 javaClass.addContent(
-                        new FunctionDeclaration("is" + capitalize(column.getJavaName() + "Unique"), "boolean").addContent(  // TODO: IMPLEMENT!!!
-                                new ReturnStatement(
-                                        dbAccessFunctionCall
-                                                .addArgument(Strings.quickQuote(getNotUniqueQuery(column)))
-                                                .addArgument(new AnonymousClassCreation("BooleanCheckQuery").setContext(dbAccessFunctionCall, 1).addContent(
-                                                        new FunctionDeclaration("setupPreparedStatement")
-                                                                .addArgument(new FunctionArgument("PreparedStatement", "stat"))
-                                                                .annotate("@Override").addException("SQLException").addContent(
-                                                                new FunctionCall("set" + capitalize(column.getJavaType()), "stat")
-                                                                        .addArgument("1").addArgument(column.getJavaName()).byItself()
-                                                        ).addContent(
-                                                                new FunctionCall("setLong", "stat")
-                                                                        .addArguments("2", "id").byItself()
-                                                        )
-                                                ))
+                        new FunctionDeclaration("is" + capitalize(column.getJavaName() + "Unique"), "boolean")
+                                .addContent(
+                                        new ReturnStatement(
+                                                dbAccessFunctionCall
+                                                        .addArgument(Strings.quickQuote(getNotUniqueQuery(column)))
+                                                        .addArgument(new AnonymousClassCreation("BooleanCheckQuery")
+                                                                .setContext(dbAccessFunctionCall, 1)
+                                                                .addContent(
+                                                                        new FunctionDeclaration("setupPreparedStatement")
+                                                                                .addArgument(new FunctionArgument("PreparedStatement", "stat"))
+                                                                                .annotate("@Override").addException("SQLException")
+                                                                                .addContent(setComparisonArgument)
+                                                                                .addContent(
+                                                                                        new FunctionCall("setLong", "stat")
+                                                                                                .addArguments("2", "id").byItself()
+                                                                                )
+                                                                ))
+                                        )
                                 )
-                        )
                 ).addContent(EMPTY_LINE);
             }
         }
 
         for (Column column: columns.getList()) {
-            if (!column.isSpecial() && column.isUnique()) {
+            if (!column.isSpecial() && !column.getJavaType().equals("boolean")) {
                 final String field = column.getJavaName();
                 final String fieldCap = capitalize(field);
                 javaClass.addContent(
