@@ -1357,6 +1357,17 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 final String fieldCap = capitalize(field);
 
                 final IfBlock checkRequired =
+                        new IfBlock(new Condition(new FunctionCall("is" + fieldCap + "Empty"))).addContent(
+                                new IfBlock(new Condition(new FunctionCall("is" + fieldCap + "Required"))).addContent(
+                                        new FunctionCall("addErrorMessage", internalsVar).byItself()
+                                                .addArgument("id")
+                                                .addArgument(quickQuote(field))
+                                                .addArgument(new FunctionCall("get" + fieldCap + "Label"))
+                                                .addArgument(new FunctionCall("get" + fieldCap + "EmptyErrorMessage"))
+                                ).addContent(new Assignment("ok", "false"))
+                        );
+
+                /*final IfBlock checkRequired =
                         new IfBlock(
                                 new Condition(new FunctionCall("is" + fieldCap + "Required"))
                                         .andCondition(
@@ -1368,7 +1379,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                                         .addArgument(quickQuote(field))
                                         .addArgument(new FunctionCall("get" + fieldCap + "Label"))
                                         .addArgument(new FunctionCall("get" + fieldCap + "EmptyErrorMessage"))
-                        ).addContent(new Assignment("ok", "false"));
+                        ).addContent(new Assignment("ok", "false"));*/
 
                 final ElseIfBlock checkOK =
                         new ElseIfBlock(new Condition(new FunctionCall("is" + fieldCap + "OK"), true)).addContent(
