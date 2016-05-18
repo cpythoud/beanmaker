@@ -7,6 +7,8 @@ public interface DbBeanInterface {
 
     void setId(final long id);
 
+    long getId();
+
     void resetId();
 
     void updateDB();
