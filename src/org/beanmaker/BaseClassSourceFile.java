@@ -1367,20 +1367,6 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                                 ).addContent(new Assignment("ok", "false"))
                         );
 
-                /*final IfBlock checkRequired =
-                        new IfBlock(
-                                new Condition(new FunctionCall("is" + fieldCap + "Required"))
-                                        .andCondition(
-                                                new Condition(new FunctionCall("is" + fieldCap + "Empty"))
-                                        )
-                        ).addContent(
-                                new FunctionCall("addErrorMessage", internalsVar).byItself()
-                                        .addArgument("id")
-                                        .addArgument(quickQuote(field))
-                                        .addArgument(new FunctionCall("get" + fieldCap + "Label"))
-                                        .addArgument(new FunctionCall("get" + fieldCap + "EmptyErrorMessage"))
-                        ).addContent(new Assignment("ok", "false"));*/
-
                 final ElseIfBlock checkOK =
                         new ElseIfBlock(new Condition(new FunctionCall("is" + fieldCap + "OK"), true)).addContent(
                                 new FunctionCall("addErrorMessage", internalsVar).byItself()
