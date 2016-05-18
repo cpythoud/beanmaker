@@ -494,8 +494,15 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                         .addContent(extraDBInnerClass)
                         .addContent(EMPTY_LINE);
 
+                final String beanClass = relationship.getBeanClass();
                 final String cappedJavaName = capitalize(relationship.getJavaName());
+                final String parameterFieldName = uncapitalize(beanClass) + "Parameters";
                 initializedBeansFunction.addContent(
+                        new VarDeclaration(
+                                beanClass + "Parameters",
+                                parameterFieldName,
+                                new ObjectCreation(beanClass + "Parameters")).markAsFinal()
+                ).addContent(
                         new VarDeclaration(
                                 "DataFromDBQuery" + cappedJavaName,
                                 "dataFromDBQuery" + cappedJavaName,
@@ -503,7 +510,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 ).addContent(
                         new FunctionCall("processQuery", "dbAccess")
                                 .byItself()
-                                .addArgument(getReadSQLQueryOneToManyRelationship(relationship))
+                                .addArgument(getReadSQLQueryOneToManyRelationship(relationship, parameterFieldName))
                                 .addArgument("dataFromDBQuery" + cappedJavaName)
                 ).addContent(EMPTY_LINE);
 
@@ -516,7 +523,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                                                 + "."
                                                 + relationship.getJavaName()));
 
-                javaClass.addContent(initializedBeansFunction).addContent(EMPTY_LINE);
+                this.javaClass.addContent(initializedBeansFunction).addContent(EMPTY_LINE);
             }
 
 		javaClass.addContent(
@@ -2355,10 +2362,14 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         return buf.toString();
     }
 
-    private String getReadSQLQueryOneToManyRelationship(final OneToManyRelationship relationship) {
+    private String getReadSQLQueryOneToManyRelationship(
+            final OneToManyRelationship relationship,
+            final String parametersFieldName)
+    {
         return "\"SELECT \" + " + relationship.getBeanClass() + ".DATABASE_FIELD_LIST + \" FROM "
                 + relationship.getTable()
-                + " WHERE " + relationship.getIdSqlName() + "=?\"";
+                + " WHERE " + relationship.getIdSqlName() + "=? ORDER BY \" + "
+                + parametersFieldName + ".getOrderByFields()";
     }
 	
 	private String getDeleteSQLQuery() {
