@@ -1,5 +1,7 @@
 package org.beanmaker.util;
 
+import org.jcodegen.html.FormTag;
+
 import javax.servlet.ServletRequest;
 
 import java.util.List;
@@ -18,6 +20,8 @@ public interface DbBeanHTMLViewInterface {
     void setId(final long id);
 
     String getHtmlForm();
+
+    FormTag getHtmlFormTag();
 
     void setAllFields(final ServletRequest request);
 
