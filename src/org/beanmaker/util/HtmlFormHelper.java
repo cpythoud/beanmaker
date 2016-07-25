@@ -135,7 +135,11 @@ public class HtmlFormHelper {
 
     private static final List<String> BOOTSTRAP_SIZES = Arrays.asList("xs", "sm", "md", "lg");
 
-    public void setHorizontalFormParameters(final String horizontalSizeShift, final int horizontalLabelWidth, final int horizontalFieldWidth) {
+    public void setHorizontalFormParameters(
+            final String horizontalSizeShift,
+            final int horizontalLabelWidth,
+            final int horizontalFieldWidth)
+    {
         if (!BOOTSTRAP_SIZES.contains(horizontalSizeShift))
             throw new IllegalArgumentException("Unknown Boostrap size: " + horizontalSizeShift);
         if (horizontalLabelWidth < 0 || horizontalLabelWidth > 12)
@@ -143,7 +147,10 @@ public class HtmlFormHelper {
         if (horizontalFieldWidth < 0 || horizontalFieldWidth > 12)
             throw new IllegalArgumentException("Illegal column index for field width:" + horizontalFieldWidth);
         if (horizontalLabelWidth + horizontalFieldWidth > 12)
-            throw new IllegalArgumentException("Column count for label + field is incorrect (> 12): " + horizontalLabelWidth + " + " + horizontalFieldWidth + " = " + (horizontalLabelWidth + horizontalFieldWidth));
+            throw new IllegalArgumentException(
+                    "Column count for label + field is incorrect (> 12): " + horizontalLabelWidth
+                            + " + " + horizontalFieldWidth
+                            + " = " + (horizontalLabelWidth + horizontalFieldWidth));
 
         this.horizontalSizeShift = horizontalSizeShift;
         this.horizontalLabelWidth = horizontalLabelWidth;
@@ -347,19 +354,6 @@ public class HtmlFormHelper {
             final boolean disabled,
             final String helpText)
     {
-        /*final String fieldId = getFieldId(field, idBean);
-        final LabelTag label = getLabel(fieldLabel, fieldId, required);
-
-        final InputTag input = getInputTag(type, fieldId, field, value);
-        if (required && useRequiredInHtml)
-            input.required();
-        if (placeholder != null)
-            input.placeholder(placeholder);
-        if (disabled)
-            input.disabled();
-
-        return getFormGroup(label, input, helpText);*/
-
         return getTextField(
                 new HFHParameters()
                         .setField(field)
@@ -510,14 +504,6 @@ public class HtmlFormHelper {
             final String buttonLabel,
             final String extraCssClasses)
     {
-        /*return getButtonTag(
-                ButtonTag.ButtonType.SUBMIT,
-                beanName,
-                idBean,
-                "submit",
-                buttonLabel,
-                "btn btn-default" + (extraCssClasses == null ? "" : " " + extraCssClasses));*/
-
         return getSubmitButtonTag(
                 new HFHParameters()
                         .setBeanName(beanName)
@@ -541,11 +527,6 @@ public class HtmlFormHelper {
             final String buttonLabel,
             final String cssClasses)
     {
-        /*return new ButtonTag(type)
-                .child(new CData(buttonLabel))
-                .id(getHtmlId(beanName + "_" + functionName, idBean))
-                .cssClass(cssClasses);*/
-
         return getButtonTag(
                 new HFHParameters()
                         .setButtonType(type)
@@ -573,16 +554,6 @@ public class HtmlFormHelper {
             final String buttonLabel,
             final boolean disabled)
     {
-        /*final ButtonTag submit = getSubmitButtonTag(beanName, idBean, buttonLabel);
-
-        if (disabled)
-            submit.disabled();
-
-        if (horizontal)
-            return getFormGroup().child(new DivTag().cssClass(getHorizontalFieldClassesWithOffset()).child(submit));
-
-        return submit;*/
-
         return getSubmitButton(
                 new HFHParameters()
                         .setBeanName(beanName)
@@ -604,7 +575,10 @@ public class HtmlFormHelper {
     }
 
     public String getHorizontalFieldClassesWithOffset() {
-        return "col-" + horizontalSizeShift + "-offset-" + horizontalLabelWidth + " col-" + horizontalSizeShift + "-" + horizontalFieldWidth;
+        return "col-" + horizontalSizeShift
+                + "-offset-" + horizontalLabelWidth
+                + " col-" + horizontalSizeShift
+                + "-" + horizontalFieldWidth;
     }
 
     public DivTag getSelectField(
@@ -676,24 +650,6 @@ public class HtmlFormHelper {
             final boolean disabled,
             final String helpText)
     {
-        /*final String fieldId = getFieldId(field, idBean);
-        final LabelTag label = getLabel(fieldLabel, fieldId, required);
-
-        final SelectTag select = getSelectTag(field, fieldId);
-        if (required && useRequiredInHtml)
-            select.required();
-        if (disabled)
-            select.disabled();
-
-        for (IdNamePair pair: pairs) {
-            final OptionTag optionTag = new OptionTag(pair.getName(), pair.getId());
-            if (pair.getId().equals(selected))
-                optionTag.selected();
-            select.child(optionTag);
-        }
-
-        return getFormGroup(label, select, helpText);*/
-
         return getSelectField(
                 new HFHParameters()
                         .setField(field)
@@ -760,17 +716,6 @@ public class HtmlFormHelper {
             final boolean disabled,
             final String helpText)
     {
-        /*final String fieldId = getFieldId(field, idBean);
-        final LabelTag label = getLabel(fieldLabel, fieldId, required);
-
-        final TextareaTag textarea = getTextAreaTag(fieldId, field, value);
-        if (required && useRequiredInHtml)
-            textarea.required();
-        if (disabled)
-            textarea.disabled();
-
-        return getFormGroup(label, textarea, helpText);*/
-
         return getTextAreaField(
                 new HFHParameters()
                         .setField(field)
@@ -838,13 +783,6 @@ public class HtmlFormHelper {
             final String value,
             final String idNameSuffix)
     {
-        /*final DivTag innerPart = getCheckbox(field, idBean, checked, fieldLabel, disabled, value, idNameSuffix);
-
-        if (horizontal)
-            return getFormGroup().child(new DivTag().cssClass(getHorizontalFieldClassesWithOffset()).child(innerPart));
-
-        return innerPart;*/
-
         return getCheckboxField(
                 new HFHParameters()
                         .setField(field)
@@ -904,13 +842,6 @@ public class HtmlFormHelper {
             final String value,
             final String idNameSuffix)
     {
-        /*return new DivTag()
-                .cssClass("checkbox")
-                .child(new LabelTag()
-                                .child(getCheckboxTag(field, idBean, checked, disabled, value, idNameSuffix))
-                                .child(new CData(" " + fieldLabel))
-                );*/
-
         return getCheckbox(
                 new HFHParameters()
                         .setField(field)
@@ -958,16 +889,6 @@ public class HtmlFormHelper {
             final String value,
             final String idNameSuffix)
     {
-        /*final InputTag checkbox = new InputTag(InputTag.InputType.CHECKBOX).name(field).id(getFieldId(field, idBean, idNameSuffix));
-        if (checked)
-            checkbox.checked();
-        if (disabled)
-            checkbox.disabled();
-        if (value != null)
-            checkbox.value(value);
-
-        return checkbox;*/
-
         return getCheckboxTag(
                 new HFHParameters()
                         .setField(field)
@@ -1016,17 +937,6 @@ public class HtmlFormHelper {
             final boolean required,
             final boolean disabled)
     {
-        /*final String fieldId = getFieldId(field, idBean);
-        final LabelTag label = getLabel(fieldLabel, fieldId, required);
-
-        final InputTag input = getInputTag(InputTag.InputType.FILE, fieldId, field, currentFile);
-        if (required && useRequiredInHtml)
-            input.required();
-        if (disabled)
-            input.disabled();
-
-        return getFormGroup(label, input);*/
-
         return getFileField(
                 new HFHParameters()
                         .setField(field)
