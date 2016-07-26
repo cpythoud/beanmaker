@@ -178,6 +178,18 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         ).addContent(EMPTY_LINE);
 
         javaClass.addContent(
+                new FunctionDeclaration("getSubmitButtonParameters", "HFHParameters").visibility(Visibility.PROTECTED)
+                        .addContent(getNewHFHParametersDeclaration())
+                        .addContent(getParamAdjunctionCall("setBeanName", quickQuote(beanName)))
+                        .addContent(getParamAdjunctionCall("setIdBean", getId()))
+                        .addContent(getParamAdjunctionCall(
+                                "setButtonLabel",
+                                new FunctionCall("getString", "resourceBundle")
+                                        .addArgument(quickQuote("submit_button"))))
+                        .addContent(new ReturnStatement("params"))
+        ).addContent(EMPTY_LINE);
+
+        /*javaClass.addContent(
                 new FunctionDeclaration("composeSubmitButton").visibility(Visibility.PROTECTED)
                         .addArgument(new FunctionArgument("Tag", "form"))
                         .addContent(
@@ -186,6 +198,16 @@ public class BaseHTMLViewSourceFile extends ViewCode {
                                                 .addArgument(quickQuote(beanName))
                                                 .addArgument(getId())
                                                 .addArgument(new FunctionCall("getString", "resourceBundle").addArgument(quickQuote("submit_button"))))
+                        )
+        ).addContent(EMPTY_LINE);*/
+
+        javaClass.addContent(
+                new FunctionDeclaration("composeSubmitButton").visibility(Visibility.PROTECTED)
+                        .addArgument(new FunctionArgument("Tag", "form"))
+                        .addContent(
+                                new FunctionCall("child", "form").byItself()
+                                        .addArgument(new FunctionCall("getSubmitButton", "htmlFormHelper")
+                                                .addArgument(new FunctionCall("getSubmitButtonParameters")))
                         )
         ).addContent(EMPTY_LINE);
 
