@@ -143,8 +143,13 @@ public class BaseHTMLViewSourceFile extends ViewCode {
 
         for (Column column: columns.getList()) {
             final String field = column.getJavaName();
-            if (!field.equals("id") && !field.equals("lastUpdate") && !field.equals("modifiedBy") && !field.equals("itemOrder"))
-                javaClass.addContent(getFieldHtmlFormFunction(column)).addContent(EMPTY_LINE);
+            if (!field.equals("id")
+                    && !field.equals("lastUpdate")
+                    && !field.equals("modifiedBy")
+                    && !field.equals("itemOrder")) {
+                addFieldHtmlFormFunctions(column);
+                //javaClass.addContent(getFieldHtmlFormFunction(column)).addContent(EMPTY_LINE);
+            }
         }
 
         javaClass.addContent(
@@ -191,7 +196,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         return new FunctionCall("compose" + capitalize(column.getJavaName()) + "FormElement").addArgument("form").byItself();
     }
 
-    private FunctionDeclaration getFieldHtmlFormFunction(final Column column) {
+    /*private FunctionDeclaration getFieldHtmlFormFunction(final Column column) {
         final String type = column.getJavaType();
         final String field = column.getJavaName();
 
@@ -226,6 +231,58 @@ public class BaseHTMLViewSourceFile extends ViewCode {
 
         if (type.equals("Money"))
             return getInputFormElement("money", field);
+
+        throw new IllegalStateException("Unknown and unsupported java type: " + type);
+    }*/
+
+    private void addFieldHtmlFormFunctions(final Column column) {
+        final String type = column.getJavaType();
+        final String field = column.getJavaName();
+
+        if (type.equals("boolean")) {
+            javaClass.addContent(getCheckboxFormElement(field)).addContent(EMPTY_LINE);
+            return;
+        }
+
+        if (type.equals("int") || type.equals("long")) {
+            if (field.startsWith("id") && column.hasAssociatedBean())
+                javaClass.addContent(getSelectForAssociatedBeanFunction(column)).addContent(EMPTY_LINE);
+            else
+                javaClass.addContent(getInputFormElement("NUMBER", field)).addContent(EMPTY_LINE);
+            return;
+        }
+
+        if (type.equals("String")) {
+            if (column.getDisplaySize() < TEXTAREA_THRESHOLD) {
+                if (field.equalsIgnoreCase("email") || field.equalsIgnoreCase("e-mail"))
+                    javaClass.addContent(getInputFormElement("EMAIL", field)).addContent(EMPTY_LINE);
+                else
+                    javaClass.addContent(getInputFormElement("TEXT", field)).addContent(EMPTY_LINE);
+            } else {
+                javaClass.addContent(getTextAreaFormElement(field)).addContent(EMPTY_LINE);
+            }
+            return;
+        }
+
+        if (type.equals("Date")) {
+            javaClass.addContent(getInputFormElement("DATE", field)).addContent(EMPTY_LINE);
+            return;
+        }
+
+        if (type.equals("Time")) {
+            javaClass.addContent(getInputFormElement("TIME", field)).addContent(EMPTY_LINE);
+            return;
+        }
+
+        if (type.equals("Timestamp")) {
+            javaClass.addContent(getInputFormElement("DATETIME", field)).addContent(EMPTY_LINE);
+            return;
+        }
+
+        if (type.equals("Money")) {
+            javaClass.addContent(getInputFormElement("money", field)).addContent(EMPTY_LINE);
+            return;
+        }
 
         throw new IllegalStateException("Unknown and unsupported java type: " + type);
     }
