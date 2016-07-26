@@ -60,18 +60,22 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         javaClass.addContent(
                 new FunctionDeclaration("resetId").addContent(
                         new FunctionCall("resetId", beanVarName).byItself()
-                )
+                ).annotate("@Override")
         ).addContent(EMPTY_LINE);
 
         javaClass.addContent(
                 new FunctionDeclaration("setResetId")
+                        .annotate("@Override")
                         .addArgument(new FunctionArgument("String", "dummy"))
                         .addContent(new FunctionCall("resetId").byItself())
         ).addContent(EMPTY_LINE);
 
         javaClass.addContent(
-                new FunctionDeclaration("setId").addArgument(new FunctionArgument("long", "id")).addContent(
-                        new FunctionCall("setId", beanVarName).addArgument("id").byItself()
+                new FunctionDeclaration("setId")
+                        .annotate("@Override")
+                        .addArgument(new FunctionArgument("long", "id"))
+                        .addContent(
+                                new FunctionCall("setId", beanVarName).addArgument("id").byItself()
                 )
         ).addContent(EMPTY_LINE).addContent(EMPTY_LINE);
     }
@@ -89,15 +93,19 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         javaClass.addContent(
                 new FunctionDeclaration("getHtmlForm", "String").addContent(
                         new ReturnStatement("getHtmlFormTag().toString()")
-                )
+                ).annotate("@Override")
         ).addContent(EMPTY_LINE);
 
-        final FunctionDeclaration getHtmlFormFunction = new FunctionDeclaration("getHtmlFormTag", "FormTag").addContent(
-                new VarDeclaration("FormTag", "form", new FunctionCall("getFormStart")).markAsFinal()
-        ).addContent(
-                new FunctionCall("composeHiddenSubmitField").byItself()
-                        .addArgument("form")
-        );
+        final FunctionDeclaration getHtmlFormFunction =
+                new FunctionDeclaration("getHtmlFormTag", "FormTag")
+                        .annotate("@Override")
+                        .addContent(
+                                new VarDeclaration("FormTag", "form", new FunctionCall("getFormStart")).markAsFinal()
+                        ).addContent(
+                        new FunctionCall("composeHiddenSubmitField").byItself()
+                                .addArgument("form")
+                );
+
 
         for (Column column: columns.getList()) {
             final String field = column.getJavaName();
@@ -473,6 +481,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
 
     private void addAllFieldsSetter() {
         final FunctionDeclaration setAllFieldsFunction = new FunctionDeclaration("setAllFields")
+                .annotate("@Override")
                 .addArgument(new FunctionArgument("ServletRequest", "request"))
                 .addContent(new FunctionCall("reset").byItself())
                 .addContent(EMPTY_LINE);
@@ -553,13 +562,16 @@ public class BaseHTMLViewSourceFile extends ViewCode {
     }
 
     private void addDataOKChecker() {
-        final FunctionDeclaration dataOKFunction = new FunctionDeclaration("isDataOK", "boolean").addContent(
-                new VarDeclaration("boolean", "ok", new FunctionCall("isDataOK", beanVarName))
-        ).addContent(
-                new FunctionCall("clear", "errorMessages").byItself()
-        ).addContent(
-                new FunctionCall("addAll", "errorMessages").addArgument(new FunctionCall("getErrorMessages", beanVarName)).byItself()
-        ).addContent(EMPTY_LINE);
+        final FunctionDeclaration dataOKFunction = new FunctionDeclaration("isDataOK", "boolean")
+                .annotate("@Override")
+                .addContent(
+                        new VarDeclaration("boolean", "ok", new FunctionCall("isDataOK", beanVarName))
+                ).addContent(
+                        new FunctionCall("clear", "errorMessages").byItself()
+                ).addContent(
+                        new FunctionCall("addAll", "errorMessages").addArgument(new FunctionCall("getErrorMessages", beanVarName)).byItself()
+                ).addContent(EMPTY_LINE);
+
 
         dataOKFunction.addContent(
                 new IfBlock(new Condition("captchaControl")).addContent(
@@ -585,13 +597,13 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         javaClass.addContent(
                 new FunctionDeclaration("updateDB").addContent(
                         new FunctionCall("updateDB", beanVarName).byItself()
-                )
+                ).annotate("@Override")
         ).addContent(EMPTY_LINE);
 
         javaClass.addContent(
                 new FunctionDeclaration("setUpdateDB").addArgument(new FunctionArgument("String", "dummy")).addContent(
                         new FunctionCall("updateDB").byItself()
-                )
+                ).annotate("@Override")
         ).addContent(EMPTY_LINE);
     }
 
@@ -599,21 +611,21 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         javaClass.addContent(
                 new FunctionDeclaration("reset").addContent(
                         new FunctionCall("reset", beanVarName).byItself()
-                )
+                ).annotate("@Override")
         ).addContent(EMPTY_LINE).addContent(
                 new FunctionDeclaration("fullReset").addContent(
                         new FunctionCall("fullReset", beanVarName).byItself()
-                )
+                ).annotate("@Override")
         ).addContent(EMPTY_LINE);
 
         javaClass.addContent(
                 new FunctionDeclaration("setReset").addArgument(new FunctionArgument("String", "dummy")).addContent(
                         new FunctionCall("reset").byItself()
-                )
+                ).annotate("@Override")
         ).addContent(EMPTY_LINE).addContent(
                 new FunctionDeclaration("setFullReset").addArgument(new FunctionArgument("String", "dummy")).addContent(
                         new FunctionCall("fullReset").byItself()
-                )
+                ).annotate("@Override")
         ).addContent(EMPTY_LINE);
     }
 
@@ -621,13 +633,13 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         javaClass.addContent(
                 new FunctionDeclaration("delete").addContent(
                         new FunctionCall("delete", beanVarName).byItself()
-                )
+                ).annotate("@Override")
         ).addContent(EMPTY_LINE);
 
         javaClass.addContent(
                 new FunctionDeclaration("setDelete").addArgument(new FunctionArgument("String", "dummy")).addContent(
                         new FunctionCall("delete").byItself()
-                )
+                ).annotate("@Override")
         );
     }
 
