@@ -243,7 +243,8 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         final String field = column.getJavaName();
 
         if (type.equals("boolean")) {
-            javaClass.addContent(getCheckboxFormElement(field)).addContent(EMPTY_LINE);
+            addCheckboxFormElement(field);
+            //javaClass.addContent(getCheckboxFormElement(field)).addContent(EMPTY_LINE);
             return;
         }
 
@@ -384,9 +385,10 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         importsManager.addImport("org.jcodegen.html.InputTag");
 
         final String paramsFunctionName = "get" + capitalize(field) + "FormElementParameters";
-        final FunctionDeclaration paramsFunctionDeclaration =
+        /*final FunctionDeclaration paramsFunctionDeclaration =
                 new FunctionDeclaration(paramsFunctionName, "HFHParameters")
-                        .visibility(Visibility.PROTECTED);
+                        .visibility(Visibility.PROTECTED);*/
+        final FunctionDeclaration paramsFunctionDeclaration = getNewParamsFunctionDeclaration(paramsFunctionName);
 
         final String fieldVar;
         if (!inputType.equals("TEXT") && !inputType.equals("EMAIL"))
@@ -399,9 +401,10 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         else
             inputTypeVal = inputType;
 
-        paramsFunctionDeclaration.addContent(
+        /*paramsFunctionDeclaration.addContent(
                 new VarDeclaration("HFHParameters", "params", new ObjectCreation("HFHParameters"))
-                        .markAsFinal());
+                        .markAsFinal());*/
+        paramsFunctionDeclaration.addContent(getNewHFHParametersDeclaration());
         paramsFunctionDeclaration.addContent(getParamAdjunctionCall("setField", quickQuote(field)));
         paramsFunctionDeclaration.addContent(getParamAdjunctionCall("setIdBean", getId()));
         paramsFunctionDeclaration.addContent(
@@ -415,10 +418,11 @@ public class BaseHTMLViewSourceFile extends ViewCode {
                         new FunctionCall("is" + capitalize(field) + "RequiredInHtmlForm")));
         paramsFunctionDeclaration.addContent(new ReturnStatement("params"));
 
-        final FunctionDeclaration getElementFunctionDeclaration =
+        /*final FunctionDeclaration getElementFunctionDeclaration =
                 new FunctionDeclaration("compose" + capitalize(field) + "FormElement")
                         .visibility(Visibility.PROTECTED)
-                        .addArgument(new FunctionArgument("Tag", "form"));
+                        .addArgument(new FunctionArgument("Tag", "form"));*/
+        final FunctionDeclaration getElementFunctionDeclaration = getNewElementFunctionDeclaration(field);
 
         getElementFunctionDeclaration.addContent(
                 new FunctionCall("child", "form").byItself().addArgument(
@@ -442,6 +446,21 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         return new FunctionCall(paramSetterFunction, "params").addArgument(value).byItself();
     }
 
+    private FunctionDeclaration getNewParamsFunctionDeclaration(final String functionName) {
+        return new FunctionDeclaration(functionName, "HFHParameters").visibility(Visibility.PROTECTED);
+    }
+
+    private VarDeclaration getNewHFHParametersDeclaration() {
+        return new VarDeclaration("HFHParameters", "params", new ObjectCreation("HFHParameters"))
+                .markAsFinal();
+    }
+
+    private FunctionDeclaration getNewElementFunctionDeclaration(final String field) {
+        return new FunctionDeclaration("compose" + capitalize(field) + "FormElement")
+                .visibility(Visibility.PROTECTED)
+                .addArgument(new FunctionArgument("Tag", "form"));
+    }
+
     private FunctionDeclaration getTextAreaFormElement(final String field) {
         final FunctionDeclaration functionDeclaration =  new FunctionDeclaration("compose" + capitalize(field) + "FormElement").visibility(Visibility.PROTECTED)
                 .addArgument(new FunctionArgument("Tag", "form"));
@@ -460,7 +479,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         return functionDeclaration;
     }
 
-    private FunctionDeclaration getCheckboxFormElement(final String field) {
+    /*private FunctionDeclaration getCheckboxFormElement(final String field) {
         return new FunctionDeclaration("compose" + capitalize(field) + "FormElement")
                 .visibility(Visibility.PROTECTED)
                 .addArgument(new FunctionArgument("Tag", "form"))
@@ -473,6 +492,34 @@ public class BaseHTMLViewSourceFile extends ViewCode {
                                         .addArgument(getLabelArgument(field))
                         )
                 );
+    }*/
+
+    private void addCheckboxFormElement(final String field) {
+        final String paramsFunctionName = "get" + capitalize(field) + "FormElementParameters";
+        final FunctionDeclaration paramsFunctionDeclaration = getNewParamsFunctionDeclaration(paramsFunctionName);
+
+        paramsFunctionDeclaration.addContent(getNewHFHParametersDeclaration());
+        paramsFunctionDeclaration.addContent(getParamAdjunctionCall("setField", quickQuote(field)));
+        paramsFunctionDeclaration.addContent(getParamAdjunctionCall("setIdBean", getId()));
+        paramsFunctionDeclaration.addContent(
+                getParamAdjunctionCall("setChecked", addFieldValueArgument(field, true)));
+        paramsFunctionDeclaration.addContent(getParamAdjunctionCall("setFieldLabel", getLabelArgument(field)));
+        paramsFunctionDeclaration.addContent(new ReturnStatement("params"));
+
+        final FunctionDeclaration getElementFunctionDeclaration = getNewElementFunctionDeclaration(field);
+
+        getElementFunctionDeclaration.addContent(
+                new FunctionCall("child", "form").byItself().addArgument(
+                        new FunctionCall("getCheckboxField", "htmlFormHelper")
+                                .addArgument(new FunctionCall(paramsFunctionName))
+                )
+        );
+
+        javaClass
+                .addContent(paramsFunctionDeclaration)
+                .addContent(EMPTY_LINE)
+                .addContent(getElementFunctionDeclaration)
+                .addContent(EMPTY_LINE);
     }
 
     private FunctionCall setterCall(final String field) {
