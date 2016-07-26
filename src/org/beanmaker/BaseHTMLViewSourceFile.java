@@ -151,7 +151,6 @@ public class BaseHTMLViewSourceFile extends ViewCode {
                     && !field.equals("modifiedBy")
                     && !field.equals("itemOrder")) {
                 addFieldHtmlFormFunctions(column);
-                //javaClass.addContent(getFieldHtmlFormFunction(column)).addContent(EMPTY_LINE);
             }
         }
 
@@ -189,18 +188,6 @@ public class BaseHTMLViewSourceFile extends ViewCode {
                         .addContent(new ReturnStatement("params"))
         ).addContent(EMPTY_LINE);
 
-        /*javaClass.addContent(
-                new FunctionDeclaration("composeSubmitButton").visibility(Visibility.PROTECTED)
-                        .addArgument(new FunctionArgument("Tag", "form"))
-                        .addContent(
-                                new FunctionCall("child", "form").byItself()
-                                        .addArgument(new FunctionCall("getSubmitButton", "htmlFormHelper")
-                                                .addArgument(quickQuote(beanName))
-                                                .addArgument(getId())
-                                                .addArgument(new FunctionCall("getString", "resourceBundle").addArgument(quickQuote("submit_button"))))
-                        )
-        ).addContent(EMPTY_LINE);*/
-
         javaClass.addContent(
                 new FunctionDeclaration("composeSubmitButton").visibility(Visibility.PROTECTED)
                         .addArgument(new FunctionArgument("Tag", "form"))
@@ -221,62 +208,20 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         return new FunctionCall("compose" + capitalize(column.getJavaName()) + "FormElement").addArgument("form").byItself();
     }
 
-    /*private FunctionDeclaration getFieldHtmlFormFunction(final Column column) {
-        final String type = column.getJavaType();
-        final String field = column.getJavaName();
-
-        if (type.equals("boolean"))
-            return getCheckboxFormElement(field);
-
-        if (type.equals("int") || type.equals("long")) {
-            if (field.startsWith("id") && column.hasAssociatedBean())
-                return getSelectForAssociatedBeanFunction(column);
-
-            return getInputFormElement("NUMBER", field);
-        }
-
-        if (type.equals("String")) {
-            if (column.getDisplaySize() < TEXTAREA_THRESHOLD) {
-                if (field.equalsIgnoreCase("email") || field.equalsIgnoreCase("e-mail"))
-                    return getInputFormElement("EMAIL", field);
-                return getInputFormElement("TEXT", field);
-            } else {
-                return getTextAreaFormElement(field);
-            }
-        }
-
-        if (type.equals("Date"))
-            return getInputFormElement("DATE", field);
-
-        if (type.equals("Time"))
-            return getInputFormElement("TIME", field);
-
-        if (type.equals("Timestamp"))
-            return getInputFormElement("DATETIME", field);
-
-        if (type.equals("Money"))
-            return getInputFormElement("money", field);
-
-        throw new IllegalStateException("Unknown and unsupported java type: " + type);
-    }*/
-
     private void addFieldHtmlFormFunctions(final Column column) {
         final String type = column.getJavaType();
         final String field = column.getJavaName();
 
         if (type.equals("boolean")) {
             addCheckboxFormElement(field);
-            //javaClass.addContent(getCheckboxFormElement(field)).addContent(EMPTY_LINE);
             return;
         }
 
         if (type.equals("int") || type.equals("long")) {
             if (field.startsWith("id") && column.hasAssociatedBean())
                 addSelectForAssociatedBeanFunctions(column);
-                //javaClass.addContent(getSelectForAssociatedBeanFunction(column)).addContent(EMPTY_LINE);
             else
                 addInputFormElement("NUMBER", field);
-                //javaClass.addContent(getInputFormElement("NUMBER", field)).addContent(EMPTY_LINE);
             return;
         }
 
@@ -284,87 +229,36 @@ public class BaseHTMLViewSourceFile extends ViewCode {
             if (column.getDisplaySize() < TEXTAREA_THRESHOLD) {
                 if (field.equalsIgnoreCase("email") || field.equalsIgnoreCase("e-mail"))
                     addInputFormElement("EMAIL", field);
-                    //javaClass.addContent(getInputFormElement("EMAIL", field)).addContent(EMPTY_LINE);
                 else
                     addInputFormElement("TEXT", field);
-                    //javaClass.addContent(getInputFormElement("TEXT", field)).addContent(EMPTY_LINE);
             } else {
                 addTextAreaFormElement(field);
-                //javaClass.addContent(getTextAreaFormElement(field)).addContent(EMPTY_LINE);
             }
             return;
         }
 
         if (type.equals("Date")) {
             addInputFormElement("DATE", field);
-            //javaClass.addContent(getInputFormElement("DATE", field)).addContent(EMPTY_LINE);
             return;
         }
 
         if (type.equals("Time")) {
             addInputFormElement("TIME", field);
-            //javaClass.addContent(getInputFormElement("TIME", field)).addContent(EMPTY_LINE);
             return;
         }
 
         if (type.equals("Timestamp")) {
             addInputFormElement("DATETIME", field);
-            //javaClass.addContent(getInputFormElement("DATETIME", field)).addContent(EMPTY_LINE);
             return;
         }
 
         if (type.equals("Money")) {
             addInputFormElement("money", field);
-            //javaClass.addContent(getInputFormElement("money", field)).addContent(EMPTY_LINE);
             return;
         }
 
         throw new IllegalStateException("Unknown and unsupported java type: " + type);
     }
-
-    /*private FunctionDeclaration getSelectForAssociatedBeanFunction(final Column column) {
-        importsManager.addImport("java.util.List");
-        importsManager.addImport("java.util.ArrayList");
-        importsManager.addImport("org.beanmaker.util.IdNamePair");
-
-        final String field = column.getJavaName();
-        final String associatedBeanClass = column.getAssociatedBeanClass();
-        final String bundleKey = uncapitalize(SourceFiles.chopId(field));
-        final String parametersClass = associatedBeanClass + "Parameters";
-        final String parametersVar = uncapitalize(getVarNameForClass(associatedBeanClass)) + "Parameters";
-
-        final FunctionDeclaration functionDeclaration = new FunctionDeclaration("compose" + capitalize(field) + "FormElement")
-                .visibility(Visibility.PROTECTED)
-                .addArgument(new FunctionArgument("Tag", "form"));
-
-        functionDeclaration.addContent(
-                new VarDeclaration(parametersClass, parametersVar, new ObjectCreation(parametersClass)).markAsFinal()
-        ).addContent(
-                VarDeclaration.createListDeclaration("IdNamePair", "pairs").markAsFinal()
-        ).addContent(
-                new FunctionCall("add", "pairs").byItself()
-                        .addArgument(new ObjectCreation("IdNamePair")
-                                .addArgument(quickQuote("0"))
-                                .addArgument(new FunctionCall("getString", "resourceBundle").addArgument(quickQuote(bundleKey + "_please_select"))))
-        ).addContent(
-                new FunctionCall("addAll", "pairs").byItself()
-                        .addArgument(new FunctionCall("getIdNamePairs", associatedBeanClass)
-                                .addArgument(new FunctionCall("getNamingFields", parametersVar))
-                                .addArgument(new FunctionCall("getOrderingFields", parametersVar)))
-        ).addContent(EMPTY_LINE).addContent(
-                new FunctionCall("child", "form").byItself().addArgument(
-                        new FunctionCall("getSelectField", "htmlFormHelper")
-                                .addArgument(quickQuote(field))
-                                .addArgument(getId())
-                                .addArgument(addFieldValueArgument(field, false))
-                                .addArgument(getLabelArgument(field))
-                                .addArgument("pairs")
-                                .addArgument(new FunctionCall("is" + capitalize(field) + "RequiredInHtmlForm"))
-                )
-        );
-
-        return functionDeclaration;
-    }*/
 
     private void addSelectForAssociatedBeanFunctions(final Column column) {
         importsManager.addImport("java.util.List");
@@ -436,45 +330,10 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         return new FunctionCall("get" + capitalize(field), beanVarName);
     }
 
-    /*private FunctionDeclaration getInputFormElement(final String inputType, final String field) {
-        importsManager.addImport("org.jcodegen.html.InputTag");
-
-        final FunctionDeclaration functionDeclaration = new FunctionDeclaration("compose" + capitalize(field) + "FormElement").visibility(Visibility.PROTECTED)
-                .addArgument(new FunctionArgument("Tag", "form"));
-
-        final String fieldVar;
-        if (!inputType.equals("TEXT") && !inputType.equals("EMAIL"))
-            fieldVar = field + "Str";
-        else
-            fieldVar = field;
-        final String inputTypeVal;
-        if (inputType.equals("money"))
-            inputTypeVal = "TEXT";
-        else
-            inputTypeVal = inputType;
-
-        functionDeclaration.addContent(
-                new FunctionCall("child", "form").byItself().addArgument(
-                        new FunctionCall("getTextField", "htmlFormHelper")
-                                .addArgument(quickQuote(field))
-                                .addArgument(getId())
-                                .addArgument(addFieldValueArgument(fieldVar, false))
-                                .addArgument(getLabelArgument(field))
-                                .addArgument("InputTag.InputType." + inputTypeVal)
-                                .addArgument(new FunctionCall("is" + capitalize(field) + "RequiredInHtmlForm"))
-                )
-        );
-
-        return functionDeclaration;
-    }*/
-
     private void addInputFormElement(final String inputType, final String field) {
         importsManager.addImport("org.jcodegen.html.InputTag");
 
         final String paramsFunctionName = getParamsFunctionName(field);
-        /*final FunctionDeclaration paramsFunctionDeclaration =
-                new FunctionDeclaration(paramsFunctionName, "HFHParameters")
-                        .visibility(Visibility.PROTECTED);*/
         final FunctionDeclaration paramsFunctionDeclaration = getNewParamsFunctionDeclaration(paramsFunctionName);
 
         final String fieldVar;
@@ -488,9 +347,6 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         else
             inputTypeVal = inputType;
 
-        /*paramsFunctionDeclaration.addContent(
-                new VarDeclaration("HFHParameters", "params", new ObjectCreation("HFHParameters"))
-                        .markAsFinal());*/
         paramsFunctionDeclaration.addContent(getNewHFHParametersDeclaration());
         paramsFunctionDeclaration.addContent(getParamAdjunctionCall("setField", quickQuote(field)));
         paramsFunctionDeclaration.addContent(getParamAdjunctionCall("setIdBean", getId()));
@@ -505,10 +361,6 @@ public class BaseHTMLViewSourceFile extends ViewCode {
                         new FunctionCall("is" + capitalize(field) + "RequiredInHtmlForm")));
         paramsFunctionDeclaration.addContent(new ReturnStatement("params"));
 
-        /*final FunctionDeclaration getElementFunctionDeclaration =
-                new FunctionDeclaration("compose" + capitalize(field) + "FormElement")
-                        .visibility(Visibility.PROTECTED)
-                        .addArgument(new FunctionArgument("Tag", "form"));*/
         final FunctionDeclaration getElementFunctionDeclaration = getNewElementFunctionDeclaration(field);
 
         getElementFunctionDeclaration.addContent(
@@ -552,24 +404,6 @@ public class BaseHTMLViewSourceFile extends ViewCode {
                 .addArgument(new FunctionArgument("Tag", "form"));
     }
 
-    /*private FunctionDeclaration getTextAreaFormElement(final String field) {
-        final FunctionDeclaration functionDeclaration =  new FunctionDeclaration("compose" + capitalize(field) + "FormElement").visibility(Visibility.PROTECTED)
-                .addArgument(new FunctionArgument("Tag", "form"));
-
-        functionDeclaration.addContent(
-                new FunctionCall("child", "form").byItself().addArgument(
-                        new FunctionCall("getTextAreaField", "htmlFormHelper")
-                                .addArgument(quickQuote(field))
-                                .addArgument(getId())
-                                .addArgument(addFieldValueArgument(field, false))
-                                .addArgument(getLabelArgument(field))
-                                .addArgument(new FunctionCall("is" + capitalize(field) + "RequiredInHtmlForm"))
-                )
-        );
-
-        return functionDeclaration;
-    }*/
-
     private void addTextAreaFormElement(final String field) {
         final String paramsFunctionName = getParamsFunctionName(field);
         final FunctionDeclaration paramsFunctionDeclaration = getNewParamsFunctionDeclaration(paramsFunctionName);
@@ -604,21 +438,6 @@ public class BaseHTMLViewSourceFile extends ViewCode {
                 .addContent(getElementFunctionDeclaration)
                 .addContent(EMPTY_LINE);
     }
-
-    /*private FunctionDeclaration getCheckboxFormElement(final String field) {
-        return new FunctionDeclaration("compose" + capitalize(field) + "FormElement")
-                .visibility(Visibility.PROTECTED)
-                .addArgument(new FunctionArgument("Tag", "form"))
-                .addContent(
-                        new FunctionCall("child", "form").byItself().addArgument(
-                                new FunctionCall("getCheckboxField", "htmlFormHelper")
-                                        .addArgument(quickQuote(field))
-                                        .addArgument(getId())
-                                        .addArgument(addFieldValueArgument(field, true))
-                                        .addArgument(getLabelArgument(field))
-                        )
-                );
-    }*/
 
     private void addCheckboxFormElement(final String field) {
         final String paramsFunctionName = getParamsFunctionName(field);
