@@ -272,7 +272,8 @@ public class BaseHTMLViewSourceFile extends ViewCode {
 
         if (type.equals("int") || type.equals("long")) {
             if (field.startsWith("id") && column.hasAssociatedBean())
-                javaClass.addContent(getSelectForAssociatedBeanFunction(column)).addContent(EMPTY_LINE);
+                addSelectForAssociatedBeanFunctions(column);
+                //javaClass.addContent(getSelectForAssociatedBeanFunction(column)).addContent(EMPTY_LINE);
             else
                 addInputFormElement("NUMBER", field);
                 //javaClass.addContent(getInputFormElement("NUMBER", field)).addContent(EMPTY_LINE);
@@ -320,7 +321,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         throw new IllegalStateException("Unknown and unsupported java type: " + type);
     }
 
-    private FunctionDeclaration getSelectForAssociatedBeanFunction(final Column column) {
+    /*private FunctionDeclaration getSelectForAssociatedBeanFunction(final Column column) {
         importsManager.addImport("java.util.List");
         importsManager.addImport("java.util.ArrayList");
         importsManager.addImport("org.beanmaker.util.IdNamePair");
@@ -362,6 +363,69 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         );
 
         return functionDeclaration;
+    }*/
+
+    private void addSelectForAssociatedBeanFunctions(final Column column) {
+        importsManager.addImport("java.util.List");
+        importsManager.addImport("java.util.ArrayList");
+        importsManager.addImport("org.beanmaker.util.IdNamePair");
+
+        final String field = column.getJavaName();
+        final String associatedBeanClass = column.getAssociatedBeanClass();
+        final String bundleKey = uncapitalize(SourceFiles.chopId(field));
+        final String parametersClass = associatedBeanClass + "Parameters";
+        final String parametersVar = uncapitalize(getVarNameForClass(associatedBeanClass)) + "Parameters";
+
+        final String paramsFunctionName = getParamsFunctionName(field);
+        final FunctionDeclaration paramsFunctionDeclaration = getNewParamsFunctionDeclaration(paramsFunctionName);
+
+        paramsFunctionDeclaration.addContent(
+                new VarDeclaration(parametersClass, parametersVar, new ObjectCreation(parametersClass)).markAsFinal()
+        ).addContent(
+                VarDeclaration.createListDeclaration("IdNamePair", "pairs").markAsFinal()
+        ).addContent(
+                new FunctionCall("add", "pairs").byItself()
+                        .addArgument(new ObjectCreation("IdNamePair")
+                                .addArgument(quickQuote("0"))
+                                .addArgument(new FunctionCall("getString", "resourceBundle")
+                                        .addArgument(quickQuote(bundleKey + "_please_select"))))
+        ).addContent(
+                new FunctionCall("addAll", "pairs").byItself()
+                        .addArgument(new FunctionCall("getIdNamePairs", associatedBeanClass)
+                                .addArgument(new FunctionCall("getNamingFields", parametersVar))
+                                .addArgument(new FunctionCall("getOrderingFields", parametersVar)))
+        ).addContent(EMPTY_LINE);
+
+        paramsFunctionDeclaration.addContent(getNewHFHParametersDeclaration());
+        paramsFunctionDeclaration.addContent(getParamAdjunctionCall("setField", quickQuote(field)));
+        paramsFunctionDeclaration.addContent(getParamAdjunctionCall("setIdBean", getId()));
+        paramsFunctionDeclaration.addContent(
+                getParamAdjunctionCall("setSelected", addFieldValueArgument(field, false)));
+        paramsFunctionDeclaration.addContent(getParamAdjunctionCall("setFieldLabel", getLabelArgument(field)));
+        paramsFunctionDeclaration.addContent(getParamAdjunctionCall("setSelectPairs", "pairs"));
+        paramsFunctionDeclaration.addContent(
+                getParamAdjunctionCall(
+                        "setRequired",
+                        new FunctionCall("is" + capitalize(field) + "RequiredInHtmlForm")));
+        paramsFunctionDeclaration.addContent(new ReturnStatement("params"));
+
+        final FunctionDeclaration getElementFunctionDeclaration =
+                new FunctionDeclaration("compose" + capitalize(field) + "FormElement")
+                        .visibility(Visibility.PROTECTED)
+                        .addArgument(new FunctionArgument("Tag", "form"));
+
+        getElementFunctionDeclaration.addContent(
+                new FunctionCall("child", "form").byItself().addArgument(
+                        new FunctionCall("getSelectField", "htmlFormHelper")
+                                .addArgument(new FunctionCall(paramsFunctionName))
+                )
+        );
+
+        javaClass
+                .addContent(paramsFunctionDeclaration)
+                .addContent(EMPTY_LINE)
+                .addContent(getElementFunctionDeclaration)
+                .addContent(EMPTY_LINE);
     }
 
     private FunctionCall addFieldValueArgument(final String field, final boolean booleanField) {
@@ -406,7 +470,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
     private void addInputFormElement(final String inputType, final String field) {
         importsManager.addImport("org.jcodegen.html.InputTag");
 
-        final String paramsFunctionName = "get" + capitalize(field) + "FormElementParameters";
+        final String paramsFunctionName = getParamsFunctionName(field);
         /*final FunctionDeclaration paramsFunctionDeclaration =
                 new FunctionDeclaration(paramsFunctionName, "HFHParameters")
                         .visibility(Visibility.PROTECTED);*/
@@ -458,6 +522,10 @@ public class BaseHTMLViewSourceFile extends ViewCode {
                 .addContent(EMPTY_LINE)
                 .addContent(getElementFunctionDeclaration)
                 .addContent(EMPTY_LINE);
+    }
+
+    private String getParamsFunctionName(final String field) {
+        return "get" + capitalize(field) + "FormElementParameters";
     }
 
     private FunctionCall getParamAdjunctionCall(final String paramSetterFunction, final String value) {
@@ -517,7 +585,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
     }*/
 
     private void addCheckboxFormElement(final String field) {
-        final String paramsFunctionName = "get" + capitalize(field) + "FormElementParameters";
+        final String paramsFunctionName = getParamsFunctionName(field);
         final FunctionDeclaration paramsFunctionDeclaration = getNewParamsFunctionDeclaration(paramsFunctionName);
 
         paramsFunctionDeclaration.addContent(getNewHFHParametersDeclaration());
