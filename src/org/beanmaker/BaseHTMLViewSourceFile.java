@@ -4,6 +4,7 @@ import org.jcodegen.java.Assignment;
 import org.jcodegen.java.Comparison;
 import org.jcodegen.java.Condition;
 import org.jcodegen.java.ElseBlock;
+import org.jcodegen.java.Expression;
 import org.jcodegen.java.FunctionArgument;
 import org.jcodegen.java.FunctionCall;
 import org.jcodegen.java.FunctionDeclaration;
@@ -33,6 +34,8 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         importsManager.addImport("org.beanmaker.util.ErrorMessage");
 
         importsManager.addImport("javax.servlet.ServletRequest");
+
+        importsManager.addImport("org.beanmaker.util.HFHParameters");
 
         importsManager.addImport("org.jcodegen.html.FormTag");
         importsManager.addImport("org.jcodegen.html.Tag");
@@ -248,16 +251,19 @@ public class BaseHTMLViewSourceFile extends ViewCode {
             if (field.startsWith("id") && column.hasAssociatedBean())
                 javaClass.addContent(getSelectForAssociatedBeanFunction(column)).addContent(EMPTY_LINE);
             else
-                javaClass.addContent(getInputFormElement("NUMBER", field)).addContent(EMPTY_LINE);
+                addInputFormElement("NUMBER", field);
+                //javaClass.addContent(getInputFormElement("NUMBER", field)).addContent(EMPTY_LINE);
             return;
         }
 
         if (type.equals("String")) {
             if (column.getDisplaySize() < TEXTAREA_THRESHOLD) {
                 if (field.equalsIgnoreCase("email") || field.equalsIgnoreCase("e-mail"))
-                    javaClass.addContent(getInputFormElement("EMAIL", field)).addContent(EMPTY_LINE);
+                    addInputFormElement("EMAIL", field);
+                    //javaClass.addContent(getInputFormElement("EMAIL", field)).addContent(EMPTY_LINE);
                 else
-                    javaClass.addContent(getInputFormElement("TEXT", field)).addContent(EMPTY_LINE);
+                    addInputFormElement("TEXT", field);
+                    //javaClass.addContent(getInputFormElement("TEXT", field)).addContent(EMPTY_LINE);
             } else {
                 javaClass.addContent(getTextAreaFormElement(field)).addContent(EMPTY_LINE);
             }
@@ -265,22 +271,26 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         }
 
         if (type.equals("Date")) {
-            javaClass.addContent(getInputFormElement("DATE", field)).addContent(EMPTY_LINE);
+            addInputFormElement("DATE", field);
+            //javaClass.addContent(getInputFormElement("DATE", field)).addContent(EMPTY_LINE);
             return;
         }
 
         if (type.equals("Time")) {
-            javaClass.addContent(getInputFormElement("TIME", field)).addContent(EMPTY_LINE);
+            addInputFormElement("TIME", field);
+            //javaClass.addContent(getInputFormElement("TIME", field)).addContent(EMPTY_LINE);
             return;
         }
 
         if (type.equals("Timestamp")) {
-            javaClass.addContent(getInputFormElement("DATETIME", field)).addContent(EMPTY_LINE);
+            addInputFormElement("DATETIME", field);
+            //javaClass.addContent(getInputFormElement("DATETIME", field)).addContent(EMPTY_LINE);
             return;
         }
 
         if (type.equals("Money")) {
-            javaClass.addContent(getInputFormElement("money", field)).addContent(EMPTY_LINE);
+            addInputFormElement("money", field);
+            //javaClass.addContent(getInputFormElement("money", field)).addContent(EMPTY_LINE);
             return;
         }
 
@@ -338,7 +348,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         return new FunctionCall("get" + capitalize(field), beanVarName);
     }
 
-    private FunctionDeclaration getInputFormElement(final String inputType, final String field) {
+    /*private FunctionDeclaration getInputFormElement(final String inputType, final String field) {
         importsManager.addImport("org.jcodegen.html.InputTag");
 
         final FunctionDeclaration functionDeclaration = new FunctionDeclaration("compose" + capitalize(field) + "FormElement").visibility(Visibility.PROTECTED)
@@ -368,6 +378,68 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         );
 
         return functionDeclaration;
+    }*/
+
+    private void addInputFormElement(final String inputType, final String field) {
+        importsManager.addImport("org.jcodegen.html.InputTag");
+
+        final String paramsFunctionName = "get" + capitalize(field) + "FormElementParameters";
+        final FunctionDeclaration paramsFunctionDeclaration =
+                new FunctionDeclaration(paramsFunctionName, "HFHParameters")
+                        .visibility(Visibility.PROTECTED);
+
+        final String fieldVar;
+        if (!inputType.equals("TEXT") && !inputType.equals("EMAIL"))
+            fieldVar = field + "Str";
+        else
+            fieldVar = field;
+        final String inputTypeVal;
+        if (inputType.equals("money"))
+            inputTypeVal = "TEXT";
+        else
+            inputTypeVal = inputType;
+
+        paramsFunctionDeclaration.addContent(
+                new VarDeclaration("HFHParameters", "params", new ObjectCreation("HFHParameters"))
+                        .markAsFinal());
+        paramsFunctionDeclaration.addContent(getParamAdjunctionCall("setField", quickQuote(field)));
+        paramsFunctionDeclaration.addContent(getParamAdjunctionCall("setIdBean", getId()));
+        paramsFunctionDeclaration.addContent(
+                getParamAdjunctionCall("setValue", addFieldValueArgument(fieldVar, false)));
+        paramsFunctionDeclaration.addContent(getParamAdjunctionCall("setFieldLabel", getLabelArgument(field)));
+        paramsFunctionDeclaration.addContent(
+                getParamAdjunctionCall("setInputType", "InputTag.InputType." + inputTypeVal));
+        paramsFunctionDeclaration.addContent(
+                getParamAdjunctionCall(
+                        "setRequired",
+                        new FunctionCall("is" + capitalize(field) + "RequiredInHtmlForm")));
+        paramsFunctionDeclaration.addContent(new ReturnStatement("params"));
+
+        final FunctionDeclaration getElementFunctionDeclaration =
+                new FunctionDeclaration("compose" + capitalize(field) + "FormElement")
+                        .visibility(Visibility.PROTECTED)
+                        .addArgument(new FunctionArgument("Tag", "form"));
+
+        getElementFunctionDeclaration.addContent(
+                new FunctionCall("child", "form").byItself().addArgument(
+                        new FunctionCall("getTextField", "htmlFormHelper")
+                                .addArgument(new FunctionCall(paramsFunctionName))
+                )
+        );
+
+        javaClass
+                .addContent(paramsFunctionDeclaration)
+                .addContent(EMPTY_LINE)
+                .addContent(getElementFunctionDeclaration)
+                .addContent(EMPTY_LINE);
+    }
+
+    private FunctionCall getParamAdjunctionCall(final String paramSetterFunction, final String value) {
+        return new FunctionCall(paramSetterFunction, "params").addArgument(value).byItself();
+    }
+
+    private FunctionCall getParamAdjunctionCall(final String paramSetterFunction, final Expression value) {
+        return new FunctionCall(paramSetterFunction, "params").addArgument(value).byItself();
     }
 
     private FunctionDeclaration getTextAreaFormElement(final String field) {
