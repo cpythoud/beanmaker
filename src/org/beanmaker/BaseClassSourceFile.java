@@ -1353,22 +1353,21 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         final FunctionDeclaration dataOKFunction =
                 new FunctionDeclaration("isDataOK", "boolean").annotate("@Override").addContent(
                         new FunctionCall("clearErrorMessages", internalsVar).byItself()
+                ).addContent(
+                        new VarDeclaration("boolean", "ok", "true")
                 ).addContent(EMPTY_LINE);
 
-        final StringBuilder checkFunctionsCalled = new StringBuilder();
+        int okAssignCount = 0;
         for (Column column: columns.getList())
-            if (!column.isSpecial() && !column.getJavaType().equals("boolean"))
-                checkFunctionsCalled
-                        .append("checkDataFor")
-                        .append(capitalize(column.getJavaName()))
-                        .append("() && ");
+            if (!column.isSpecial() && !column.getJavaType().equals("boolean")) {
+                dataOKFunction.addContent(
+                        new Assignment("ok", "ok && checkDataFor" + capitalize(column.getJavaName()) + "()"));
+                ++okAssignCount;
+            }
+        if (okAssignCount > 0)
+            dataOKFunction.addContent(EMPTY_LINE);
 
-        if (checkFunctionsCalled.length() == 0)
-            dataOKFunction.addContent(new ReturnStatement("true"));
-        else {
-            checkFunctionsCalled.delete(checkFunctionsCalled.length() - 4, checkFunctionsCalled.length());
-            dataOKFunction.addContent(new ReturnStatement(checkFunctionsCalled.toString()));
-        }
+        dataOKFunction.addContent(new ReturnStatement("ok"));
 
         javaClass.addContent(dataOKFunction).addContent(EMPTY_LINE);
 
