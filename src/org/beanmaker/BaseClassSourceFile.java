@@ -1361,7 +1361,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         for (Column column: columns.getList())
             if (!column.isSpecial() && !column.getJavaType().equals("boolean")) {
                 dataOKFunction.addContent(
-                        new Assignment("ok", "ok && checkDataFor" + capitalize(column.getJavaName()) + "()"));
+                        new Assignment("ok", "checkDataFor" + capitalize(column.getJavaName()) + "() && ok"));
                 ++okAssignCount;
             }
         if (okAssignCount > 0)
