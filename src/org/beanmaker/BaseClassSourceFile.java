@@ -1353,15 +1353,34 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         final FunctionDeclaration dataOKFunction =
                 new FunctionDeclaration("isDataOK", "boolean").annotate("@Override").addContent(
                         new FunctionCall("clearErrorMessages", internalsVar).byItself()
-                ).addContent(
-                new VarDeclaration("boolean", "ok", "true")
-        ).addContent(EMPTY_LINE);
+                ).addContent(EMPTY_LINE);
+
+        final StringBuilder checkFunctionsCalled = new StringBuilder();
+        for (Column column: columns.getList())
+            if (!column.isSpecial() && !column.getJavaType().equals("boolean"))
+                checkFunctionsCalled
+                        .append("checkDataFor")
+                        .append(capitalize(column.getJavaName()))
+                        .append("() && ");
+
+        if (checkFunctionsCalled.length() == 0)
+            dataOKFunction.addContent(new ReturnStatement("true"));
+        else {
+            checkFunctionsCalled.delete(checkFunctionsCalled.length() - 4, checkFunctionsCalled.length());
+            dataOKFunction.addContent(new ReturnStatement(checkFunctionsCalled.toString()));
+        }
+
+        javaClass.addContent(dataOKFunction).addContent(EMPTY_LINE);
 
         for (Column column: columns.getList()) {
             if (!column.isSpecial() && !column.getJavaType().equals("boolean")) {
 
                 final String field = column.getJavaName();
                 final String fieldCap = capitalize(field);
+
+                final FunctionDeclaration checkFieldFunction =
+                        new FunctionDeclaration("checkDataFor" + fieldCap, "boolean")
+                                .visibility(Visibility.PROTECTED);
 
                 final IfBlock checkRequired =
                         new IfBlock(new Condition(new FunctionCall("is" + fieldCap + "Empty"))).addContent(
@@ -1371,7 +1390,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                                                 .addArgument(quickQuote(field))
                                                 .addArgument(new FunctionCall("get" + fieldCap + "Label"))
                                                 .addArgument(new FunctionCall("get" + fieldCap + "EmptyErrorMessage"))
-                                ).addContent(new Assignment("ok", "false"))
+                                ).addContent(new ReturnStatement("false"))
                         );
 
                 final ElseIfBlock checkOK =
@@ -1381,7 +1400,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                                         .addArgument(quickQuote(field))
                                         .addArgument(new FunctionCall("get" + fieldCap + "Label"))
                                         .addArgument(new FunctionCall("get" + fieldCap + "BadFormatErrorMessage"))
-                        ).addContent(new Assignment("ok", "false"));
+                        ).addContent(new ReturnStatement("false"));
 
                 final ElseIfBlock checkUnique =
                         new ElseIfBlock(
@@ -1394,19 +1413,16 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                                                 .addArgument(quickQuote(field))
                                                 .addArgument(new FunctionCall("get" + fieldCap + "Label"))
                                                 .addArgument(new FunctionCall("get" + fieldCap + "NotUniqueErrorMessage"))
-                                ).addContent(new Assignment("ok", "false"));
+                                ).addContent(new ReturnStatement("false"));
 
-                dataOKFunction
+                checkFieldFunction
                         .addContent(checkRequired.addElseIfClause(checkOK).addElseIfClause(checkUnique))
-                        .addContent(EMPTY_LINE);
+                        .addContent(EMPTY_LINE)
+                        .addContent(new ReturnStatement("true"));
+
+                javaClass.addContent(checkFieldFunction).addContent(EMPTY_LINE);
             }
         }
-
-        dataOKFunction.addContent(
-                new ReturnStatement("ok")
-        );
-
-        javaClass.addContent(dataOKFunction).addContent(EMPTY_LINE);
 
         for (Column column: columns.getList()) {
             if (!column.isSpecial() && !column.getJavaType().equals("boolean")) {
