@@ -39,6 +39,12 @@ public class HFHParameters {
     private String cssClasses;
     private String buttonLabel;
 
+    // yes/no radio buttons
+    private String yesLabel;
+    private String noLabel;
+    private String yesValue;
+    private String noValue;
+
     // extra parameters
     private Map<String, String> extraParams;
 
@@ -75,6 +81,12 @@ public class HFHParameters {
         functionName = params.functionName;
         cssClasses = params.cssClasses;
         buttonLabel = params.buttonLabel;
+
+        // yes/no radio buttons
+        yesLabel = params.yesLabel;
+        noLabel = params.noLabel;
+        yesValue = params.yesValue;
+        noValue = params.noValue;
 
         if (params.extraParams != null) {
             initExtraParamMap();
@@ -328,6 +340,58 @@ public class HFHParameters {
 
     public HFHParameters setButtonLabel(final String buttonLabel) {
         this.buttonLabel = buttonLabel;
+
+        return this;
+    }
+
+    public String getYesLabel() {
+        if (yesLabel == null)
+            throw new HFHParameterMissingException("yesLabel");
+
+        return yesLabel;
+    }
+
+    public HFHParameters setYesLabel(String yesLabel) {
+        this.yesLabel = yesLabel;
+
+        return this;
+    }
+
+    public String getNoLabel() {
+        if (noLabel == null)
+            throw new HFHParameterMissingException("noLabel");
+
+        return noLabel;
+    }
+
+    public HFHParameters setNoLabel(String noLabel) {
+        this.noLabel = noLabel;
+
+        return this;
+    }
+
+    public String getYesValue() {
+        if (yesValue == null)
+            return "true";
+
+        return yesValue;
+    }
+
+    public HFHParameters setYesValue(String yesValue) {
+        this.yesValue = yesValue;
+
+        return this;
+    }
+
+    public String getNoValue() {
+        if (noValue == null)
+            return "false";
+
+        return noValue;
+    }
+
+    public HFHParameters setNoValue(String noValue) {
+        this.noValue = noValue;
 
         return this;
     }

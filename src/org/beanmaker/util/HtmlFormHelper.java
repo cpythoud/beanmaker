@@ -6,6 +6,7 @@ import org.jcodegen.html.ButtonTag;
 import org.jcodegen.html.CData;
 import org.jcodegen.html.DivTag;
 import org.jcodegen.html.FormTag;
+import org.jcodegen.html.HtmlCodeFragment;
 import org.jcodegen.html.InputTag;
 import org.jcodegen.html.LabelTag;
 import org.jcodegen.html.OptionTag;
@@ -454,8 +455,16 @@ public class HtmlFormHelper {
         return new PTag(helpText).cssClass("helpBlock");
     }
 
+    protected LabelTag getLabel(final String fieldLabel, final boolean required) {
+        return getLabel(fieldLabel, null, required);
+    }
+
     protected LabelTag getLabel(final String fieldLabel, final String fieldId, final boolean required) {
-        final LabelTag label = new LabelTag(getLabelText(fieldLabel, required), fieldId);
+        final LabelTag label;
+        if (fieldId == null)
+            label = new LabelTag(getLabelText(fieldLabel, required));
+        else
+            label = new LabelTag(getLabelText(fieldLabel, required), fieldId);
 
         if (inlineWithoutLabels)
             label.cssClass("sr-only");
@@ -971,6 +980,42 @@ public class HtmlFormHelper {
                 .name(field)
                 .id(getFieldId(field, idBean))
                 .value(value);
+    }
+
+    public DivTag getBooleanRadiosField(final HFHParameters params) {
+        final LabelTag label = getLabel(params.getFieldLabel(), params.isRequired());
+
+        final DivTag wrapper = new DivTag();
+        wrapper.child(getBooleanRadioButton(params, true));
+        wrapper.child(getBooleanRadioButton(params, false));
+
+        return getFormGroup(label, wrapper);
+    }
+
+    private LabelTag getBooleanRadioButton(final HFHParameters params, final boolean positiveValue) {
+        final String fieldLabel;
+        final String fieldValue;
+        if (positiveValue) {
+            fieldLabel = params.getYesLabel();
+            fieldValue = params.getYesValue();
+        } else {
+            fieldLabel = params.getNoLabel();
+            fieldValue = params.getNoValue();
+        }
+
+        final HtmlCodeFragment buttonInside = new HtmlCodeFragment();
+        final InputTag radioButton =
+                new InputTag(InputTag.InputType.RADIO)
+                        .name(params.getField())
+                        .value(fieldValue);
+        if (params.isChecked() && positiveValue)
+            radioButton.checked();
+        if (!params.isChecked() && !positiveValue)
+            radioButton.checked();
+        buttonInside.addTag(radioButton);
+        buttonInside.addTag(new CData("&nbsp;" + fieldLabel));
+
+        return new LabelTag().cssClass("radio-inline").addCodeFragment(buttonInside);
     }
 }
 
