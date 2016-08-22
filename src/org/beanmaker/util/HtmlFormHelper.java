@@ -1012,6 +1012,8 @@ public class HtmlFormHelper {
             radioButton.checked();
         if (!params.isChecked() && !positiveValue)
             radioButton.checked();
+        if (params.isDisabled())
+            radioButton.disabled();
         buttonInside.addTag(radioButton);
         buttonInside.addTag(new CData("&nbsp;" + fieldLabel));
 
