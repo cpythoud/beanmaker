@@ -2201,6 +2201,66 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                                 .addArgument(new ObjectCreation("GetSelectionQueryProcess")))
                 )
         ).addContent(EMPTY_LINE);
+
+
+        javaClass.addContent(
+                new JavaClass("GetSelectionCountQueryProcess")
+                        .implementsInterface("DBQueryRetrieveData<Long>")
+                        .visibility(Visibility.PRIVATE)
+                        .markAsStatic()
+                        .addContent(
+                                new FunctionDeclaration("processResultSet", "Long")
+                                        .annotate("@Override")
+                                        .addException("SQLException")
+                                        .addArgument(new FunctionArgument("ResultSet", "rs"))
+                                        .addContent(
+                                                new FunctionCall("next", "rs").byItself()
+                                        )
+                                        .addContent(
+                                                new ReturnStatement(new FunctionCall("getLong", "rs").addArgument("1"))
+                                        )
+                        )
+        ).addContent(EMPTY_LINE);
+
+        javaClass.addContent(
+                new FunctionDeclaration("getSelectionCount", "long")
+                        .markAsStatic()
+                        .visibility(Visibility.PROTECTED)
+                        .addArgument(new FunctionArgument("String", "whereClause"))
+                        .addContent(
+                                new ReturnStatement(
+                                        new FunctionCall("getSelectionCount").addArguments("whereClause", "null"))
+                )
+        ).addContent(EMPTY_LINE);
+
+        javaClass.addContent(
+                new FunctionDeclaration("getSelectionCount", "long")
+                        .markAsStatic()
+                        .visibility(Visibility.PROTECTED)
+                        .addArgument(new FunctionArgument("String", "whereClause"))
+                        .addArgument(new FunctionArgument("DBQuerySetup", "setup"))
+                        .addContent(
+                                new VarDeclaration(
+                                        "String",
+                                        "query",
+                                        quickQuote("SELECT COUNT(id) FROM " + tableName + " WHERE ") + " + whereClause"
+                                ).markAsFinal()
+                        ).addContent(EMPTY_LINE)
+                        .addContent(
+                                new IfBlock(new Condition(new Comparison("setup", "null")))
+                                        .addContent(
+                                                new ReturnStatement(new FunctionCall("processQuery", "dbAccess")
+                                                        .addArgument("query")
+                                                        .addArgument(new ObjectCreation("GetSelectionCountQueryProcess")))
+                                        )
+                        ).addContent(EMPTY_LINE)
+                        .addContent(
+                                new ReturnStatement(new FunctionCall("processQuery", "dbAccess")
+                                        .addArgument("query")
+                                        .addArgument("setup")
+                                        .addArgument(new ObjectCreation("GetSelectionCountQueryProcess")))
+                        )
+        ).addContent(EMPTY_LINE);
     }
 
     private void addGetIdNamePairs() {
