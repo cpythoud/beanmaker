@@ -7,4 +7,6 @@ public interface ProtectedIdInterface extends DbBeanInterface {
     String getProtectionCode();
 
     void initFromProtectionCode(final String code);
+
+    boolean matchesProtectionCode(final String code);
 }

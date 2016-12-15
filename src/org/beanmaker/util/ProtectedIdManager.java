@@ -42,6 +42,10 @@ public class ProtectedIdManager {
         return getIdFromDB(code);
     }
 
+    public boolean codeMatchesId(final String code, final long id) {
+        return getId(code) == id;
+    }
+
     private String getCodeFromDB(final long id) {
         return dbAccess.processQuery(
                 "SELECT code FROM " + table + " WHERE protected_id=?",
