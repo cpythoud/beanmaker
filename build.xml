@@ -42,6 +42,14 @@
         <jar destfile="${build.dir}/beanmaker-util-${jar.version}.jar" basedir="${build.classes}" includes="org/beanmaker/util/**/*" />
     </target>
 
+    <target name="jar-util-src" description="Create file beanmaker-util-(version).jar" depends="cleanup,compile">
+        <java classname="org.beanmaker.Version" classpath="${build.classes}" outputproperty="jar.version" />
+        <jar destfile="${build.dir}/beanmaker-util-${jar.version}.jar">
+            <fileset dir="${build.classes}" includes="org/beanmaker/util/**/*" />
+            <fileset dir="${src-ascii.dir}" includes="org/beanmaker/util/**/*" />
+        </jar>
+    </target>
+
     <target name="doc" description="Create javadoc for this project" depends="native2ascii">
         <mkdir dir="${javadoc.dir}" />
         <javadoc sourcepath="${src-ascii.dir}" destdir="${javadoc.dir}" />
