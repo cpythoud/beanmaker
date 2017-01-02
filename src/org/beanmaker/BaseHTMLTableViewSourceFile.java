@@ -23,6 +23,7 @@ public class BaseHTMLTableViewSourceFile extends ViewCode {
         importsManager.addImport("java.util.ArrayList");
         importsManager.addImport("java.util.List");
 
+        importsManager.addImport("org.beanmaker.util.DbBeanViewInterface");
         importsManager.addImport("org.beanmaker.util.HtmlTableHelper");
     }
 
@@ -112,7 +113,7 @@ public class BaseHTMLTableViewSourceFile extends ViewCode {
         sourceFile.setStartComment(SourceFiles.getCommentAndVersion());
 
         addImports();
-        javaClass.markAsAbstract();
+        javaClass.markAsAbstract().implementsInterface("DbBeanViewInterface");
         addViewPrelude();
         addHTMLTableGetter();
     }

@@ -32,6 +32,8 @@ public class BaseXMLViewSourceFile extends ViewCode {
     private void addImports() {
         importsManager.addImport("org.jcodegen.html.xmlbase.ValueXMLAttribute");
         importsManager.addImport("org.jcodegen.html.xmlbase.XMLElement");
+
+        importsManager.addImport("org.beanmaker.util.DbBeanViewInterface");
     }
 
     private void addXMLGetter() {
@@ -173,7 +175,7 @@ public class BaseXMLViewSourceFile extends ViewCode {
         sourceFile.setStartComment(SourceFiles.getCommentAndVersion());
 
         addImports();
-        javaClass.markAsAbstract();
+        javaClass.markAsAbstract().implementsInterface("DbBeanViewInterface");
         addViewPrelude();
         addXMLGetter();
     }

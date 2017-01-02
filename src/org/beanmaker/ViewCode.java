@@ -8,11 +8,18 @@ import org.jcodegen.java.ObjectCreation;
 import org.jcodegen.java.ReturnStatement;
 import org.jcodegen.java.VarDeclaration;
 import org.jcodegen.java.Visibility;
+
 import org.dbbeans.util.Strings;
 
 public abstract class ViewCode extends BeanCodeWithDBInfo {
 
-    public ViewCode(final String beanName, final String packageName, final String nameExtension, final Columns columns, final String tableName) {
+    public ViewCode(
+            final String beanName,
+            final String packageName,
+            final String nameExtension,
+            final Columns columns,
+            final String tableName)
+    {
         super(beanName, packageName, nameExtension, columns, tableName);
     }
 
@@ -25,6 +32,7 @@ public abstract class ViewCode extends BeanCodeWithDBInfo {
         newLine();
         addBeanGetter();
         newLine();
+        addIdFunctions();
         newLine();
     }
 
@@ -68,5 +76,29 @@ public abstract class ViewCode extends BeanCodeWithDBInfo {
 
     protected FunctionCall getLabelArgument(final String field) {
         return new FunctionCall("get" + Strings.capitalize(field) + "Label", beanVarName);
+    }
+
+    private void addIdFunctions() {
+        javaClass.addContent(
+                new FunctionDeclaration("resetId").addContent(
+                        new FunctionCall("resetId", beanVarName).byItself()
+                ).annotate("@Override")
+        ).addContent(EMPTY_LINE);
+
+        javaClass.addContent(
+                new FunctionDeclaration("setResetId")
+                        .annotate("@Override")
+                        .addArgument(new FunctionArgument("String", "dummy"))
+                        .addContent(new FunctionCall("resetId").byItself())
+        ).addContent(EMPTY_LINE);
+
+        javaClass.addContent(
+                new FunctionDeclaration("setId")
+                        .annotate("@Override")
+                        .addArgument(new FunctionArgument("long", "id"))
+                        .addContent(
+                                new FunctionCall("setId", beanVarName).addArgument("id").byItself()
+                        )
+        ).addContent(EMPTY_LINE).addContent(EMPTY_LINE);
     }
 }

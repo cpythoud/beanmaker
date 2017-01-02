@@ -7,17 +7,11 @@ import javax.servlet.ServletRequest;
 import java.util.List;
 import java.util.Locale;
 
-public interface DbBeanHTMLViewInterface {
+public interface DbBeanHTMLViewInterface extends DbBeanViewInterface {
 
     void setLocale(final Locale locale);
 
     List<ErrorMessage> getErrorMessages();
-
-    void resetId();
-
-    void setResetId(final String dummy);
-
-    void setId(final long id);
 
     String getHtmlForm();
 

@@ -53,7 +53,8 @@ public class BaseEmailViewSourceFile extends ViewCode {
     private void createSourceCode() {
         sourceFile.setStartComment(SourceFiles.getCommentAndVersion());
         importsManager.addImport("org.dbbeans.util.Email");
-        javaClass.markAsAbstract();
+        importsManager.addImport("org.beanmaker.util.DbBeanViewInterface");
+        javaClass.markAsAbstract().implementsInterface("DbBeanViewInterface");
         addViewPrelude();
         addSendEmail();
     }

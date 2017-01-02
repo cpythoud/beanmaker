@@ -31,6 +31,8 @@ public class BaseJsonViewSourceFile extends ViewCode {
         importsManager.addImport("org.dbbeans.util.json.JsonObject");
         importsManager.addImport("org.dbbeans.util.json.JsonElement");
         importsManager.addImport("org.dbbeans.util.json.JsonIntegerElement");
+
+        importsManager.addImport("org.beanmaker.util.DbBeanViewInterface");
     }
 
     private void addJsonGetter() {
@@ -190,7 +192,7 @@ public class BaseJsonViewSourceFile extends ViewCode {
         sourceFile.setStartComment(SourceFiles.getCommentAndVersion());
 
         addImports();
-        javaClass.markAsAbstract();
+        javaClass.markAsAbstract().implementsInterface("DbBeanViewInterface");
         addViewPrelude();
         addJsonGetter();
     }

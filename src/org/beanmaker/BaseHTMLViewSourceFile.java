@@ -56,7 +56,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         );
     }
 
-    private void addIdFunctions() {
+    /*private void addIdFunctions() {
         javaClass.addContent(
                 new FunctionDeclaration("resetId").addContent(
                         new FunctionCall("resetId", beanVarName).byItself()
@@ -78,7 +78,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
                                 new FunctionCall("setId", beanVarName).addArgument("id").byItself()
                 )
         ).addContent(EMPTY_LINE).addContent(EMPTY_LINE);
-    }
+    }*/
 
     private void addChecksForRequiredFields() {
         for (Column column: columns.getList())
@@ -663,7 +663,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         addImports();
         addClassModifiers();
         addViewPrelude();
-        addIdFunctions();
+        //addIdFunctions();
         addChecksForRequiredFields();
         newLine();
         addHTMLFormGetter();
