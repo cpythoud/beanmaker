@@ -157,4 +157,12 @@ public abstract class BeanMakerBaseServlet extends HttpServlet {
 
         return getJsonOk();
     }
+
+    protected String getErrorMessageContainerHtml(final String idContainer) {
+        return getErrorMessageContainerHtml(idContainer, "error-message-container");
+    }
+
+    protected String getErrorMessageContainerHtml(final String idContainer, final String cssClass) {
+        return "<div id='" + idContainer + "' class='" + cssClass + "'></div>";
+    }
 }
