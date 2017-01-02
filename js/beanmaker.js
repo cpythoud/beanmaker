@@ -189,3 +189,12 @@ BEANMAKER.loadOperation = function(idContainer, servlet, idBean, operation, done
             operation: operation
         }, doneFunction);
 };
+
+BEANMAKER.reloadAfterChange = function() {
+    window.location.reload();
+};
+
+BEANMAKER.reloadToHashAfterChange = function(hash) {
+    window.location.href = window.location.pathname + hash;
+    window.location.reload();
+};
