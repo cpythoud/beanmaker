@@ -99,6 +99,6 @@ public abstract class ViewCode extends BeanCodeWithDBInfo {
                         .addContent(
                                 new FunctionCall("setId", beanVarName).addArgument("id").byItself()
                         )
-        ).addContent(EMPTY_LINE).addContent(EMPTY_LINE);
+        );
     }
 }
