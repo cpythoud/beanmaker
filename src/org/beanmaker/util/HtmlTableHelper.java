@@ -1,10 +1,26 @@
 package org.beanmaker.util;
 
+import org.jcodegen.html.TableTag;
+import org.jcodegen.html.TbodyTag;
+import org.jcodegen.html.TdTag;
+import org.jcodegen.html.ThTag;
+import org.jcodegen.html.TrTag;
+
 import java.util.List;
 
 public class HtmlTableHelper {
+
+	protected String tableCssClass = "display-table";
+	protected String beanTableCssClassPrefix = tableCssClass;
+
+	protected String rowCssClass = "display-table-row";
+	protected String beanRowCssClassPrefix = rowCssClass;
 	
 	public static class Row {
+
+		private final String fieldName;
+		private final String label;
+		private final String value;
 		
 		public Row(final String fieldName, final String label, final String value) {
 			this.fieldName = fieldName;
@@ -12,7 +28,7 @@ public class HtmlTableHelper {
 			this.value = value;
 		}
 		
-		public void print(final StringBuilder buf, final boolean odd) {
+		/*public void print(final StringBuilder buf, final boolean odd) {
 			buf.append("<tr class=\"");
 			buf.append(fieldName);
 			if (odd)
@@ -28,14 +44,22 @@ public class HtmlTableHelper {
 			buf.append("\">");
 			buf.append(value);
 			buf.append("</td></tr>\n");
-		}
+		}*/
 		
-		private final String fieldName;
-		private final String label;
-		private final String value;
+		private TrTag getCode(final String rowCssClass, final String beanRowCssClassPrefix, final int index) {
+			return new TrTag()
+					.cssClass(getCssClasses(rowCssClass, beanRowCssClassPrefix, index))
+					.child(new ThTag(label))
+					.child(new TdTag(value));
+		}
+
+		private String getCssClasses(final String rowCssClass, final String beanRowCssClassPrefix, final int index) {
+			return rowCssClass + " " + beanRowCssClassPrefix + "-" + fieldName
+					+ (index % 2 == 0 ? " even" : " odd");
+		}
 	}
 	
-	public static void table(final StringBuilder buf, final String beanName, final long id, final List<Row> rows) {
+	/*public static void table(final StringBuilder buf, final String beanName, final long id, final List<Row> rows) {
 		buf.append("<table id=\"");
 		buf.append(beanName);
 		buf.append("_");
@@ -49,7 +73,31 @@ public class HtmlTableHelper {
 			row.print(buf, ++index % 2 != 0);
 		
 		buf.append("</table>\n");
+	}*/
+
+	public String getTable(final String beanName, final long id, final List<Row> rows) {
+		return getTableCode(beanName, id, rows).toString();
+	}
+
+	protected TableTag getTableCode(final String beanName, final long id, final List<Row> rows) {
+		final TbodyTag body = new TbodyTag();
+
+		int index = 0;
+		for (Row row: rows)
+			body.child(row.getCode(rowCssClass, beanRowCssClassPrefix, ++index));
+
+		return new TableTag()
+				.id(getTableId(beanName, id))
+				.cssClass(getCssClasses(beanName))
+				.child(body);
+	}
+
+	protected String getTableId(final String beanName, final long id) {
+		return beanName + "_" + id;
+	}
+
+	protected String getCssClasses(final String beanName) {
+		return tableCssClass + " " + beanTableCssClassPrefix + "-" + beanName;
 	}
 	
 }
-

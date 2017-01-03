@@ -27,13 +27,22 @@ public class BaseHTMLTableViewSourceFile extends ViewCode {
         importsManager.addImport("org.beanmaker.util.HtmlTableHelper");
     }
 
+    @Override
+    protected void addProperties() {
+        super.addProperties();
+        newLine();
+        javaClass.addContent(
+                VarDeclaration.declareAndInit("HtmlTableHelper", "htmlTableHelper").visibility(Visibility.PROTECTED)
+        );
+    }
+
     private void addHTMLTableGetter() {
         javaClass.addContent(
                 new FunctionDeclaration("getHtmlTable", "String").addContent(
                         ifNotDataOK(true).addContent(
                                 ExceptionThrow.getThrowExpression("IllegalArgumentException", "Cannot display bad data")
                         )
-                ).addContent(EMPTY_LINE).addContent(
+                ).addContent(EMPTY_LINE)/*.addContent(
                         VarDeclaration.declareAndInitFinal("StringBuilder", "buf")
                 ).addContent(
                         new FunctionCall("table", "HtmlTableHelper").byItself()
@@ -42,6 +51,13 @@ public class BaseHTMLTableViewSourceFile extends ViewCode {
                                 .addArgument(new FunctionCall("getHtmlTableRows"))
                 ).addContent(
                         new ReturnStatement(new FunctionCall("toString", "buf"))
+                )*/.addContent(
+                        new ReturnStatement(
+                                new FunctionCall("getTable", "htmlTableHelper")
+                                        .addArgument(quickQuote(beanName))
+                                        .addArgument(getId())
+                                        .addArgument(new FunctionCall("getHtmlTableRows"))
+                        )
                 )
         ).addContent(EMPTY_LINE);
 
