@@ -42,16 +42,7 @@ public class BaseHTMLTableViewSourceFile extends ViewCode {
                         ifNotDataOK(true).addContent(
                                 ExceptionThrow.getThrowExpression("IllegalArgumentException", "Cannot display bad data")
                         )
-                ).addContent(EMPTY_LINE)/*.addContent(
-                        VarDeclaration.declareAndInitFinal("StringBuilder", "buf")
-                ).addContent(
-                        new FunctionCall("table", "HtmlTableHelper").byItself()
-                                .addArguments("buf", quickQuote(beanName))
-                                .addArgument(getId())
-                                .addArgument(new FunctionCall("getHtmlTableRows"))
-                ).addContent(
-                        new ReturnStatement(new FunctionCall("toString", "buf"))
-                )*/.addContent(
+                ).addContent(EMPTY_LINE).addContent(
                         new ReturnStatement(
                                 new FunctionCall("getTable", "htmlTableHelper")
                                         .addArgument(quickQuote(beanName))
@@ -61,9 +52,31 @@ public class BaseHTMLTableViewSourceFile extends ViewCode {
                 )
         ).addContent(EMPTY_LINE);
 
-        final FunctionDeclaration getHtmlTableRowsFunction = new FunctionDeclaration("getHtmlTableRows", "List<HtmlTableHelper.Row>").visibility(Visibility.PROTECTED).addContent(
-                VarDeclaration.createListDeclaration("HtmlTableHelper.Row", "rows").markAsFinal()
+        final FunctionDeclaration getHtmlTableRowsFunction =
+                new FunctionDeclaration(
+                        "getHtmlTableRows",
+                        "List<HtmlTableHelper.Row>")
+                        .visibility(Visibility.PROTECTED)
+                        .addContent(
+                                VarDeclaration.createListDeclaration("HtmlTableHelper.Row", "rows").markAsFinal()
+                        ).addContent(EMPTY_LINE);
+
+        for (Column column: columns.getList()) {
+            if (!column.isSpecial()) {
+                final String field = column.getJavaName();
+                getHtmlTableRowsFunction.addContent(
+                        new FunctionCall("add", "rows")
+                                .byItself()
+                                .addArgument(new FunctionCall("get" + capitalize(field) + "Row"))
+                );
+            }
+        }
+
+        getHtmlTableRowsFunction.addContent(EMPTY_LINE).addContent(
+                new ReturnStatement("rows")
         );
+
+        javaClass.addContent(getHtmlTableRowsFunction).addContent(EMPTY_LINE);
 
         for (Column column: columns.getList()) {
             if (!column.isSpecial()) {
@@ -112,17 +125,15 @@ public class BaseHTMLTableViewSourceFile extends ViewCode {
                 else
                     throw new IllegalStateException("Unknown type " + type);
 
-                getHtmlTableRowsFunction.addContent(
-                        new FunctionCall("add", "rows").byItself().addArgument(rowCreation)
-                );
+                javaClass.addContent(
+                        new FunctionDeclaration("get" + capitalize(field) + "Row", "HtmlTableHelper.Row")
+                                .visibility(Visibility.PROTECTED)
+                                .addContent(
+                                        new ReturnStatement(rowCreation)
+                                )
+                ).addContent(EMPTY_LINE);
             }
         }
-
-        getHtmlTableRowsFunction.addContent(EMPTY_LINE).addContent(
-                new ReturnStatement("rows")
-        );
-
-        javaClass.addContent(getHtmlTableRowsFunction).addContent(EMPTY_LINE);
     }
 
     private void createSourceCode() {
