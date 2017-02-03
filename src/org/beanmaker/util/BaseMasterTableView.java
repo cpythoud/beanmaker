@@ -72,6 +72,8 @@ public abstract class BaseMasterTableView extends BaseView {
     protected String summaryShownLabel = "items shown,";
     protected String summaryFilteredOutLabel = "items filtered out.";
 
+    protected boolean shownBeanIdInRowId = true;
+
     public BaseMasterTableView(final String resourceBundleName, final String tableId) {
         super(resourceBundleName);
         this.tableId = tableId;
@@ -246,7 +248,6 @@ public abstract class BaseMasterTableView extends BaseView {
         return thTitleCssClass + " th-" + name;
     }
 
-    @Deprecated
     protected TrTag getTableLine() {
         final TrTag line = new TrTag();
 
@@ -264,7 +265,22 @@ public abstract class BaseMasterTableView extends BaseView {
     }
 
     protected TrTag getTrTag(final long id) {
-        return new TrTag().id(tableId + "_row_" + id);
+        if (shownBeanIdInRowId)
+            return new TrTag().id(tableId + "_row_" + id);
+
+        return new TrTag();
+    }
+
+    protected TrTag getTableLine(final String code) {
+        final TrTag line = getTrTag(code);
+
+        line.child(getTableCellForRemoveFilteringPlaceholder());
+
+        return line;
+    }
+
+    protected TrTag getTrTag(final String code) {
+        return new TrTag().id(tableId + "_row_" + code);
     }
 
     protected TdTag getTableCellForRemoveFilteringPlaceholder() {
