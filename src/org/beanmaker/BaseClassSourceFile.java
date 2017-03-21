@@ -1280,9 +1280,18 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         javaClass.addContent(updateDBFunction).addContent(EMPTY_LINE);
 
 
-        final FunctionDeclaration updateDBFunctionWithTransaction = new FunctionDeclaration("updateDB", "long").addArgument(new FunctionArgument("DBTransaction", "transaction"));
+        final FunctionDeclaration updateDBFunctionWithTransaction =
+                new FunctionDeclaration("updateDB", "long")
+                        .addArgument(new FunctionArgument("DBTransaction", "transaction"));
         if (columns.hasModifiedBy())
             updateDBFunctionWithTransaction.addArgument(new FunctionArgument("String", "username"));
+
+        updateDBFunctionWithTransaction.addContent(
+                new IfBlock(new Condition(parametersVar + ".USE_CACHE")).addContent(
+                        new ExceptionThrow("UnsupportedOperationException")
+                                .addArgument(quickQuote("Cannot cache intermediate updates."))
+                )
+        ).addContent(EMPTY_LINE);
 
         updateDBFunctionWithTransaction.addContent(
                 getPreUpdateConversionCall()
@@ -1702,6 +1711,16 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         ).addContent(
                 new FunctionCall("postDeleteActions").byItself()
         ).addContent(
+                EMPTY_LINE
+        ).addContent(
+                new IfBlock(new Condition(parametersVar + ".USE_CACHE")).addContent(
+                        new FunctionCall("delete", parametersVar + ".CACHE_SET")
+                                .addArgument("id")
+                                .byItself()
+                )
+        ).addContent(
+                EMPTY_LINE
+        ).addContent(
                 new FunctionCall("fullReset").byItself()
         );
 
@@ -1817,6 +1836,8 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 new Assignment("this.id", "id")
         ).addContent(
                 new FunctionCall("postCreateActions").byItself()
+        ).addContent(EMPTY_LINE).addContent(
+                new FunctionCall("updateCaching").byItself()
         );
 
         javaClass.addContent(createRecordFunction).addContent(EMPTY_LINE);
@@ -1897,6 +1918,8 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 new FunctionCall("commit", "transaction").byItself()
         ).addContent(
                 new FunctionCall("postUpdateActions").byItself()
+        ).addContent(
+                new FunctionCall("updateCaching").byItself()
         );
 
         javaClass.addContent(updateRecordFunction).addContent(EMPTY_LINE);
@@ -1922,6 +1945,18 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         javaClass.addContent(
                 new FunctionDeclaration("postUpdateActions").visibility(Visibility.PROTECTED)
         ).addContent(EMPTY_LINE);
+    }
+
+    private void addUpdateCaching() {
+	    javaClass.addContent(
+	            new FunctionDeclaration("updateCaching").visibility(Visibility.PRIVATE).addContent(
+	                    new IfBlock(new Condition(parametersVar + ".USE_CACHE")).addContent(
+	                            new FunctionCall("submit", parametersVar + ".CACHE_SET")
+                                        .addArgument("(" + beanName + ") this")
+                                        .byItself()
+                        )
+                )
+        );
     }
 
     private void addOneToManyRelationshipInDB() {
@@ -2387,6 +2422,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 		addDelete();
 		addCreate();
 		addUpdate();
+		addUpdateCaching();
 		addOneToManyRelationshipInDB();
 		addTemporalFunctions();
 		addGetAll();
