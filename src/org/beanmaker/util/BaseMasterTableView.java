@@ -452,6 +452,50 @@ public abstract class BaseMasterTableView extends BaseView {
                 .attribute("data-filter-value", Strings.zeroFill(Long.valueOf(pair.getId()), zeroFilledMaxDigits));
     }
 
+    protected TdTag getTableCell(
+            final String name,
+            final List<IdNamePair> pairs,
+            final long idRow,
+            final long idSelected,
+            final boolean emptyChoice)
+    {
+        return getTableCell(name, pairs, idRow, idSelected, emptyChoice, null);
+    }
+
+    protected TdTag getTableCell(
+            final String name,
+            final List<IdNamePair> pairs,
+            final long idRow,
+            final long idSelected,
+            final boolean emptyChoice,
+            final String extraCssClasses)
+    {
+        final SelectTag select =
+                new SelectTag().id("tb-cell-select-" + name + "_" + idRow).cssClass("tb-cell-select-" + name);
+
+        if (emptyChoice) {
+            final OptionTag emptyOption = new OptionTag("", "");
+            if (idSelected == 0)
+                emptyOption.selected();
+            select.child(emptyOption);
+        }
+
+        String sortValue = null;
+        for (IdNamePair pair: pairs) {
+            final OptionTag option =
+                    new OptionTag(pair.getName(), Strings.zeroFill(Long.valueOf(pair.getId()), zeroFilledMaxDigits));
+            if (pair.getId().equals(Long.toString(idSelected))) {
+                option.selected();
+                sortValue = pair.getName();
+            }
+            select.child(option);
+        }
+
+        return getTableCell(name, select, extraCssClasses)
+                .attribute("data-filter-value", Strings.zeroFill(idSelected, zeroFilledMaxDigits))
+                .attribute("data-sort-value", sortValue == null ? "" : sortValue);
+    }
+
     protected TheadTag getThreeLineHead() {
         final TheadTag head = new TheadTag();
 
