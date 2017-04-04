@@ -743,6 +743,8 @@ public class HtmlFormHelper {
         final TextareaTag textarea = getTextAreaTag(fieldId, params.getField(), params.getValue());
         if (params.isRequired() && useRequiredInHtml)
             textarea.required();
+        if (params.getPlaceholder() != null)
+            textarea.placeholder(params.getPlaceholder());
         if (params.isDisabled())
             textarea.disabled();
 
