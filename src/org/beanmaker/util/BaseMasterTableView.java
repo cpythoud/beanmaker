@@ -72,7 +72,7 @@ public abstract class BaseMasterTableView extends BaseView {
     protected String summaryShownLabel = "items shown,";
     protected String summaryFilteredOutLabel = "items filtered out.";
 
-    protected boolean shownBeanIdInRowId = true;
+    protected boolean showBeanIdInRowId = true;
 
     public BaseMasterTableView(final String resourceBundleName, final String tableId) {
         super(resourceBundleName);
@@ -265,7 +265,7 @@ public abstract class BaseMasterTableView extends BaseView {
     }
 
     protected TrTag getTrTag(final long id) {
-        if (shownBeanIdInRowId)
+        if (showBeanIdInRowId)
             return new TrTag().id(tableId + "_row_" + id);
 
         return new TrTag();
