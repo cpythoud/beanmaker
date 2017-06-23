@@ -96,9 +96,9 @@ BEANMAKER.ajaxSubmit = function(event, nonDefaultParams, refreshOnSuccessFunctio
                 case 'ok':
                     if (refreshOnSuccessFunction != undefined) {
                         if ($this != undefined)
-                            refreshOnSuccessFunction($this);
+                            refreshOnSuccessFunction($this, data);
                         else
-                            refreshOnSuccessFunction();
+                            refreshOnSuccessFunction(data);
                     } else
                         window.location.href = params.nextPage;
                     break;
