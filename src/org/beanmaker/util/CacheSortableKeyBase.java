@@ -42,10 +42,14 @@ public abstract class CacheSortableKeyBase<T extends Comparable<T>> implements C
 
     @Override
     public int hashCode() {
+        return computeHashCode(id);
+    }
+
+    protected int computeHashCode(final long id) {
         int result = 17;
 
-        final int idEvaluationHash = (int) (id ^ (id >>> 32));
-        result = 31 * result + idEvaluationHash;
+        final int hash = (int) (id ^ (id >>> 32));
+        result = 31 * result + hash;
 
         return result;
     }
