@@ -1,6 +1,7 @@
 package org.beanmaker;
 
 import org.jcodegen.java.ExceptionThrow;
+import org.jcodegen.java.Expression;
 import org.jcodegen.java.FunctionCall;
 import org.jcodegen.java.FunctionDeclaration;
 import org.jcodegen.java.ObjectCreation;
@@ -91,53 +92,13 @@ public class BaseHTMLTableViewSourceFile extends ViewCode {
 
         for (Column column: columns.getList()) {
             if (!column.isSpecial()) {
-                final String type = column.getJavaType();
                 final String field = column.getJavaName();
 
                 final ObjectCreation rowCreation = new ObjectCreation("HtmlTableHelper.Row")
                         .addArgument(quickQuote(field))
                         .addArgument(new FunctionCall("get" + capitalize(field) + "Label", beanVarName));
 
-                if (type.equals("boolean"))
-                    rowCreation.addArgument(
-                            new FunctionCall("get" + capitalize(field) + "Val", beanVarName)
-                    );
-
-                else if (type.equals("int") || type.equals("long")) {
-                    if (field.startsWith("id"))
-                        rowCreation.addArgument(
-                                new FunctionCall("getHumanReadableTitle", column.getAssociatedBeanClass())
-                                        .addArgument(getFieldValue(field))
-                        );
-                    else {
-                        if (type.equals("int"))
-                            rowCreation.addArgument(
-                                    new FunctionCall("toString", "Integer")
-                                            .addArgument(getFieldValue(field))
-                            );
-                        else
-                            rowCreation.addArgument(
-                                    new FunctionCall("toString", "Long")
-                                            .addArgument(getFieldValue(field))
-                            );
-                    }
-                }
-
-                else if (type.equals("String"))
-                    rowCreation.addArgument(getFieldValue(field));
-
-                else if (JAVA_TEMPORAL_TYPES.contains(type))
-                    rowCreation.addArgument(
-                            new FunctionCall("get" + capitalize(field) + "Formatted", beanVarName)
-                    );
-
-                else if (type.equals("Money"))
-                    rowCreation.addArgument(
-                            new FunctionCall("toString", getFieldValue(field))
-                    );
-
-                else
-                    throw new IllegalStateException("Unknown type " + type);
+                addDataArgument(column, rowCreation);
 
                 javaClass.addContent(
                         new FunctionDeclaration("get" + capitalize(field) + "Row", "HtmlTableHelper.Row")
@@ -150,6 +111,113 @@ public class BaseHTMLTableViewSourceFile extends ViewCode {
         }
     }
 
+    private void addToStringFunction() {
+        javaClass.addContent(
+                new FunctionDeclaration("toString", "String").annotate("@Override").addContent(
+                        ifNotDataOK(true).addContent(
+                                ExceptionThrow.getThrowExpression(
+                                        "IllegalArgumentException",
+                                        "Cannot display bad data")
+                        )
+                ).addContent(EMPTY_LINE).addContent(
+                        new ReturnStatement(
+                                new FunctionCall("toString", new FunctionCall("getTextTableRow"))
+                        )
+                )
+        ).addContent(EMPTY_LINE);
+
+        final FunctionDeclaration getTextTableRowFunction =
+                new FunctionDeclaration(
+                        "getTextTableRow",
+                        "StringBuilder")
+                        .visibility(Visibility.PROTECTED)
+                        .addContent(
+                                VarDeclaration.declareAndInitFinal("StringBuilder", "rows")
+                        ).addContent(EMPTY_LINE);
+
+        for (Column column: columns.getList()) {
+            if (!column.isSpecial()) {
+                final String field = column.getJavaName();
+                getTextTableRowFunction.addContent(
+                        new FunctionCall("append", "rows")
+                                .byItself()
+                                .addArgument(new FunctionCall("get" + capitalize(field) + "TextRow"))
+                );
+            }
+        }
+
+        getTextTableRowFunction.addContent(EMPTY_LINE).addContent(
+                new ReturnStatement("rows")
+        );
+
+        javaClass.addContent(getTextTableRowFunction).addContent(EMPTY_LINE);
+
+        for (Column column: columns.getList()) {
+            if (!column.isSpecial()) {
+                final String field = column.getJavaName();
+
+                final FunctionCall rowCreation = new FunctionCall("getTextRow","HtmlTableHelper")
+                        .addArgument(new FunctionCall("get" + capitalize(field) + "Label", beanVarName));
+
+                addDataArgument(column, rowCreation);
+
+                javaClass.addContent(
+                        new FunctionDeclaration("get" + capitalize(field) + "TextRow", "String")
+                                .visibility(Visibility.PROTECTED)
+                                .addContent(
+                                        new ReturnStatement(rowCreation)
+                                )
+                ).addContent(EMPTY_LINE);
+            }
+        }
+    }
+
+    private void addDataArgument(final Column column, final Expression expression) {
+        final String type = column.getJavaType();
+        final String field = column.getJavaName();
+
+        if (type.equals("boolean"))
+            expression.addArgument(
+                    new FunctionCall("get" + capitalize(field) + "Val", beanVarName)
+            );
+
+        else if (type.equals("int") || type.equals("long")) {
+            if (field.startsWith("id"))
+                expression.addArgument(
+                        new FunctionCall("getHumanReadableTitle", column.getAssociatedBeanClass())
+                                .addArgument(getFieldValue(field))
+                );
+            else {
+                if (type.equals("int"))
+                    expression.addArgument(
+                            new FunctionCall("toString", "Integer")
+                                    .addArgument(getFieldValue(field))
+                    );
+                else
+                    expression.addArgument(
+                            new FunctionCall("toString", "Long")
+                                    .addArgument(getFieldValue(field))
+                    );
+            }
+        }
+
+        else if (type.equals("String"))
+            expression.addArgument(getFieldValue(field));
+
+        else if (JAVA_TEMPORAL_TYPES.contains(type))
+            expression.addArgument(
+                    new FunctionCall("get" + capitalize(field) + "Formatted", beanVarName)
+            );
+
+        else if (type.equals("Money"))
+            expression.addArgument(
+                    new FunctionCall("toString", getFieldValue(field))
+            );
+
+        else
+            throw new IllegalStateException("Unknown type " + type);
+    }
+
     private void createSourceCode() {
         sourceFile.setStartComment(SourceFiles.getCommentAndVersion());
 
@@ -157,5 +225,6 @@ public class BaseHTMLTableViewSourceFile extends ViewCode {
         javaClass.markAsAbstract().implementsInterface("DbBeanViewInterface");
         addViewPrelude();
         addHTMLTableGetter();
+        addToStringFunction();
     }
 }
