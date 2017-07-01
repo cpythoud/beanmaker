@@ -13,7 +13,12 @@ import static org.dbbeans.util.Strings.quickQuote;
 
 public class BaseHTMLTableViewSourceFile extends ViewCode {
 
-    public BaseHTMLTableViewSourceFile(final String beanName, final String packageName, final Columns columns, final String tableName) {
+    public BaseHTMLTableViewSourceFile(
+            final String beanName,
+            final String packageName,
+            final Columns columns,
+            final String tableName)
+    {
         super(beanName, packageName, "HTMLTableViewBase", columns, tableName);
 
         createSourceCode();
@@ -32,7 +37,9 @@ public class BaseHTMLTableViewSourceFile extends ViewCode {
         super.addProperties();
         newLine();
         javaClass.addContent(
-                VarDeclaration.declareAndInit("HtmlTableHelper", "htmlTableHelper").visibility(Visibility.PROTECTED)
+                VarDeclaration
+                        .declareAndInit("HtmlTableHelper", "htmlTableHelper")
+                        .visibility(Visibility.PROTECTED)
         );
     }
 
@@ -40,7 +47,9 @@ public class BaseHTMLTableViewSourceFile extends ViewCode {
         javaClass.addContent(
                 new FunctionDeclaration("getHtmlTable", "String").addContent(
                         ifNotDataOK(true).addContent(
-                                ExceptionThrow.getThrowExpression("IllegalArgumentException", "Cannot display bad data")
+                                ExceptionThrow.getThrowExpression(
+                                        "IllegalArgumentException",
+                                        "Cannot display bad data")
                         )
                 ).addContent(EMPTY_LINE).addContent(
                         new ReturnStatement(
@@ -58,7 +67,9 @@ public class BaseHTMLTableViewSourceFile extends ViewCode {
                         "List<HtmlTableHelper.Row>")
                         .visibility(Visibility.PROTECTED)
                         .addContent(
-                                VarDeclaration.createListDeclaration("HtmlTableHelper.Row", "rows").markAsFinal()
+                                VarDeclaration
+                                        .createListDeclaration("HtmlTableHelper.Row", "rows")
+                                        .markAsFinal()
                         ).addContent(EMPTY_LINE);
 
         for (Column column: columns.getList()) {
@@ -95,16 +106,19 @@ public class BaseHTMLTableViewSourceFile extends ViewCode {
                 else if (type.equals("int") || type.equals("long")) {
                     if (field.startsWith("id"))
                         rowCreation.addArgument(
-                                new FunctionCall("getHumanReadableTitle", column.getAssociatedBeanClass()).addArgument(getFieldValue(field))
+                                new FunctionCall("getHumanReadableTitle", column.getAssociatedBeanClass())
+                                        .addArgument(getFieldValue(field))
                         );
                     else {
                         if (type.equals("int"))
                             rowCreation.addArgument(
-                                    new FunctionCall("toString", "Integer").addArgument(getFieldValue(field))
+                                    new FunctionCall("toString", "Integer")
+                                            .addArgument(getFieldValue(field))
                             );
                         else
                             rowCreation.addArgument(
-                                    new FunctionCall("toString", "Long").addArgument(getFieldValue(field))
+                                    new FunctionCall("toString", "Long")
+                                            .addArgument(getFieldValue(field))
                             );
                     }
                 }
