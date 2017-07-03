@@ -100,6 +100,10 @@ public class BaseHTMLTableViewSourceFile extends ViewCode {
 
                 addDataArgument(column, rowCreation);
 
+                rowCreation.addArgument(
+                        new FunctionCall("shouldUseStrongInsteadOfTh", "htmlTableHelper")
+                );
+
                 javaClass.addContent(
                         new FunctionDeclaration("get" + capitalize(field) + "Row", "HtmlTableHelper.Row")
                                 .visibility(Visibility.PROTECTED)
