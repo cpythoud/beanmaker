@@ -7,7 +7,7 @@ public class Version {
     private static final String  PREFIX  = "";
     private static final int     MAJOR   = 0;
     private static final int     MINOR   = 9;
-    private static final int     PATCH   = 9;
+    private static final int     PATCH   = 10;
     private static final String  POSTFIX = "-beta";
 
     private static final String VERSION = PREFIX + MAJOR + "." + MINOR + "." + PATCH + POSTFIX;
