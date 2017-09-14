@@ -26,6 +26,8 @@ import java.sql.Timestamp;
 import java.text.DateFormat;
 
 import java.util.List;
+import java.util.Map;
+import java.util.ResourceBundle;
 
 public abstract class BaseMasterTableView extends BaseView {
 
@@ -74,13 +76,40 @@ public abstract class BaseMasterTableView extends BaseView {
 
     protected boolean showBeanIdInRowId = true;
 
+    protected DbBeanLanguage dbBeanLanguage = null;
+    protected boolean languageInfoRequired = false;
+    protected boolean displayAllLanguages = true;
+
     public BaseMasterTableView(final String resourceBundleName, final String tableId) {
         super(resourceBundleName);
         this.tableId = tableId;
     }
 
     public String getMasterTable() {
+        if (languageInfoRequired && dbBeanLanguage == null)
+            throw new NullPointerException("Language is not defined.");
+
         return getMasterTableTag().toString();
+    }
+
+    protected void setLanguage(DbBeanLanguage dbBeanLanguage, final Map<String, String> labels) {
+        this.dbBeanLanguage = dbBeanLanguage;
+
+        removeFilteringHtmlTags =
+                new SpanTag()
+                        .cssClass("glyphicon glyphicon-remove")
+                        .title(labels.get("cct_remove_filtering"));
+
+        yesName = labels.get("yes");
+        noName = labels.get("no");
+
+        noDataMessage = labels.get("cct_no_data");
+
+        summaryTotalLabel = labels.get("cct_total");
+        summaryShownLabel = labels.get("cct_shown");
+        summaryFilteredOutLabel = labels.get("cct_filtered");
+
+        setLocale(dbBeanLanguage.getLocale());
     }
 
     public TableTag getMasterTableTag() {

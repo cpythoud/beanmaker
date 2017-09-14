@@ -105,6 +105,14 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
         if (columns.hasLastUpdate())
             importsManager.addImport("org.dbbeans.util.Dates");
+
+        if (columns.hasLabels()) {
+            importsManager.addImport("org.beanmaker.util.DbBeanLabel");
+            importsManager.addImport("org.beanmaker.util.DbBeanLanguage");
+            if (columns.hasLabelField())
+                importsManager.addImport("org.beanmaker.util.DbBeanMultilingual");
+        }
+
     }
 	
 	private void addClassModifiers() {
@@ -113,6 +121,9 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
             javaClass.implementsGenericInterface("DbBeanWithItemOrderInterface", beanName);
         else
             javaClass.implementsInterface("DbBeanInterface");
+
+        if (columns.hasLabelField())
+            javaClass.implementsInterface("DbBeanMultilingual");
 	}
 
     private void addProperties() {
@@ -133,9 +144,18 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
             addProperty(declaration);
 
             if (type.equals("Money"))
-                addProperty(new VarDeclaration("String", field + "Str", new FunctionCall("toString", field)));
-            if (JAVA_TEMPORAL_TYPES.contains(type) || ((type.equals("int") || type.equals("long")) && !field.startsWith("id") && !field.equals("itemOrder")))
+                addProperty(new VarDeclaration(
+                        "String",
+                        field + "Str",
+                        new FunctionCall("toString", field)));
+            if (JAVA_TEMPORAL_TYPES.contains(type)
+                    || ((type.equals("int")
+                    || type.equals("long"))
+                    && !field.startsWith("id")
+                    && !field.equals("itemOrder")))
                 addProperty(new VarDeclaration("String", field + "Str", EMPTY_STRING));
+            if (field.startsWith("id") && field.endsWith("Label"))
+                addProperty(new VarDeclaration("DbBeanLabel", uncapitalize(chopId(field))));
         }
 
         if (columns.hasLastUpdate())
@@ -460,6 +480,14 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                                         .addArgument("id")
                 ));
 
+        // Nullification of labels
+        if (columns.hasLabels()) {
+            function.addContent(EMPTY_LINE);
+            for (Column column: columns.getList())
+                if (column.isLabelReference())
+                    function.addContent(new Assignment(uncapitalize(chopId(column.getJavaName())), "null"));
+        }
+
         function.addContent(EMPTY_LINE).addContent("postInitActions();");
         javaClass.addContent(function).addContent(EMPTY_LINE);
 
@@ -665,7 +693,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 prefix = "get";
             final FunctionDeclaration getter = new FunctionDeclaration(prefix + capitalize(field), type);
 
-            if (field.equals("itemOrder"))
+            if (field.equals("id") || field.equals("itemOrder") || field.equals("idLabel"))
                 getter.annotate("@Override");
 
             if (JAVA_TEMPORAL_TYPES.contains(type))
@@ -686,9 +714,39 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
             if (column.hasAssociatedBean()) {
                 final String associatedBeanClass = column.getAssociatedBeanClass();
-                final FunctionDeclaration associatedBeanGetter = new FunctionDeclaration("get" + chopId(field), associatedBeanClass)
-                        .addContent(new ReturnStatement(new ObjectCreation(associatedBeanClass).addArgument(field)));
+
+                final ReturnStatement returnStatement;
+                if (column.isLabelReference())
+                    returnStatement = new ReturnStatement(new FunctionCall("get", "Labels").addArgument(field));
+                else
+                    returnStatement = new ReturnStatement(new ObjectCreation(associatedBeanClass).addArgument(field));
+
+                final String associatedBeanGetterFunctionName = "get" + chopId(field);
+                final FunctionDeclaration associatedBeanGetter =
+                        new FunctionDeclaration(associatedBeanGetterFunctionName, associatedBeanClass)
+                                .addContent(returnStatement);
+                if (field.equals("idLabel"))
+                    associatedBeanGetter.annotate("@Override");
                 javaClass.addContent(associatedBeanGetter).addContent(EMPTY_LINE);
+
+                if (column.isLabelReference()) {
+                    final FunctionDeclaration labelGetter =
+                            new FunctionDeclaration(associatedBeanGetterFunctionName, "String")
+                                    .addArgument(new FunctionArgument("DbBeanLanguage", "dbBeanLanguage"))
+                                    .addContent(
+                                            new ReturnStatement(
+                                                    new FunctionCall("get", "Labels")
+                                                            .addArgument(field)
+                                                            .addArgument("dbBeanLanguage")
+                                            )
+                                    );
+
+                    if (field.equals("idLabel"))
+                        labelGetter.annotate("@Override");
+
+                    javaClass.addContent(labelGetter).addContent(EMPTY_LINE);
+                }
+
             }
 
             if (JAVA_TEMPORAL_TYPES.contains(type) || type.equals("Money") || ((type.equals("int") || type.equals("long")) && !field.startsWith("id") && !field.equals("itemOrder"))) {
@@ -725,12 +783,21 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
     private void addLabelGetters() {
         for (Column column: columns.getList()) {
             final String field = column.getJavaName();
-            if (!column.isSpecial())
-                javaClass.addContent(
-                        new FunctionDeclaration("get" + capitalize(field) + "Label", "String").addContent(
-                                new ReturnStatement(new FunctionCall("getLabel", internalsVar).addArgument(quickQuote(field)))
-                        )
-                ).addContent(EMPTY_LINE);
+            if (!column.isSpecial()) {
+                final FunctionDeclaration labelGetter =
+                        new FunctionDeclaration("get" + capitalize(field) + "Label", "String")
+                                .addContent(
+                                        new ReturnStatement(
+                                                new FunctionCall("getLabel", internalsVar)
+                                                        .addArgument(quickQuote(field)
+                                                        )
+                                        )
+                                );
+                if (column.getJavaName().equals("idLabel"))
+                    labelGetter.annotate("@Override");
+
+                javaClass.addContent(labelGetter).addContent(EMPTY_LINE);
+            }
         }
     }
 
@@ -1242,6 +1309,62 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
     private static FunctionCall getPreUpdateConversionCall() {
         return new FunctionCall("preUpdateConversions").byItself();
     }
+
+    private void addInitSetLabelFunctions() {
+	    if (columns.hasLabels())
+	        for (Column column: columns.getList()) {
+	            if (column.isLabelReference()) {
+                    final String choppedField = chopId(column.getJavaName());
+                    final String localVar = uncapitalize(choppedField);
+                    final String getIdFunction = "getId" + choppedField;
+                    final String initFunction = "init" + choppedField;
+
+                    javaClass.addContent(
+                            new FunctionDeclaration(initFunction)
+                                    .visibility(Visibility.PRIVATE)
+                                    .addContent(
+                                            new IfBlock(new Condition(new Comparison(localVar, "null")))
+                                                    .addContent(
+                                                            new Assignment(
+                                                                    localVar,
+                                                                    new FunctionCall(
+                                                                            "createInstance",
+                                                                            "Labels"))
+                                                    )
+                                                    .addContent(
+                                                            new IfBlock(new Condition(new Comparison(
+                                                                    new FunctionCall(getIdFunction),
+                                                                    "0",
+                                                                    Comparison.Comparator.GREATER_THAN)))
+                                                                    .addContent(
+                                                                            new FunctionCall("setId", localVar)
+                                                                                    .addArgument(new FunctionCall(getIdFunction))
+                                                                                    .byItself()
+                                                                    )
+                                                                    .addContent(
+                                                                            new FunctionCall("cacheLabelsFromDB", localVar)
+                                                                                    .byItself()
+                                                                    )
+                                                    )
+                                    )
+                    ).addContent(EMPTY_LINE);
+
+                    javaClass.addContent(
+                            new FunctionDeclaration("set" + choppedField)
+                                    .addArgument(new FunctionArgument("DbBeanLanguage", "dbBeanLanguage"))
+                                    .addArgument(new FunctionArgument("String", "text"))
+                                    .addContent(
+                                            new FunctionCall(initFunction).byItself()
+                                    )
+                                    .addContent(
+                                            new FunctionCall("updateLater", localVar)
+                                                    .addArguments("dbBeanLanguage", "text")
+                                                    .byItself()
+                                    )
+                    ).addContent(EMPTY_LINE);
+                }
+            }
+    }
 	
 	private void addUpdateDB() {
         if (columns.hasLastUpdate())
@@ -1390,43 +1513,76 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                         new FunctionDeclaration("checkDataFor" + fieldCap, "boolean")
                                 .visibility(Visibility.PROTECTED);
 
-                final IfBlock checkRequired =
-                        new IfBlock(new Condition(new FunctionCall("is" + fieldCap + "Empty"))).addContent(
-                                new IfBlock(new Condition(new FunctionCall("is" + fieldCap + "Required"))).addContent(
-                                        new FunctionCall("addErrorMessage", internalsVar).byItself()
-                                                .addArgument("id")
-                                                .addArgument(quickQuote(field))
-                                                .addArgument(new FunctionCall("get" + fieldCap + "Label"))
-                                                .addArgument(new FunctionCall("get" + fieldCap + "EmptyErrorMessage"))
-                                ).addContent(new ReturnStatement("false"))
-                        );
+                if (column.isLabelReference()) {
+                    final String localVar = uncapitalize(chopId(field));
+                    checkFieldFunction.addContent(
+                            new ForLoop("DbBeanLanguage dbBeanLanguage: Labels.getAllActiveLanguages()")
+                                    .addContent(
+                                            new VarDeclaration(
+                                                    "String",
+                                                    "iso",
+                                                    new FunctionCall("getCapIso", "dbBeanLanguage"))
+                                                    .markAsFinal()
+                                    )
+                                    .addContent(
+                                            new IfBlock(new Condition(
+                                                    new FunctionCall("isEmpty", "Strings")
+                                                            .addArgument(new FunctionCall("get", localVar)
+                                                                    .addArgument("dbBeanLanguage"))))
+                                                    .addContent(
+                                                            new IfBlock(new Condition(
+                                                                    new FunctionCall("is" + fieldCap + "Required")))
+                                                                    .addContent(
+                                                                            new FunctionCall("addErrorMessage", internalsVar)
+                                                                                    .byItself()
+                                                                                    .addArgument("id")
+                                                                                    .addArgument(quickQuote(field) + " + iso")
+                                                                                    .addArgument(getLabelLabelComposition(fieldCap))
+                                                                                    .addArgument(new FunctionCall("get" + fieldCap + "EmptyErrorMessage"))
+                                                                    )
+                                                                    .addContent(new ReturnStatement("false"))
+                                                    )
+                                    )
+                    ).addContent(EMPTY_LINE).addContent(new ReturnStatement("true"));
+                } else {
+                    final IfBlock checkRequired =
+                            new IfBlock(new Condition(new FunctionCall("is" + fieldCap + "Empty"))).addContent(
+                                    new IfBlock(new Condition(new FunctionCall("is" + fieldCap + "Required"))).addContent(
+                                            new FunctionCall("addErrorMessage", internalsVar).byItself()
+                                                    .addArgument("id")
+                                                    .addArgument(quickQuote(field))
+                                                    .addArgument(new FunctionCall("get" + fieldCap + "Label"))
+                                                    .addArgument(new FunctionCall("get" + fieldCap + "EmptyErrorMessage"))
+                                    ).addContent(new ReturnStatement("false"))
+                            );
 
-                final ElseIfBlock checkOK =
-                        new ElseIfBlock(new Condition(new FunctionCall("is" + fieldCap + "OK"), true)).addContent(
-                                new FunctionCall("addErrorMessage", internalsVar).byItself()
-                                        .addArgument("id")
-                                        .addArgument(quickQuote(field))
-                                        .addArgument(new FunctionCall("get" + fieldCap + "Label"))
-                                        .addArgument(new FunctionCall("get" + fieldCap + "BadFormatErrorMessage"))
-                        ).addContent(new ReturnStatement("false"));
+                    final ElseIfBlock checkOK =
+                            new ElseIfBlock(new Condition(new FunctionCall("is" + fieldCap + "OK"), true)).addContent(
+                                    new FunctionCall("addErrorMessage", internalsVar).byItself()
+                                            .addArgument("id")
+                                            .addArgument(quickQuote(field))
+                                            .addArgument(new FunctionCall("get" + fieldCap + "Label"))
+                                            .addArgument(new FunctionCall("get" + fieldCap + "BadFormatErrorMessage"))
+                            ).addContent(new ReturnStatement("false"));
 
-                final ElseIfBlock checkUnique =
-                        new ElseIfBlock(
-                                new Condition(new FunctionCall("is" + fieldCap + "ToBeUnique"))
-                                        .andCondition(
-                                                new Condition(new FunctionCall("is" + fieldCap + "Unique"), true)))
-                                .addContent(
-                                        new FunctionCall("addErrorMessage", internalsVar).byItself()
-                                                .addArgument("id")
-                                                .addArgument(quickQuote(field))
-                                                .addArgument(new FunctionCall("get" + fieldCap + "Label"))
-                                                .addArgument(new FunctionCall("get" + fieldCap + "NotUniqueErrorMessage"))
-                                ).addContent(new ReturnStatement("false"));
+                    final ElseIfBlock checkUnique =
+                            new ElseIfBlock(
+                                    new Condition(new FunctionCall("is" + fieldCap + "ToBeUnique"))
+                                            .andCondition(
+                                                    new Condition(new FunctionCall("is" + fieldCap + "Unique"), true)))
+                                    .addContent(
+                                            new FunctionCall("addErrorMessage", internalsVar).byItself()
+                                                    .addArgument("id")
+                                                    .addArgument(quickQuote(field))
+                                                    .addArgument(new FunctionCall("get" + fieldCap + "Label"))
+                                                    .addArgument(new FunctionCall("get" + fieldCap + "NotUniqueErrorMessage"))
+                                    ).addContent(new ReturnStatement("false"));
 
-                checkFieldFunction
-                        .addContent(checkRequired.addElseIfClause(checkOK).addElseIfClause(checkUnique))
-                        .addContent(EMPTY_LINE)
-                        .addContent(new ReturnStatement("true"));
+                    checkFieldFunction
+                            .addContent(checkRequired.addElseIfClause(checkOK).addElseIfClause(checkUnique))
+                            .addContent(EMPTY_LINE)
+                            .addContent(new ReturnStatement("true"));
+                }
 
                 javaClass.addContent(checkFieldFunction).addContent(EMPTY_LINE);
             }
@@ -1478,19 +1634,27 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 final FunctionDeclaration isOKFunction = new FunctionDeclaration("is" + fieldCap + "OK", "boolean");
 
                 if ((type.equals("int") || type.equals("long"))) {
-                    if (field.startsWith("id"))
-                        isOKFunction.addContent(
+                    if (field.startsWith("id")) {
+                        isOKFunction.addContent(  // TODO: reexamine the reason for this test...
                                 new IfBlock(new Condition("id == 0")).addContent(
                                         new ReturnStatement(
                                                 new Comparison(field, "0", Comparison.Comparator.GREATER_THAN)
                                         )
                                 )
-                        ).addContent(EMPTY_LINE).addContent(
-                                new ReturnStatement(
-                                        new FunctionCall("isIdOK", column.getAssociatedBeanClass())
-                                                .addArgument(field))
                         );
-                    else {
+                        if (column.isLabelReference())
+                            isOKFunction.addContent(EMPTY_LINE).addContent(
+                                    new ReturnStatement(
+                                            new FunctionCall("isIdOK", "Labels")
+                                                    .addArgument(field))
+                            );
+                        else
+                            isOKFunction.addContent(EMPTY_LINE).addContent(
+                                    new ReturnStatement(
+                                            new FunctionCall("isIdOK", column.getAssociatedBeanClass())
+                                                    .addArgument(field))
+                            );
+                    } else {
                         importsManager.addImport("org.beanmaker.util.FormatCheckHelper");
                         isOKFunction.addContent(new ReturnStatement(new FunctionCall("isNumber", "FormatCheckHelper").addArgument(field + "Str")));
                     }
@@ -1593,12 +1757,29 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         ).addContent(EMPTY_LINE);
     }
 
+    private String getLabelLabelComposition(final String fieldCap) {
+	    return "get" + fieldCap + "Label() + \" \" + iso";
+    }
+
     private String getNotUniqueQuery(final Column column) {
         return "SELECT id FROM " + tableName + " WHERE " + column.getSqlName() + "=? AND id <> ?";
     }
 	
 	private void addReset() {
         final FunctionDeclaration resetFunction = new FunctionDeclaration("reset").annotate("@Override");
+
+        boolean hasLabels = false;
+        for (Column column: columns.getList())
+            if (column.isLabelReference()) {
+                resetFunction.addContent(
+                        new FunctionCall("init" + chopId(column.getJavaName()))
+                                .byItself()
+                );
+                hasLabels = true;
+            }
+
+        if (hasLabels)
+            resetFunction.addContent(EMPTY_LINE);
 
         for (Column column: columns.getList()) {
             if (!column.isSpecial()) {
@@ -1630,6 +1811,17 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 		
 		resetFunction.addContent(new FunctionCall("clearErrorMessages", internalsVar).byItself());
 
+        if (hasLabels) {
+            resetFunction.addContent(EMPTY_LINE);
+
+            for (Column column: columns.getList())
+                if (column.isLabelReference())
+                    resetFunction.addContent(
+                            new FunctionCall("clearCache", uncapitalize(chopId(column.getJavaName())))
+                                    .byItself()
+                    );
+        }
+
         javaClass.addContent(resetFunction).addContent(EMPTY_LINE);
 
 
@@ -1647,6 +1839,17 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 fullResetFunction.addContent(new Assignment("modifiedBy", "null"));
             if (column.isItemOrder())
                 fullResetFunction.addContent(new Assignment("itemOrder", "0"));
+        }
+
+        if (hasLabels) {
+            fullResetFunction.addContent(EMPTY_LINE);
+
+            for (Column column: columns.getList())
+                if (column.isLabelReference())
+                    fullResetFunction.addContent(
+                            new FunctionCall("fullReset", uncapitalize(chopId(column.getJavaName())))
+                                    .byItself()
+                    );
         }
 
         javaClass.addContent(fullResetFunction).addContent(EMPTY_LINE);
@@ -1818,15 +2021,43 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 )
         ).addContent(EMPTY_LINE);
 
+        final FunctionDeclaration createRecordFunction = new FunctionDeclaration("createRecord")
+                .visibility(Visibility.PRIVATE)
+                .addContent(
+                        new VarDeclaration("DBTransaction", "transaction", new FunctionCall("createDBTransaction"))
+                                .markAsFinal()
+                )
+                .addContent(
+                        new FunctionCall("preCreateExtraDbActions")
+                                .byItself()
+                                .addArgument("transaction")
+                );
 
-        final FunctionDeclaration createRecordFunction = new FunctionDeclaration("createRecord").visibility(Visibility.PRIVATE).addContent(
-                new VarDeclaration("DBTransaction", "transaction", new FunctionCall("createDBTransaction")).markAsFinal()).addContent(
-                new FunctionCall("preCreateExtraDbActions").byItself().addArgument("transaction")
-        ).addContent(
-                new VarDeclaration("long", "id", new FunctionCall("createRecord").addArgument("transaction")).markAsFinal()
-        );
+        if (columns.hasLabels())
+            for (Column column: columns.getList())
+                if (column.isLabelReference()) {
+                    final String field = column.getJavaName();
+                    createRecordFunction.addContent(
+                            new FunctionCall("set" + capitalize(field))
+                                    .byItself()
+                                    .addArgument(new FunctionCall("updateDB", uncapitalize(chopId(field)))
+                                            .addArgument("transaction")
+                                    )
+                    );
+                }
+
+        createRecordFunction
+                .addContent(
+                        new VarDeclaration("long", "id", new FunctionCall("createRecord").addArgument("transaction"))
+                                .markAsFinal()
+                );
 
         addOneToManyRelationshipDBUpdateFunctionCalls(createRecordFunction);
+
+        if (columns.hasLabels())
+            createRecordFunction.addContent(
+                    new FunctionCall("updateLabels").addArgument("transaction").byItself()
+            );
 
         createRecordFunction.addContent(
                 new FunctionCall("createExtraDbActions").byItself().addArguments("transaction", "id")
@@ -1902,15 +2133,39 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
     }
 
     private void addUpdate() {
-        final FunctionDeclaration updateRecordFunction = new FunctionDeclaration("updateRecord").visibility(Visibility.PRIVATE).addContent(
-                new VarDeclaration("DBTransaction", "transaction", new FunctionCall("createDBTransaction")).markAsFinal()
-        ).addContent(
-                new FunctionCall("preUpdateExtraDbActions").byItself().addArgument("transaction")
-        ).addContent(
+        final FunctionDeclaration updateRecordFunction = new FunctionDeclaration("updateRecord")
+                .visibility(Visibility.PRIVATE)
+                .addContent(
+                        new VarDeclaration("DBTransaction", "transaction", new FunctionCall("createDBTransaction"))
+                                .markAsFinal()
+                )
+                .addContent(
+                        new FunctionCall("preUpdateExtraDbActions")
+                                .byItself()
+                                .addArgument("transaction")
+                );
+
+        if (columns.hasLabels())
+            for (Column column: columns.getList())
+                if (column.isLabelReference()) {
+                    final String field = column.getJavaName();
+                    updateRecordFunction.addContent(
+                            new FunctionCall("set" + capitalize(field))
+                                    .byItself()
+                                    .addArgument(new FunctionCall("getId", uncapitalize(chopId(field))))
+                    );
+                }
+
+        updateRecordFunction.addContent(
                 new FunctionCall("updateRecord").byItself().addArgument("transaction")
         );
 
         addOneToManyRelationshipDBUpdateFunctionCalls(updateRecordFunction);
+
+        if (columns.hasLabels())
+            updateRecordFunction.addContent(
+                    new FunctionCall("updateLabels").addArgument("transaction").byItself()
+            );
 
         updateRecordFunction.addContent(
                 new FunctionCall("updateExtraDbActions").byItself().addArgument("transaction")
@@ -1947,6 +2202,25 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         ).addContent(EMPTY_LINE);
     }
 
+    private void addUpdateLabels() {
+	    if (columns.hasLabels()) {
+	        final FunctionDeclaration updateLabelsFunction =
+                    new FunctionDeclaration("updateLabels")
+                            .addArgument(new FunctionArgument("DBTransaction", "transaction"))
+                            .visibility(Visibility.PRIVATE);
+
+            for (Column column: columns.getList())
+                if (column.isLabelReference())
+                    updateLabelsFunction.addContent(
+                            new FunctionCall("commitTextsToDatabase", uncapitalize(chopId(column.getJavaName())))
+                                    .byItself()
+                                    .addArgument("transaction")
+                    );
+
+            javaClass.addContent(updateLabelsFunction).addContent(EMPTY_LINE);
+        }
+    }
+
     private void addUpdateCaching() {
 	    javaClass.addContent(
 	            new FunctionDeclaration("updateCaching").visibility(Visibility.PRIVATE).addContent(
@@ -1956,7 +2230,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                                         .byItself()
                         )
                 )
-        );
+        ).addContent(EMPTY_LINE);
     }
 
     private void addOneToManyRelationshipInDB() {
@@ -2416,12 +2690,14 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         addUniqueIndicators();
 		addOneToManyRelationshipManagement();
         addItemOrderManagement();
+        addInitSetLabelFunctions();
 		addUpdateDB();
 		addDataOK();
 		addReset();
 		addDelete();
 		addCreate();
 		addUpdate();
+        addUpdateLabels();
 		addUpdateCaching();
 		addOneToManyRelationshipInDB();
 		addTemporalFunctions();

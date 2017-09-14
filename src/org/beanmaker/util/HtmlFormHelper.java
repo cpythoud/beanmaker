@@ -1021,5 +1021,23 @@ public class HtmlFormHelper {
 
         return new LabelTag().cssClass("radio-inline").addCodeFragment(buttonInside);
     }
+
+    public DivTag getLabelFormField(
+            final String value,
+            final DbBeanLanguage dbBeanLanguage,
+            final HFHParameters params)
+    {
+        final HFHParameters actualParameters = new HFHParameters(params);
+
+        actualParameters.setField(params.getField() + dbBeanLanguage.getIso());
+        actualParameters.setValue(value);
+        actualParameters.setFieldLabel(params.getFieldLabel() + " " + dbBeanLanguage.getCapIso());
+
+        if (params.isAsTextArea())
+            return getTextAreaField(actualParameters);
+
+        actualParameters.setInputType(InputTag.InputType.TEXT);
+        return getTextField(actualParameters);
+    }
 }
 

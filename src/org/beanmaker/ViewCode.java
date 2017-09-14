@@ -1,9 +1,13 @@
 package org.beanmaker;
 
 import org.jcodegen.java.Assignment;
+import org.jcodegen.java.Comparison;
+import org.jcodegen.java.Condition;
+import org.jcodegen.java.ElseBlock;
 import org.jcodegen.java.FunctionArgument;
 import org.jcodegen.java.FunctionCall;
 import org.jcodegen.java.FunctionDeclaration;
+import org.jcodegen.java.IfBlock;
 import org.jcodegen.java.ObjectCreation;
 import org.jcodegen.java.ReturnStatement;
 import org.jcodegen.java.VarDeclaration;
@@ -30,6 +34,8 @@ public abstract class ViewCode extends BeanCodeWithDBInfo {
         newLine();
         addConstructorWithBean();
         newLine();
+        addConstructorWithBeanAndLanguage();
+        newLine();
         addBeanGetter();
         newLine();
         addIdFunctions();
@@ -38,7 +44,13 @@ public abstract class ViewCode extends BeanCodeWithDBInfo {
 
     protected void addProperties() {
         javaClass.addContent(
-                new VarDeclaration(beanName, beanVarName).markAsFinal().visibility(Visibility.PROTECTED)
+                new VarDeclaration(beanName, beanVarName)
+                        .markAsFinal()
+                        .visibility(Visibility.PROTECTED)
+        ).addContent(
+                new VarDeclaration("DbBeanLanguage", "dbBeanLanguage")
+                        .markAsFinal()
+                        .visibility(Visibility.PROTECTED)
         );
     }
 
@@ -52,9 +64,42 @@ public abstract class ViewCode extends BeanCodeWithDBInfo {
 
     protected void addConstructorWithBean() {
         javaClass.addContent(
-                javaClass.createConstructor().addArgument(new FunctionArgument(beanName, beanVarName)).addContent(
-                        new Assignment("this." + beanVarName, beanVarName)
-                )
+                javaClass.createConstructor()
+                        .addArgument(new FunctionArgument(beanName, beanVarName))
+                        .addContent(
+                                new FunctionCall("this")
+                                        .addArguments(beanVarName, "null")
+                                        .byItself()
+                        )
+        );
+    }
+
+    protected void addConstructorWithBeanAndLanguage() {
+        javaClass.addContent(
+                javaClass.createConstructor()
+                        .addArgument(new FunctionArgument(beanName, beanVarName))
+                        .addArgument(new FunctionArgument("DbBeanLanguage", "dbBeanLanguage"))
+                        .addContent(
+                                new Assignment("this." + beanVarName, beanVarName)
+                        )
+                        .addContent(
+                                new IfBlock(new Condition(new Comparison("dbBeanLanguage", "null")))
+                                        .addContent(
+                                                new Assignment("this.dbBeanLanguage", "null")
+                                        ).elseClause(
+                                        new ElseBlock()
+                                                .addContent(
+                                                        new Assignment(
+                                                                "this.dbBeanLanguage",
+                                                                new FunctionCall("getCopy", "Labels")
+                                                                        .addArgument("dbBeanLanguage"))
+                                                )
+                                                .addContent(
+                                                        new FunctionCall("setLocale", beanVarName)
+                                                                .byItself()
+                                                                .addArgument(new FunctionCall("getLocale", "dbBeanLanguage"))
+                                                ))
+                        )
         );
     }
 

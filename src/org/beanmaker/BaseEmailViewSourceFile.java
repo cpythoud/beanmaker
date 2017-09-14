@@ -1,10 +1,14 @@
 package org.beanmaker;
 
 import org.jcodegen.java.Assignment;
+import org.jcodegen.java.Comparison;
+import org.jcodegen.java.Condition;
+import org.jcodegen.java.ElseBlock;
 import org.jcodegen.java.ExceptionThrow;
 import org.jcodegen.java.FunctionArgument;
 import org.jcodegen.java.FunctionCall;
 import org.jcodegen.java.FunctionDeclaration;
+import org.jcodegen.java.IfBlock;
 import org.jcodegen.java.ObjectCreation;
 import org.jcodegen.java.VarDeclaration;
 import org.jcodegen.java.Visibility;
@@ -17,6 +21,13 @@ public class BaseEmailViewSourceFile extends ViewCode {
         createSourceCode();
     }
 
+    private void addImports() {
+        importsManager.addImport("org.dbbeans.util.Email");
+
+        importsManager.addImport("org.beanmaker.util.DbBeanLanguage");
+        importsManager.addImport("org.beanmaker.util.DbBeanViewInterface");
+    }
+
     @Override
     protected void addProperties() {
         super.addProperties();
@@ -26,13 +37,36 @@ public class BaseEmailViewSourceFile extends ViewCode {
     }
 
     @Override
-    protected void addConstructorWithBean() {
+    protected void addConstructorWithBeanAndLanguage() {
         javaClass.addContent(
-                javaClass.createConstructor().addArgument(new FunctionArgument(beanName, beanVarName)).addContent(
-                        new Assignment("this." + beanVarName, beanVarName)
-                ).addContent(
-                        new Assignment("tableView", new ObjectCreation(beanName + "HTMLTableView").addArgument(beanVarName))
-                )
+                javaClass.createConstructor()
+                        .addArgument(new FunctionArgument(beanName, beanVarName))
+                        .addArgument(new FunctionArgument("DbBeanLanguage", "dbBeanLanguage"))
+                        .addContent(
+                                new Assignment("this." + beanVarName, beanVarName)
+                        )
+                        .addContent(
+                                new IfBlock(new Condition(new Comparison("dbBeanLanguage", "null")))
+                                        .addContent(
+                                                new Assignment("this.dbBeanLanguage", "null")
+                                        ).elseClause(
+                                        new ElseBlock()
+                                                .addContent(
+                                                        new Assignment(
+                                                                "this.dbBeanLanguage",
+                                                                new FunctionCall("getCopy", "Labels")
+                                                                        .addArgument("dbBeanLanguage"))
+                                                )
+                                                .addContent(
+                                                        new FunctionCall("setLocale", beanVarName)
+                                                                .byItself()
+                                                                .addArgument(new FunctionCall("getLocale", "dbBeanLanguage"))
+                                                ))
+                        )
+                        .addContent(
+                                new Assignment("tableView", new ObjectCreation(beanName + "HTMLTableView")
+                                        .addArgument(beanVarName))
+                        )
         );
     }
 
@@ -52,8 +86,7 @@ public class BaseEmailViewSourceFile extends ViewCode {
 
     private void createSourceCode() {
         sourceFile.setStartComment(SourceFiles.getCommentAndVersion());
-        importsManager.addImport("org.dbbeans.util.Email");
-        importsManager.addImport("org.beanmaker.util.DbBeanViewInterface");
+        addImports();
         javaClass.markAsAbstract().implementsInterface("DbBeanViewInterface");
         addViewPrelude();
         addSendEmail();

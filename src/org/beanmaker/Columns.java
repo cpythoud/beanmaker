@@ -180,6 +180,22 @@ public class Columns {
 
         return idCount > 1 || lastUpdateCount > 1 || modifiedByCount > 1 || itemOrderCount > 1;
 	}
+
+	public boolean hasLabels() {
+    	for (Column column: columns)
+    		if (column.isLabelReference())
+    			return true;
+
+    	return false;
+	}
+
+	public boolean hasLabelField() {
+    	for (Column column: columns)
+    		if (column.getJavaName().equals("idLabel"))
+    			return true;
+
+    	return false;
+	}
 	
 	public boolean isOK() {
         return hasId() && !hasBadField() && !hasDuplicateSpecial();

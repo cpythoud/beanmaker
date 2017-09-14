@@ -5,6 +5,7 @@ import org.jcodegen.java.Comparison;
 import org.jcodegen.java.Condition;
 import org.jcodegen.java.ElseBlock;
 import org.jcodegen.java.Expression;
+import org.jcodegen.java.ForLoop;
 import org.jcodegen.java.FunctionArgument;
 import org.jcodegen.java.FunctionCall;
 import org.jcodegen.java.FunctionDeclaration;
@@ -13,6 +14,8 @@ import org.jcodegen.java.ObjectCreation;
 import org.jcodegen.java.ReturnStatement;
 import org.jcodegen.java.VarDeclaration;
 import org.jcodegen.java.Visibility;
+
+import static org.beanmaker.SourceFiles.chopId;
 
 import static org.dbbeans.util.Strings.capitalize;
 import static org.dbbeans.util.Strings.quickQuote;
@@ -31,6 +34,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
     private void addImports() {
         importsManager.addImport("org.beanmaker.util.BaseHTMLView");
         importsManager.addImport("org.beanmaker.util.DbBeanHTMLViewInterface");
+        importsManager.addImport("org.beanmaker.util.DbBeanLanguage");
         importsManager.addImport("org.beanmaker.util.ErrorMessage");
 
         importsManager.addImport("javax.servlet.ServletRequest");
@@ -39,6 +43,8 @@ public class BaseHTMLViewSourceFile extends ViewCode {
 
         importsManager.addImport("org.jcodegen.html.FormTag");
         importsManager.addImport("org.jcodegen.html.Tag");
+
+        importsManager.addImport("java.util.Locale");
     }
 
     private void addClassModifiers() {
@@ -46,39 +52,39 @@ public class BaseHTMLViewSourceFile extends ViewCode {
     }
 
     @Override
-    protected void addConstructorWithBean() {
+    protected void addConstructorWithBeanAndLanguage() {
         javaClass.addContent(
-                javaClass.createConstructor().addArgument(new FunctionArgument(beanName, beanVarName)).addContent(
-                        new FunctionCall("super").addArgument(quickQuote(bundleName + "-HTML")).byItself()
-                ).addContent(
-                        new Assignment("this." + beanVarName, beanVarName)
-                )
+                javaClass.createConstructor()
+                        .addArgument(new FunctionArgument(beanName, beanVarName))
+                        .addArgument(new FunctionArgument("DbBeanLanguage", "dbBeanLanguage"))
+                        .addContent(
+                                new FunctionCall("super")
+                                        .addArgument(quickQuote(bundleName + "-HTML"))
+                                        .byItself()
+                        )
+                        .addContent(
+                                new Assignment("this." + beanVarName, beanVarName)
+                        )
+                        .addContent(
+                                new IfBlock(new Condition(new Comparison("dbBeanLanguage", "null")))
+                                        .addContent(
+                                                new Assignment("this.dbBeanLanguage", "null")
+                                        ).elseClause(
+                                        new ElseBlock()
+                                                .addContent(
+                                                        new Assignment(
+                                                                "this.dbBeanLanguage",
+                                                                new FunctionCall("getCopy", "Labels")
+                                                                        .addArgument("dbBeanLanguage"))
+                                                )
+                                                .addContent(
+                                                        new FunctionCall("setLocale")
+                                                                .byItself()
+                                                                .addArgument(new FunctionCall("getLocale", "dbBeanLanguage"))
+                                                ))
+                        )
         );
     }
-
-    /*private void addIdFunctions() {
-        javaClass.addContent(
-                new FunctionDeclaration("resetId").addContent(
-                        new FunctionCall("resetId", beanVarName).byItself()
-                ).annotate("@Override")
-        ).addContent(EMPTY_LINE);
-
-        javaClass.addContent(
-                new FunctionDeclaration("setResetId")
-                        .annotate("@Override")
-                        .addArgument(new FunctionArgument("String", "dummy"))
-                        .addContent(new FunctionCall("resetId").byItself())
-        ).addContent(EMPTY_LINE);
-
-        javaClass.addContent(
-                new FunctionDeclaration("setId")
-                        .annotate("@Override")
-                        .addArgument(new FunctionArgument("long", "id"))
-                        .addContent(
-                                new FunctionCall("setId", beanVarName).addArgument("id").byItself()
-                )
-        ).addContent(EMPTY_LINE).addContent(EMPTY_LINE);
-    }*/
 
     private void addChecksForRequiredFields() {
         for (Column column: columns.getList())
@@ -226,9 +232,12 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         }
 
         if (type.equals("int") || type.equals("long")) {
-            if (field.startsWith("id") && column.hasAssociatedBean())
-                addSelectForAssociatedBeanFunctions(column);
-            else
+            if (field.startsWith("id") && column.hasAssociatedBean()) {
+                if (column.isLabelReference())
+                    addLanguageDependantFieldFunctions(column);
+                else
+                    addSelectForAssociatedBeanFunctions(column);
+            } else
                 addInputFormElement("NUMBER", field);
             return;
         }
@@ -275,7 +284,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
 
         final String field = column.getJavaName();
         final String associatedBeanClass = column.getAssociatedBeanClass();
-        final String bundleKey = uncapitalize(SourceFiles.chopId(field));
+        final String bundleKey = uncapitalize(chopId(field));
         final String parametersClass = associatedBeanClass + "Parameters";
         final String parametersVar = uncapitalize(getVarNameForClass(associatedBeanClass)) + "Parameters";
 
@@ -375,6 +384,45 @@ public class BaseHTMLViewSourceFile extends ViewCode {
                 new FunctionCall("child", "form").byItself().addArgument(
                         new FunctionCall("getTextField", "htmlFormHelper")
                                 .addArgument(new FunctionCall(paramsFunctionName))
+                )
+        );
+
+        javaClass
+                .addContent(paramsFunctionDeclaration)
+                .addContent(EMPTY_LINE)
+                .addContent(getElementFunctionDeclaration)
+                .addContent(EMPTY_LINE);
+    }
+
+    private void addLanguageDependantFieldFunctions(final Column column) {
+        final String field = column.getJavaName();
+
+        final String paramsFunctionName = getParamsFunctionName(field);
+        final FunctionDeclaration paramsFunctionDeclaration = getNewParamsFunctionDeclaration(paramsFunctionName);
+
+        paramsFunctionDeclaration.addContent(getNewHFHParametersDeclaration());
+        paramsFunctionDeclaration.addContent(getParamAdjunctionCall("setField", quickQuote(field)));
+        paramsFunctionDeclaration.addContent(getParamAdjunctionCall("setIdBean", getId()));
+        paramsFunctionDeclaration.addContent(getParamAdjunctionCall("setFieldLabel", getLabelArgument(field)));
+        paramsFunctionDeclaration.addContent(
+                getParamAdjunctionCall(
+                        "setRequired",
+                        new FunctionCall("is" + capitalize(field) + "RequiredInHtmlForm")));
+        paramsFunctionDeclaration.addContent(new ReturnStatement("params"));
+
+        final FunctionDeclaration getElementFunctionDeclaration = getNewElementFunctionDeclaration(field);
+
+        getElementFunctionDeclaration.addContent(
+                new ForLoop("DbBeanLanguage dbBeanLanguage: Labels.getAllActiveLanguages()").addContent(
+                        new FunctionCall("child", "form")
+                                .byItself()
+                                .addArgument(
+                                        new FunctionCall("getLabelFormField", "htmlFormHelper")
+                                                .addArgument(new FunctionCall("get" + chopId(field), beanVarName)
+                                                        .addArgument("dbBeanLanguage"))
+                                                .addArgument("dbBeanLanguage")
+                                                .addArgument(new FunctionCall("get" + capitalize(field) + "FormElementParameters"))
+                                )
                 )
         );
 
@@ -487,7 +535,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
                 .addContent(EMPTY_LINE);
 
         for (Column column: columns.getList()) {
-            if (!column.isSpecial()) {
+            if (!column.isSpecial() && !column.isLabelReference()) {
                 final String type = column.getJavaType();
                 final String field = column.getJavaName();
 
@@ -542,6 +590,35 @@ public class BaseHTMLViewSourceFile extends ViewCode {
                 else
                     throw new IllegalStateException("Apparently unsupported type " + type + " encountered.");
             }
+        }
+
+        if (columns.hasLabels()) {
+            final ForLoop languageLoop =
+                    new ForLoop("DbBeanLanguage dbBeanLanguage: Labels.getAllActiveLanguages()")
+                            .addContent(
+                                    new VarDeclaration(
+                                            "String",
+                                            "iso",
+                                            new FunctionCall("getCapIso", "dbBeanLanguage"))
+                                            .markAsFinal()
+                            );
+
+            for (Column column: columns.getList())
+                if (column.isLabelReference()) {
+                    final String choppedIdFieldName = chopId(column.getJavaName());
+                    languageLoop.addContent(
+                            new FunctionCall("set" + choppedIdFieldName, beanVarName)
+                                    .addArgument("dbBeanLanguage")
+                                    .addArgument(
+                                            new FunctionCall("getParameter", "request")
+                                                    .addArgument(quickQuote(uncapitalize(choppedIdFieldName))
+                                                            + " + iso")
+                                    )
+                                    .byItself()
+                    );
+                }
+
+            setAllFieldsFunction.addContent(EMPTY_LINE).addContent(languageLoop);
         }
 
         setAllFieldsFunction.addContent(EMPTY_LINE).addContent(
@@ -640,6 +717,24 @@ public class BaseHTMLViewSourceFile extends ViewCode {
                 new FunctionDeclaration("setDelete").addArgument(new FunctionArgument("String", "dummy")).addContent(
                         new FunctionCall("delete").byItself()
                 ).annotate("@Override")
+        ).addContent(EMPTY_LINE);
+    }
+
+    private void addSetLocaleFunction() {
+        javaClass.addContent(
+                new FunctionDeclaration("setLocale")
+                        .annotate("@Override")
+                        .addArgument(new FunctionArgument("Locale", "locale"))
+                        .addContent(
+                                new FunctionCall("setLocale", "super")
+                                        .addArgument("locale")
+                                        .byItself()
+                        )
+                        .addContent(
+                                new FunctionCall("setLocale", beanVarName)
+                                        .addArgument("locale")
+                                        .byItself()
+                        )
         );
     }
 
@@ -654,7 +749,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
                 new FunctionDeclaration("setItemOrderMoveDown").addArgument(new FunctionArgument("String", "dummy")).addContent(
                         new FunctionCall("itemOrderMoveDown", beanVarName).byItself()
                 )
-        );
+        ).addContent(EMPTY_LINE);
     }
 
     private void createSourceCode() {
@@ -674,6 +769,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         addUpdateDBFunctions();
         addResetFunctions();
         addDeleteFunctions();
+        addSetLocaleFunction();
         if (columns.hasItemOrder()) {
             newLine();
             addItemOrderManagement();

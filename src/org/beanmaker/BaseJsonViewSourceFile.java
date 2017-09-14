@@ -32,6 +32,7 @@ public class BaseJsonViewSourceFile extends ViewCode {
         importsManager.addImport("org.dbbeans.util.json.JsonElement");
         importsManager.addImport("org.dbbeans.util.json.JsonIntegerElement");
 
+        importsManager.addImport("org.beanmaker.util.DbBeanLanguage");
         importsManager.addImport("org.beanmaker.util.DbBeanViewInterface");
     }
 
@@ -107,7 +108,25 @@ public class BaseJsonViewSourceFile extends ViewCode {
                 final String field = column.getJavaName();
                 final FunctionDeclaration getJsonElementFunction;
 
-                if (field.startsWith("id") && column.hasAssociatedBean()) {
+                if (column.isLabelReference()) {
+                    importsManager.addImport("org.dbbeans.util.json.JsonStringElement");
+                    final String choppedIdFieldName = chopId(field);
+                    getJsonElementFunction =
+                            new FunctionDeclaration(
+                                    "get" + choppedIdFieldName + "JsonElement",
+                                    "JsonElement")
+                                    .visibility(Visibility.PROTECTED);
+                    getJsonElementFunction.addContent(
+                            new ReturnStatement(
+                                    new ObjectCreation("JsonStringElement")
+                                            .addArgument(quickQuote(uncapitalize(choppedIdFieldName)))
+                                            .addArgument(
+                                                    new FunctionCall("get" + choppedIdFieldName, beanVarName)
+                                                            .addArgument("dbBeanLanguage")
+                                            )
+                            )
+                    );
+                } else if (field.startsWith("id") && column.hasAssociatedBean()) {
                     importsManager.addImport("org.dbbeans.util.json.JsonObjectElement");
                     final String associatedBeanClass = column.getAssociatedBeanClass();
                     getJsonElementFunction = new FunctionDeclaration("get" + chopId(field) + "JsonElement", "JsonElement")

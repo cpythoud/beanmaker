@@ -274,12 +274,25 @@ public class Column {
 	public boolean couldHaveAssociatedBean() {
 		return !special && sqlName.startsWith("id_");
 	}
-	
+
+	public boolean couldBeLabelReference() {
+    	return couldHaveAssociatedBean() && sqlName.endsWith("_label");
+	}
+
+	public boolean isLabelReference() {
+		return associatedBeanClass != null && associatedBeanClass.equals("DbBeanLabel");
+	}
+
+	private static final String DEFAULT_LABEL_CLASS = "DbBeanLabel";
+
 	private void suggestAssociatedBeanClass() {
 		if (!couldHaveAssociatedBean())
 			return;
-		
-		associatedBeanClass = Strings.camelize(sqlName.substring(3));
+
+		if (couldBeLabelReference())
+			associatedBeanClass = DEFAULT_LABEL_CLASS;
+		else
+			associatedBeanClass = Strings.camelize(sqlName.substring(3));
 	}
 	
 	public boolean hasAssociatedBean() {

@@ -29,6 +29,7 @@ public class BaseHTMLTableViewSourceFile extends ViewCode {
         importsManager.addImport("java.util.ArrayList");
         importsManager.addImport("java.util.List");
 
+        importsManager.addImport("org.beanmaker.util.DbBeanLanguage");
         importsManager.addImport("org.beanmaker.util.DbBeanViewInterface");
         importsManager.addImport("org.beanmaker.util.HtmlTableHelper");
     }
@@ -186,22 +187,29 @@ public class BaseHTMLTableViewSourceFile extends ViewCode {
             );
 
         else if (type.equals("int") || type.equals("long")) {
-            if (field.startsWith("id"))
+            if (column.isLabelReference())
                 expression.addArgument(
-                        new FunctionCall("getHumanReadableTitle", column.getAssociatedBeanClass())
-                                .addArgument(getFieldValue(field))
+                        new FunctionCall("get" + SourceFiles.chopId(field), beanVarName)
+                                .addArgument("dbBeanLanguage")
                 );
             else {
-                if (type.equals("int"))
+                if (field.startsWith("id"))
                     expression.addArgument(
-                            new FunctionCall("toString", "Integer")
+                            new FunctionCall("getHumanReadableTitle", column.getAssociatedBeanClass())
                                     .addArgument(getFieldValue(field))
                     );
-                else
-                    expression.addArgument(
-                            new FunctionCall("toString", "Long")
-                                    .addArgument(getFieldValue(field))
-                    );
+                else {
+                    if (type.equals("int"))
+                        expression.addArgument(
+                                new FunctionCall("toString", "Integer")
+                                        .addArgument(getFieldValue(field))
+                        );
+                    else
+                        expression.addArgument(
+                                new FunctionCall("toString", "Long")
+                                        .addArgument(getFieldValue(field))
+                        );
+                }
             }
         }
 

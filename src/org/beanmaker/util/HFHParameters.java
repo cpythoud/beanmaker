@@ -45,6 +45,9 @@ public class HFHParameters {
     private String yesValue;
     private String noValue;
 
+    // labels
+    private boolean asTextArea;
+
     // extra parameters
     private Map<String, String> extraParams;
 
@@ -87,6 +90,9 @@ public class HFHParameters {
         noLabel = params.noLabel;
         yesValue = params.yesValue;
         noValue = params.noValue;
+
+        // labels
+        asTextArea = params.asTextArea;
 
         if (params.extraParams != null) {
             initExtraParamMap();
@@ -394,5 +400,15 @@ public class HFHParameters {
         this.noValue = noValue;
 
         return this;
+    }
+
+    public HFHParameters setAsTextArea(boolean forceTextArea) {
+        this.asTextArea = forceTextArea;
+
+        return this;
+    }
+
+    public boolean isAsTextArea() {
+        return asTextArea;
     }
 }
