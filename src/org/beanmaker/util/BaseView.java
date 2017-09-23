@@ -10,11 +10,15 @@ public class BaseView {
 
     public BaseView(final String resourceBundleName) {
         this.resourceBundleName = resourceBundleName;
-        setLocale(Locale.getDefault());
+        initLocale(Locale.getDefault());
+    }
+
+    private void initLocale(final Locale locale) {
+        this.locale = locale;
+        resourceBundle = ResourceBundle.getBundle(resourceBundleName, locale);
     }
 
     public void setLocale(final Locale locale) {
-        this.locale = locale;
-        resourceBundle = ResourceBundle.getBundle(resourceBundleName, locale);
+        initLocale(locale);
     }
 }
