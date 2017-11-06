@@ -611,7 +611,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
                                     .addArgument("dbBeanLanguage")
                                     .addArgument(
                                             new FunctionCall("getParameter", "request")
-                                                    .addArgument(quickQuote(uncapitalize(choppedIdFieldName))
+                                                    .addArgument(quickQuote(column.getJavaName())
                                                             + " + iso")
                                     )
                                     .byItself()

@@ -1028,10 +1028,11 @@ public class HtmlFormHelper {
             final HFHParameters params)
     {
         final HFHParameters actualParameters = new HFHParameters(params);
+        final String iso = dbBeanLanguage.getCapIso();
 
-        actualParameters.setField(params.getField() + dbBeanLanguage.getIso());
+        actualParameters.setField(params.getField() + iso);
         actualParameters.setValue(value);
-        actualParameters.setFieldLabel(params.getFieldLabel() + " " + dbBeanLanguage.getCapIso());
+        actualParameters.setFieldLabel(params.getFieldLabel() + " " + iso);
 
         if (params.isAsTextArea())
             return getTextAreaField(actualParameters);
