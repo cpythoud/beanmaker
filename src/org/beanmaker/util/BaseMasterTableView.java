@@ -80,6 +80,12 @@ public abstract class BaseMasterTableView extends BaseView {
     protected boolean languageInfoRequired = false;
     protected boolean displayAllLanguages = true;
 
+    protected String iconLibrary = "glyphicons glyphicons-";
+    protected String removeFilteringIcon = "remove-circle";
+    protected String editIcon = "edit";
+    protected String deleteIcon = "bin";
+    protected boolean showEditLinks = false;
+
     public BaseMasterTableView(final String resourceBundleName, final String tableId) {
         super(resourceBundleName);
         this.tableId = tableId;
@@ -97,7 +103,7 @@ public abstract class BaseMasterTableView extends BaseView {
 
         removeFilteringHtmlTags =
                 new SpanTag()
-                        .cssClass("glyphicon glyphicon-remove")
+                        .cssClass(iconLibrary + removeFilteringIcon)
                         .title(labels.get("cct_remove_filtering"));
 
         yesName = labels.get("yes");
@@ -579,5 +585,67 @@ public abstract class BaseMasterTableView extends BaseView {
     protected SpanTag getSummarySpan(final long count, final String idPostfix) {
         return new SpanTag(Long.toString(count))
                 .id(tableId + idPostfix);
+    }
+
+    protected ATag getEditLineLink(final long id, final String idPrefix, final String cssClass, final String tooltip) {
+        return getOperationLink(id, idPrefix, cssClass, editIcon, tooltip);
+    }
+
+    protected ATag getDeleteLineLink(final long id, final String idPrefix, final String cssClass, final String tooltip) {
+        return getOperationLink(id, idPrefix, cssClass, deleteIcon, tooltip);
+    }
+
+    protected ATag getOperationLink(
+            final long id,
+            final String idPrefix,
+            final String cssClass,
+            final String icon,
+            final String tooltip)
+    {
+        return getOperFileLink(id, idPrefix, cssClass, iconLibrary + icon, tooltip);
+    }
+
+    private ATag getOperFileLink(
+            final long id,
+            final String idPrefix,
+            final String cssClass,
+            final String icon,
+            final String tooltip)
+    {
+        return new ATag()
+                .id(idPrefix + "_" + id)
+                .cssClass("tb-operation " + cssClass)
+                .child(
+                        new SpanTag()
+                                .cssClass(icon)
+                                .title(tooltip));
+    }
+
+    protected TdTag getEditCell(
+            final DbBeanInterface bean,
+            final String beanName,
+            final String tooltip)
+    {
+        return new TdTag()
+                .cssClass(tdResetCssClass)
+                .child(getEditLineLink(
+                        bean.getId(),
+                        beanName,
+                        "edit_" + beanName,
+                        tooltip));
+    }
+
+    protected TdTag getDeleteCell(
+            final DbBeanInterface bean,
+            final String beanName,
+            final String tooltip)
+    {
+        return new TdTag()
+                .cssClass(tdResetCssClass)
+                .child(getDeleteLineLink(
+                        bean.getId(),
+                        beanName + "Del",
+                        "delete_" + beanName,
+                        tooltip));
     }
 }

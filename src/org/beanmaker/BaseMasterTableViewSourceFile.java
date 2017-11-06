@@ -2,6 +2,7 @@ package org.beanmaker;
 
 import org.dbbeans.util.Strings;
 
+import org.jcodegen.java.Assignment;
 import org.jcodegen.java.Condition;
 import org.jcodegen.java.ElseBlock;
 import org.jcodegen.java.ForEach;
@@ -58,7 +59,7 @@ public class BaseMasterTableViewSourceFile extends BeanCodeWithDBInfo {
 
     private void addFilterRowFunctions() {
         final FunctionDeclaration masterFunction =
-                getMasterFunction("FilterRow", "filterRow", true, Visibility.PROTECTED);
+                getFilterOrTitleRowFunction("FilterRow", "filterRow");
         addFunctionCallsTo(masterFunction, "filterRow", "Filter");
         masterFunction.addContent(new ReturnStatement("filterRow"));
         javaClass.addContent(masterFunction).addContent(EMPTY_LINE);
@@ -66,26 +67,44 @@ public class BaseMasterTableViewSourceFile extends BeanCodeWithDBInfo {
         addFilterCellGetterFunctions();
     }
 
-    private FunctionDeclaration getMasterFunction(
-            final String endOfFunctionName,
-            final String trName,
-            final boolean overrides,
-            final Visibility visibility)
-    {
-        final FunctionDeclaration functionDeclaration =
-                new FunctionDeclaration("get" + endOfFunctionName, "TrTag").visibility(visibility);
+    private FunctionDeclaration getFilterOrTitleRowFunction(final String endOfFunctionName, final String trName) {
+        return new FunctionDeclaration("get" + endOfFunctionName, "TrTag")
+                .annotate("@Override")
+                .visibility(Visibility.PROTECTED)
+                .addContent(
+                        new VarDeclaration(
+                                "TrTag",
+                                trName,
+                                new FunctionCall("getDefaultStartOf" + endOfFunctionName))
+                                .markAsFinal())
+                .addContent(EMPTY_LINE);
+    }
 
-        final FunctionCall initCall;
-        if (overrides) {
-            functionDeclaration.annotate("@Override");
-            initCall = new FunctionCall("getDefaultStartOf" + endOfFunctionName);
-        } else {
-            functionDeclaration.addArgument(new FunctionArgument(beanName, beanVarName));
-            initCall = new FunctionCall("get" + endOfFunctionName)
-                    .addArgument(new FunctionCall("getId", beanVarName));
-        }
+    private FunctionDeclaration getTableLineFunction() {
+        final FunctionCall getIdCall = new FunctionCall("getId", beanVarName);
 
-        return functionDeclaration.addContent(new VarDeclaration("TrTag", trName, initCall).markAsFinal()).addContent(EMPTY_LINE);
+        return new FunctionDeclaration("getTableLine", "TrTag")
+                .addArgument(new FunctionArgument(beanName, beanVarName))
+                .visibility(Visibility.PUBLIC)
+                .addContent(
+                        new VarDeclaration("TrTag", "line").markAsFinal()
+                )
+                .addContent(
+                        new IfBlock(new Condition("showEditLinks"))
+                                .addContent(
+                                        new Assignment(
+                                                "line",
+                                                new FunctionCall("getTrTag")
+                                                        .addArgument(getIdCall))
+                                ).elseClause(
+                                new ElseBlock().addContent(
+                                        new Assignment(
+                                                "line",
+                                                new FunctionCall("getTableLine")
+                                                        .addArgument(getIdCall))
+                                ))
+                )
+                .addContent(EMPTY_LINE);
     }
 
     private void addFunctionCallsTo(
@@ -188,7 +207,7 @@ public class BaseMasterTableViewSourceFile extends BeanCodeWithDBInfo {
 
     private void addTitleRowFunctions() {
         final FunctionDeclaration masterFunction =
-                getMasterFunction("TitleRow", "titleRow", true, Visibility.PROTECTED);
+                getFilterOrTitleRowFunction("TitleRow", "titleRow");
         addFunctionCallsTo(masterFunction, "titleRow", "Title");
         masterFunction.addContent(new ReturnStatement("titleRow"));
         javaClass.addContent(masterFunction).addContent(EMPTY_LINE);
@@ -260,16 +279,22 @@ public class BaseMasterTableViewSourceFile extends BeanCodeWithDBInfo {
                 )
         ).addContent(EMPTY_LINE);
 
-        final FunctionDeclaration masterFunction =
-                getMasterFunction("TableLine", "line", false, Visibility.PUBLIC);
+        final FunctionDeclaration masterFunction = getTableLineFunction();
         addFunctionCallsTo(masterFunction);
         masterFunction.addContent(new ReturnStatement("line"));
         javaClass.addContent(masterFunction).addContent(EMPTY_LINE);
 
+        addOperationCellGetterFunction("edit");
         addTableCellGetterFunctions();
+        addOkToDeleteFunction();
+        addOperationCellGetterFunction("delete");
     }
 
     private void addFunctionCallsTo(final FunctionDeclaration functionDeclaration) {
+        functionDeclaration.addContent(
+                new IfBlock(new Condition("showEditLinks"))
+                        .addContent(getOperationChildCall("Edit"))
+        );
         functionDeclaration.addContent(
                 new IfBlock(new Condition("displayId")).addContent(getChildCall("id"))
         );
@@ -280,7 +305,11 @@ public class BaseMasterTableViewSourceFile extends BeanCodeWithDBInfo {
                 else
                     functionDeclaration.addContent(getChildCall(column.getJavaName()));
             }
-
+        functionDeclaration.addContent(
+                new IfBlock(new Condition("showEditLinks")
+                        .andCondition(new Condition(new FunctionCall("okToDelete").addArgument(beanVarName))))
+                        .addContent(getOperationChildCall("Delete"))
+        );
 
         functionDeclaration.addContent(EMPTY_LINE);
     }
@@ -295,6 +324,30 @@ public class BaseMasterTableViewSourceFile extends BeanCodeWithDBInfo {
         return new FunctionCall("child", "line").byItself().addArgument(
                 new FunctionCall("get" + Strings.capitalize(javaName) + "TableCell").addArgument(beanVarName)
         );
+    }
+
+    private FunctionCall getOperationChildCall(final String operationName) {
+        return new FunctionCall("child", "line").byItself().addArgument(
+                new FunctionCall("get" + operationName + "Cell").addArgument(beanVarName)
+        );
+    }
+
+    private void addOperationCellGetterFunction(final String operation) {
+        javaClass.addContent(
+                new FunctionDeclaration("get" + Strings.capitalize(operation) + "Cell", "TdTag")
+                        .visibility(Visibility.PROTECTED)
+                        .addArgument(new FunctionArgument(beanName, beanVarName))
+                        .addContent(
+                                new ReturnStatement(
+                                        new FunctionCall("get" + Strings.capitalize(operation) + "Cell")
+                                                .addArgument(beanVarName)
+                                                .addArgument(Strings.quickQuote(beanVarName))
+                                                .addArgument(new FunctionCall("get", "Labels")
+                                                        .addArgument(Strings.quickQuote(
+                                                                "tooltip_" + operation + "_" + beanVarName))
+                                                        .addArgument("dbBeanLanguage")))
+                        )
+        ).addContent(EMPTY_LINE);
     }
 
     private void addTableCellGetterFunctions() {
@@ -370,6 +423,15 @@ public class BaseMasterTableViewSourceFile extends BeanCodeWithDBInfo {
                         .visibility(Visibility.PROTECTED)
                         .addArgument(new FunctionArgument(beanName, beanVarName))
                         .addContent(new ReturnStatement(getTableCellCall))
+        ).addContent(EMPTY_LINE);
+    }
+
+    private void addOkToDeleteFunction() {
+        javaClass.addContent(
+                new FunctionDeclaration("okToDelete", "boolean")
+                        .visibility(Visibility.PROTECTED)
+                        .addArgument(new FunctionArgument(beanName, beanVarName))
+                        .addContent(new ReturnStatement("true"))
         ).addContent(EMPTY_LINE);
     }
 
