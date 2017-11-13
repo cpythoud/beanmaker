@@ -18,7 +18,7 @@ public class Columns {
     private final List<OneToManyRelationship> oneToManyRelationships;
     private final List<ExtraField> extraFields = new ArrayList<ExtraField>();
 
-    private static final List<String> NAMING_CANDIDATE_FIELDS = Arrays.asList("name", "description");
+    private static final List<String> NAMING_CANDIDATE_FIELDS = Arrays.asList("name", "description", "code");
 
 	
 	public Columns(final DatabaseServer server, final String db, final String table) {
