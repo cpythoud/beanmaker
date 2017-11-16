@@ -235,7 +235,7 @@ public class BaseHTMLTableViewSourceFile extends ViewCode {
 
         addImports();
         javaClass.markAsAbstract().implementsInterface("DbBeanViewInterface");
-        addViewPrelude();
+        addViewPrelude(true, true);
         addHTMLTableGetter();
         addToStringFunction();
     }

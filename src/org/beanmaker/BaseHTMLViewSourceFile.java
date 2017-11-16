@@ -66,6 +66,11 @@ public class BaseHTMLViewSourceFile extends ViewCode {
                                 new Assignment("this." + beanVarName, beanVarName)
                         )
                         .addContent(
+                                new FunctionCall("setLanguage")
+                                        .addArgument("dbBeanLanguage")
+                                        .byItself()
+                        )
+                        /*.addContent(
                                 new IfBlock(new Condition(new Comparison("dbBeanLanguage", "null")))
                                         .addContent(
                                                 new Assignment("this.dbBeanLanguage", "null")
@@ -82,7 +87,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
                                                                 .byItself()
                                                                 .addArgument(new FunctionCall("getLocale", "dbBeanLanguage"))
                                                 ))
-                        )
+                        )*/
         );
     }
 
@@ -757,8 +762,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
 
         addImports();
         addClassModifiers();
-        addViewPrelude();
-        //addIdFunctions();
+        addViewPrelude(true, false);
         addChecksForRequiredFields();
         newLine();
         addHTMLFormGetter();

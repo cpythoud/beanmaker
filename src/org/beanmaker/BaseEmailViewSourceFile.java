@@ -46,6 +46,11 @@ public class BaseEmailViewSourceFile extends ViewCode {
                                 new Assignment("this." + beanVarName, beanVarName)
                         )
                         .addContent(
+                                new FunctionCall("setLanguage")
+                                        .addArgument("dbBeanLanguage")
+                                        .byItself()
+                        )
+                        /*.addContent(
                                 new IfBlock(new Condition(new Comparison("dbBeanLanguage", "null")))
                                         .addContent(
                                                 new Assignment("this.dbBeanLanguage", "null")
@@ -62,7 +67,7 @@ public class BaseEmailViewSourceFile extends ViewCode {
                                                                 .byItself()
                                                                 .addArgument(new FunctionCall("getLocale", "dbBeanLanguage"))
                                                 ))
-                        )
+                        )*/
                         .addContent(
                                 new Assignment("tableView", new ObjectCreation(beanName + "HTMLTableView")
                                         .addArgument(beanVarName))
@@ -88,7 +93,7 @@ public class BaseEmailViewSourceFile extends ViewCode {
         sourceFile.setStartComment(SourceFiles.getCommentAndVersion());
         addImports();
         javaClass.markAsAbstract().implementsInterface("DbBeanViewInterface");
-        addViewPrelude();
+        addViewPrelude(true, true);
         addSendEmail();
     }
 }

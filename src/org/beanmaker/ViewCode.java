@@ -28,6 +28,10 @@ public abstract class ViewCode extends BeanCodeWithDBInfo {
     }
 
     protected void addViewPrelude() {
+        addViewPrelude(false, false);
+    }
+
+    protected void addViewPrelude(final boolean withLocale, final boolean localeOnObjectOnly) {
         addProperties();
         newLine();
         addEmptyConstructor();
@@ -40,6 +44,8 @@ public abstract class ViewCode extends BeanCodeWithDBInfo {
         newLine();
         addIdFunctions();
         newLine();
+        addSetLanguageFunction(withLocale, localeOnObjectOnly);
+        newLine();
     }
 
     protected void addProperties() {
@@ -49,7 +55,6 @@ public abstract class ViewCode extends BeanCodeWithDBInfo {
                         .visibility(Visibility.PROTECTED)
         ).addContent(
                 new VarDeclaration("DbBeanLanguage", "dbBeanLanguage")
-                        .markAsFinal()
                         .visibility(Visibility.PROTECTED)
         );
     }
@@ -83,6 +88,11 @@ public abstract class ViewCode extends BeanCodeWithDBInfo {
                                 new Assignment("this." + beanVarName, beanVarName)
                         )
                         .addContent(
+                                new FunctionCall("setLanguage")
+                                        .addArgument("dbBeanLanguage")
+                                        .byItself()
+                        )
+                        /*.addContent(
                                 new IfBlock(new Condition(new Comparison("dbBeanLanguage", "null")))
                                         .addContent(
                                                 new Assignment("this.dbBeanLanguage", "null")
@@ -99,7 +109,7 @@ public abstract class ViewCode extends BeanCodeWithDBInfo {
                                                                 .byItself()
                                                                 .addArgument(new FunctionCall("getLocale", "dbBeanLanguage"))
                                                 ))
-                        )
+                        )*/
         );
     }
 
@@ -143,6 +153,43 @@ public abstract class ViewCode extends BeanCodeWithDBInfo {
                         .addArgument(new FunctionArgument("long", "id"))
                         .addContent(
                                 new FunctionCall("setId", beanVarName).addArgument("id").byItself()
+                        )
+        );
+    }
+
+    private void addSetLanguageFunction(final boolean withLocale, final boolean localeOnObjectOnly) {
+        final ElseBlock languageNotNull =
+                new ElseBlock()
+                        .addContent(
+                                new Assignment(
+                                        "this.dbBeanLanguage",
+                                        new FunctionCall("getCopy", "Labels")
+                                                .addArgument("dbBeanLanguage"))
+                        );
+
+        if (withLocale) {
+            final FunctionCall setLocaleCall;
+            if (localeOnObjectOnly)
+                setLocaleCall = new FunctionCall("setLocale", beanVarName);
+            else
+                setLocaleCall = new FunctionCall("setLocale");
+
+            languageNotNull.addContent(
+                    setLocaleCall
+                            .byItself()
+                            .addArgument(new FunctionCall("getLocale", "dbBeanLanguage"))
+            );
+        }
+
+        javaClass.addContent(
+                new FunctionDeclaration("setLanguage")
+                        .addArgument(new FunctionArgument("DbBeanLanguage", "dbBeanLanguage"))
+                        .addContent(
+                                new IfBlock(new Condition(new Comparison("dbBeanLanguage", "null")))
+                                        .addContent(
+                                                new Assignment("this.dbBeanLanguage", "null")
+                                        )
+                                        .elseClause(languageNotNull)
                         )
         );
     }
