@@ -50,24 +50,6 @@ public class BaseEmailViewSourceFile extends ViewCode {
                                         .addArgument("dbBeanLanguage")
                                         .byItself()
                         )
-                        /*.addContent(
-                                new IfBlock(new Condition(new Comparison("dbBeanLanguage", "null")))
-                                        .addContent(
-                                                new Assignment("this.dbBeanLanguage", "null")
-                                        ).elseClause(
-                                        new ElseBlock()
-                                                .addContent(
-                                                        new Assignment(
-                                                                "this.dbBeanLanguage",
-                                                                new FunctionCall("getCopy", "Labels")
-                                                                        .addArgument("dbBeanLanguage"))
-                                                )
-                                                .addContent(
-                                                        new FunctionCall("setLocale", beanVarName)
-                                                                .byItself()
-                                                                .addArgument(new FunctionCall("getLocale", "dbBeanLanguage"))
-                                                ))
-                        )*/
                         .addContent(
                                 new Assignment("tableView", new ObjectCreation(beanName + "HTMLTableView")
                                         .addArgument(beanVarName))
