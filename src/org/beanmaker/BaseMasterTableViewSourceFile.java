@@ -12,6 +12,7 @@ import org.jcodegen.java.FunctionCall;
 import org.jcodegen.java.FunctionDeclaration;
 import org.jcodegen.java.IfBlock;
 import org.jcodegen.java.ReturnStatement;
+import org.jcodegen.java.TernaryOperator;
 import org.jcodegen.java.VarDeclaration;
 import org.jcodegen.java.Visibility;
 
@@ -83,6 +84,12 @@ public class BaseMasterTableViewSourceFile extends BeanCodeWithDBInfo {
     private FunctionDeclaration getTableLineFunction() {
         final FunctionCall getIdCall = new FunctionCall("getId", beanVarName);
 
+        final Condition editLinkCheck;
+        if (columns.hasItemOrder())
+            editLinkCheck = new Condition("showEditLinks || showOrderingLinks");
+        else
+            editLinkCheck = new Condition("showEditLinks");
+
         return new FunctionDeclaration("getTableLine", "TrTag")
                 .addArgument(new FunctionArgument(beanName, beanVarName))
                 .visibility(Visibility.PUBLIC)
@@ -90,7 +97,7 @@ public class BaseMasterTableViewSourceFile extends BeanCodeWithDBInfo {
                         new VarDeclaration("TrTag", "line").markAsFinal()
                 )
                 .addContent(
-                        new IfBlock(new Condition("showEditLinks"))
+                        new IfBlock(editLinkCheck)
                                 .addContent(
                                         new Assignment(
                                                 "line",
@@ -284,16 +291,29 @@ public class BaseMasterTableViewSourceFile extends BeanCodeWithDBInfo {
         masterFunction.addContent(new ReturnStatement("line"));
         javaClass.addContent(masterFunction).addContent(EMPTY_LINE);
 
-        addOperationCellGetterFunction("edit");
+        if (columns.hasItemOrder())
+            addMultiOperationCellGetterFunction();
+        else
+            addOperationCellGetterFunction("edit");
         addTableCellGetterFunctions();
         addOkToDeleteFunction();
         addOperationCellGetterFunction("delete");
     }
 
     private void addFunctionCallsTo(final FunctionDeclaration functionDeclaration) {
+        final Condition editLinkCheck;
+        final String operationName;
+        if (columns.hasItemOrder()) {
+            editLinkCheck = new Condition("showEditLinks || showOrderingLinks");
+            operationName = "Operation";
+        } else {
+            editLinkCheck = new Condition("showEditLinks");
+            operationName = "Edit";
+        }
+
         functionDeclaration.addContent(
-                new IfBlock(new Condition("showEditLinks"))
-                        .addContent(getOperationChildCall("Edit"))
+                new IfBlock(editLinkCheck)
+                        .addContent(getOperationChildCall(operationName))
         );
         functionDeclaration.addContent(
                 new IfBlock(new Condition("displayId")).addContent(getChildCall("id"))
@@ -346,6 +366,30 @@ public class BaseMasterTableViewSourceFile extends BeanCodeWithDBInfo {
                                                         .addArgument(Strings.quickQuote(
                                                                 "tooltip_" + operation + "_" + beanVarName))
                                                         .addArgument("dbBeanLanguage")))
+                        )
+        ).addContent(EMPTY_LINE);
+    }
+
+    private void addMultiOperationCellGetterFunction() {
+        javaClass.addContent(
+                new FunctionDeclaration("getOperationCell", "TdTag")
+                        .visibility(Visibility.PROTECTED)
+                        .addArgument(new FunctionArgument(beanName, beanVarName))
+                        .addContent(
+                                new ReturnStatement(
+                                        new FunctionCall("getOperationCell")
+                                                .addArgument(beanVarName)
+                                                .addArgument(Strings.quickQuote(beanVarName))
+                                                .addArguments(
+                                                        new TernaryOperator(
+                                                                new Condition("showEditLinks"),
+                                                                new FunctionCall("get", "Labels")
+                                                                        .addArgument(Strings.quickQuote(
+                                                                                "tooltip_edit_" + beanVarName))
+                                                                        .addArgument("dbBeanLanguage"),
+                                                                "null")
+                                                )
+                                )
                         )
         ).addContent(EMPTY_LINE);
     }

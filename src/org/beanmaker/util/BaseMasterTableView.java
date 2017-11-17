@@ -86,6 +86,12 @@ public abstract class BaseMasterTableView extends BaseView {
     protected String deleteIcon = "bin";
     protected boolean showEditLinks = false;
 
+    protected String moveUpLabel = "move up";
+    protected String moveDownLabel = "move down";
+    protected String moveUpIcon = "chevron-up";
+    protected String moveDownIcon = "chevron-down";
+    protected boolean showOrderingLinks = false;
+
     public BaseMasterTableView(final String resourceBundleName, final String tableId) {
         super(resourceBundleName);
         this.tableId = tableId;
@@ -114,6 +120,9 @@ public abstract class BaseMasterTableView extends BaseView {
         summaryTotalLabel = labels.get("cct_total");
         summaryShownLabel = labels.get("cct_shown");
         summaryFilteredOutLabel = labels.get("cct_filtered");
+
+        moveUpLabel = labels.get("cct_move_up");
+        moveDownLabel = labels.get("cct_move_down");
 
         setLocale(dbBeanLanguage.getLocale());
     }
@@ -595,6 +604,14 @@ public abstract class BaseMasterTableView extends BaseView {
         return getOperationLink(id, idPrefix, cssClass, deleteIcon, tooltip);
     }
 
+    protected ATag getMoveUpLink(final long id, final String idPrefix, final String cssClass) {
+        return getOperationLink(id, idPrefix, cssClass, moveUpIcon, moveUpLabel);
+    }
+
+    protected ATag getMoveDownLink(final long id, final String idPrefix, final String cssClass) {
+        return getOperationLink(id, idPrefix, cssClass, moveDownIcon, moveDownLabel);
+    }
+
     protected ATag getOperationLink(
             final long id,
             final String idPrefix,
@@ -619,6 +636,37 @@ public abstract class BaseMasterTableView extends BaseView {
                         new SpanTag()
                                 .cssClass(icon)
                                 .title(tooltip));
+    }
+
+    protected TdTag getOperationCell(
+            final DbBeanWithItemOrderInterface bean,
+            final String beanName,
+            final String editTooltip)
+    {
+        final TdTag cell = new TdTag();
+
+        if (showEditLinks)
+            cell.child(getEditLineLink(
+                    bean.getId(),
+                    beanName,
+                    "edit_" + beanName,
+                    editTooltip));
+
+        if (showOrderingLinks) {
+            if (!bean.isFirstItemOrder())
+                cell.child(getMoveUpLink(
+                        bean.getId(),
+                        beanName + "Up",
+                        "move_up_" + beanName));
+
+            if (!bean.isLastItemOrder())
+                cell.child(getMoveDownLink(
+                        bean.getId(),
+                        beanName + "Down",
+                        "move_down_" + beanName));
+        }
+
+        return cell;
     }
 
     protected TdTag getEditCell(
