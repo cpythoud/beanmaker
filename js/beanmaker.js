@@ -1,4 +1,4 @@
-// beanmaker.js -- v0.2.0 -- 2015-04-28
+// beanmaker.js -- v0.2.2 -- 2017-11-19
 
 $.ajaxSetup({cache : false});
 
@@ -13,7 +13,7 @@ BEANMAKER.setupModal = function(linkId, addText, editText, url, formName, extraS
     $('body').on('click', '.' + linkId, function (event) {
         event.preventDefault();
         var idBean = BEANMAKER.getItemId($(this));
-        if (idBean == 0)
+        if (idBean === 0)
             $('#' + linkId + '_dialog_title').text(addText);
         else
             $('#' + linkId + '_dialog_title').text(editText);
@@ -72,6 +72,7 @@ BEANMAKER.ajaxSubmitDefaults = {
     errorContainerID: "top_message",
     errorStyles: "alert alert-danger",
     elementToScrollUp: "body",
+    errorProcessingFunction: undefined,
     systemErrorFunction: function(errorCode) {
         alert("Unexpected Error: " + errorCode);
     }
@@ -94,8 +95,8 @@ BEANMAKER.ajaxSubmit = function(event, nonDefaultParams, refreshOnSuccessFunctio
         success: function(data) {
             switch (data.status) {
                 case 'ok':
-                    if (refreshOnSuccessFunction != undefined) {
-                        if ($this != undefined)
+                    if (refreshOnSuccessFunction !==undefined) {
+                        if ($this !== undefined)
                             refreshOnSuccessFunction($this, data);
                         else
                             refreshOnSuccessFunction(data);
@@ -106,12 +107,16 @@ BEANMAKER.ajaxSubmit = function(event, nonDefaultParams, refreshOnSuccessFunctio
                     window.location.href = params.noSessionPage;
                     break;
                 case 'errors':
-                    BEANMAKER.showErrorMessages(params.errorContainerID, data.errors, params.errorStyles);
-                    if (params.elementToScrollUp) {
-                        if (params.elementToScrollUp == 'body')
-                            window.scrollTo(0, 0);
-                        else
-                            $(params.elementToScrollUp).scrollTop(0);
+                    if (params.errorProcessingFunction === undefined) {
+                        BEANMAKER.showErrorMessages(params.errorContainerID, data.errors, params.errorStyles);
+                        if (params.elementToScrollUp) {
+                            if (params.elementToScrollUp === 'body')
+                                window.scrollTo(0, 0);
+                            else
+                                $(params.elementToScrollUp).scrollTop(0);
+                        }
+                    } else {
+                        params.errorProcessingFunction();
                     }
                     break;
                 default:
@@ -185,9 +190,9 @@ BEANMAKER.ajaxExecuteOperation = function(servlet, idBean, operation, doneFuncti
 
 BEANMAKER.loadOperation = function(idContainer, servlet, idBean, operation, doneFunction) {
     $('#' + idContainer).load(servlet, {
-            idBean: idBean,
-            operation: operation
-        }, doneFunction);
+        idBean: idBean,
+        operation: operation
+    }, doneFunction);
 };
 
 BEANMAKER.reloadAfterChange = function() {
