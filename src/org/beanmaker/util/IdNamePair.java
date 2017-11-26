@@ -1,6 +1,7 @@
 package org.beanmaker.util;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class IdNamePair implements Comparable<IdNamePair> {
@@ -59,13 +60,24 @@ public class IdNamePair implements Comparable<IdNamePair> {
 			final List<T> beans,
 			final String noSelectionText)
 	{
-		final List<IdNamePair> pairs = new ArrayList<IdNamePair>();
+		return getPairs(beans, noSelectionText, false);
+	}
 
-		if (noSelectionText != null)
-			pairs.add(new IdNamePair(0, noSelectionText));
+	public static <T extends IdNamePairBean> List<IdNamePair> getPairs(
+			final List<T> beans,
+			final String noSelectionText,
+			final boolean sortOnName)
+	{
+		final List<IdNamePair> pairs = new ArrayList<IdNamePair>();
 
 		for (IdNamePairBean bean: beans)
 			pairs.add(new IdNamePair(bean.getId(), bean.getNameForPair()));
+
+		if (sortOnName)
+			Collections.sort(pairs);
+
+		if (noSelectionText != null)
+			pairs.add(0, new IdNamePair(0, noSelectionText));
 
 		return pairs;
 	}
@@ -82,13 +94,25 @@ public class IdNamePair implements Comparable<IdNamePair> {
 			final DbBeanLanguage dbBeanLanguage,
 			final String noSelectionText)
 	{
-		final List<IdNamePair> pairs = new ArrayList<IdNamePair>();
+		return getMultilingualPairs(beans, dbBeanLanguage, noSelectionText, false);
+	}
 
-		if (noSelectionText != null)
-			pairs.add(new IdNamePair(0, noSelectionText));
+	public static <T extends MultilingualIdNamePairBean> List<IdNamePair> getMultilingualPairs(
+			final List<T> beans,
+			final DbBeanLanguage dbBeanLanguage,
+			final String noSelectionText,
+			final boolean sortOnName)
+	{
+		final List<IdNamePair> pairs = new ArrayList<IdNamePair>();
 
 		for (MultilingualIdNamePairBean bean: beans)
 			pairs.add(new IdNamePair(bean.getId(), bean.getNameForPair(dbBeanLanguage)));
+
+		if (sortOnName)
+			Collections.sort(pairs);
+
+		if (noSelectionText != null)
+			pairs.add(0, new IdNamePair(0, noSelectionText));
 
 		return pairs;
 	}
