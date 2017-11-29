@@ -5,3 +5,7 @@
 .tb-sort {
     cursor: pointer;
 }
+
+.tb-masked {
+    display: none;
+}

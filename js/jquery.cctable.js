@@ -3,12 +3,12 @@
     function zebra($table) {
         var index = 0;
         $table.find('tbody tr').each(function () {
-            if (!$(this).hasClass('tb-filtered')) {
+            if (!$(this).hasClass(opts.filteredCssClass)) {
                 ++index;
-                if (index % 2 == 0)
-                    $(this).addClass('alternate');
+                if (index % 2 === 0)
+                    $(this).addClass(opts.zebraCssClass);
                 else
-                    $(this).removeClass('alternate');
+                    $(this).removeClass(opts.zebraCssClass);
             }
         });
     }
@@ -27,12 +27,12 @@
         for (var i = 0; i < cookies.length; i++) {
             var nameValuePair = cookies[i].split("=");
             var name = $.trim(nameValuePair[0]);
-            if (name.indexOf(startOfName) == 0) {
+            if (name.indexOf(startOfName) === 0) {
                 var value = decodeURIComponent(nameValuePair[1]);
                 var info = name.split("|");
                 var field = info[2];
 
-                $table.find('.tb-filter[name="' + field + '"]').val(value);
+                $table.find('.' + opts.formElementFilterCssClass + '[name="' + field + '"]').val(value);
                 filter($table);
             }
         }
@@ -43,7 +43,7 @@
     function updateFilteringCounters($table) {
         var idTable = $table.attr('id');
         var total = $('#' + idTable + "_total").text();
-        var filteredOut = $table.find('tr.tb-filtered').length;
+        var filteredOut = $table.find('tr.' + opts.filteredCssClass).length;
         var shown = total - filteredOut;
 
         $('#' + idTable + "_shown").text(shown);
@@ -53,14 +53,14 @@
     function removeFiltering($table) {
         var count = 0;
         $table.find('tr').each(function () {
-            $(this).removeClass('tb-filtered');
+            $(this).removeClass(opts.filteredCssClass);
             ++count;
         });
         updateFilteringCounters($table);
     }
 
     function clearFilters($table) {
-        $table.find('.tb-filter').each(function () {
+        $table.find('.' + opts.formElementFilterCssClass).each(function () {
             $(this).val('');
             setCookie($table, this.name, '');
         });
@@ -70,10 +70,10 @@
 
     function filter($table) {
         var didFilter = false;
-        $table.find('.tb-filter').each(function () {
+        $table.find('.' + opts.formElementFilterCssClass).each(function () {
             var filterName = this.name;
             var filterVal = $.trim($(this).val()).toLowerCase();
-            if (filterVal != '') {
+            if (filterVal !== '') {
                 $table.find('td.' + filterName).each(function () {
                     var content;
                     if ($(this).data('filter-value'))
@@ -82,9 +82,9 @@
                         content = $(this).text().toLowerCase();
                     if (content.indexOf(filterVal) > -1) {
                         if (!didFilter)
-                            $(this).closest('tr').removeClass('tb-filtered');
+                            $(this).closest('tr').removeClass(opts.filteredCssClass);
                     } else {
-                        $(this).closest('tr').addClass('tb-filtered');
+                        $(this).closest('tr').addClass(opts.filteredCssClass);
                     }
                 });
                 didFilter = true;
@@ -130,7 +130,7 @@
         });
 
         sortVals.sort();
-        if (directionHash[sortColumn] == 'desc')
+        if (directionHash[sortColumn] === 'desc')
             sortVals.reverse();
 
         var $content = $table.find('tbody');
@@ -144,7 +144,7 @@
 
         // set cookie
 
-        if (directionHash[sortColumn] == 'asc')
+        if (directionHash[sortColumn] === 'asc')
             directionHash[sortColumn] = 'desc';
         else
             directionHash[sortColumn] = 'asc';
@@ -153,29 +153,106 @@
 
     // ------------------------------------------------------------------------
 
-    $.fn.cctable = function() {
+
+    function tableShowingAllData($table) {
+        return $table.hasClass(opts.showMoreCssClass);
+    }
+
+    function tableMaskingSomeData($table) {
+        return $table.hasClass(opts.showLessCssClass);
+    }
+
+    function tableDoesMasking($table) {
+        return tableShowingAllData($table) || tableMaskingSomeData($table);
+    }
+
+    function showOrHideColumns($table) {
+        if (tableShowingAllData($table)) {
+            $table.find('.' + opts.maskableCssClass).removeClass(opts.maskedCssClass);
+        }
+
+        if (tableMaskingSomeData($table)) {
+            $table.find('.' + opts.maskableCssClass).addClass(opts.maskedCssClass);
+        }
+    }
+
+    function toogleTableMaskingStatus($table) {
+        var $showMoreLink = $('#' + $table.attr('id') + '-masking-link-show');
+        var $showLessLink = $('#' + $table.attr('id') + '-masking-link-hide');
+
+        if (tableShowingAllData($table)) {
+            $table.removeClass(opts.showMoreCssClass);
+            $table.addClass(opts.showLessCssClass);
+            $showMoreLink.removeClass(opts.maskedCssClass);
+            $showLessLink.addClass(opts.maskedCssClass);
+            return;
+        }
+
+        if (tableMaskingSomeData($table)) {
+            $table.removeClass(opts.showLessCssClass);
+            $table.addClass(opts.showMoreCssClass);
+            $showMoreLink.addClass(opts.maskedCssClass);
+            $showLessLink.removeClass(opts.maskedCssClass);
+            return;
+        }
+
+        throw "Masking operation called on table that doesn't support masking";
+    }
+
+
+    // ------------------------------------------------------------------------
+
+    var opts;
+
+    $.fn.cctable = function(options) {
+        opts = $.extend({ }, $.fn.cctable.defaults, options);
+
         return this.each(function () {
             var $table = $(this);
-            $table.find('input.tb-filter').keyup(function() {
+            $table.find('input.' + opts.formElementFilterCssClass).keyup(function() {
                 filter($table);
             });
 
-            $table.find('select.tb-filter').change(function() {
+            $table.find('select.' + opts.formElementFilterCssClass).change(function() {
                 filter($table);
             });
 
-            $table.find('a.tb-nofilter').click(function (event) {
+            $table.find('a.' + opts.removeFilteringLinkCssClass).click(function (event) {
                 event.preventDefault();
                 clearFilters($table);
             });
 
-            $table.find('th.tb-sort').click(function () {
+            $table.find('th.' + opts.thSortableTitleCssClass).click(function () {
                 sort($table, $(this).data('sort-class'));
             });
 
             readCookies($table);
 
             zebra($table);
+
+            if (tableDoesMasking($table)) {
+                showOrHideColumns($table);
+
+                $('a.' + opts.maskingLinkCssClass).on('click', function (event) {
+                    event.preventDefault();
+                    toogleTableMaskingStatus($table);
+                    showOrHideColumns($table);
+                });
+            }
         });
     };
+
+    $.fn.cctable.defaults = {
+        formElementFilterCssClass: 'tb-filter',
+        removeFilteringLinkCssClass: 'tb-nofilter',
+        filteredCssClass: 'tb-filtered',
+        thSortableTitleCssClass: 'tb-sort',
+        maskedCssClass: 'tb-masked',
+        showMoreCssClass: 'tb-show-more',
+        showLessCssClass: 'tb-show-less',
+        maskableCssClass: 'tb-maskable',
+        maskingLinkCssClass: 'tb-masking-link',
+        zebraCssClass: 'alternate'
+    };
+
 })(jQuery);

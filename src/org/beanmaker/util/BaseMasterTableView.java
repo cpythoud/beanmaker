@@ -27,7 +27,6 @@ import java.text.DateFormat;
 
 import java.util.List;
 import java.util.Map;
-import java.util.ResourceBundle;
 
 public abstract class BaseMasterTableView extends BaseView {
 
@@ -92,6 +91,19 @@ public abstract class BaseMasterTableView extends BaseView {
     protected String moveDownIcon = "chevron-down";
     protected boolean showOrderingLinks = false;
 
+    protected boolean doDataToggle = false;
+    protected boolean showAllData = false;
+    protected String showMoreLabel = "show more";
+    protected String showLessLabel = "show less";
+    protected String showMoreIcon = "eye-plus";
+    protected String showLessIcon = "eye-minus";
+    protected String showMoreCssClass = "tb-show-more";
+    protected String showLessCssClass = "tb-show-less";
+    protected String maskableCssClass = "tb-maskable";
+    protected String maskingLinkCssClass = "tb-masking-link";
+    protected String maskedCssClass = "tb-masked";
+    protected String thShowDataToogleCssClass = null;
+
     public BaseMasterTableView(final String resourceBundleName, final String tableId) {
         super(resourceBundleName);
         this.tableId = tableId;
@@ -124,7 +136,14 @@ public abstract class BaseMasterTableView extends BaseView {
         moveUpLabel = labels.get("cct_move_up");
         moveDownLabel = labels.get("cct_move_down");
 
+        showMoreLabel = labels.get("cct_show_more");
+        showLessLabel = labels.get("cct_show_less");
+
         setLocale(dbBeanLanguage.getLocale());
+    }
+
+    public void setShowAllData(final boolean showAllData) {
+        this.showAllData = showAllData;
     }
 
     public TableTag getMasterTableTag() {
@@ -132,7 +151,19 @@ public abstract class BaseMasterTableView extends BaseView {
     }
 
     protected TableTag getTable() {
-        return new TableTag().cssClass(tableCssClass).id(tableId);
+        final String dataToggleCssClass;
+        if (doDataToggle) {
+            if (showAllData)
+                dataToggleCssClass = " " + showMoreCssClass;
+            else
+                dataToggleCssClass = " " + showLessCssClass;
+        } else {
+            dataToggleCssClass = "";
+        }
+
+        return new TableTag()
+                .cssClass(tableCssClass + dataToggleCssClass)
+                .id(tableId);
     }
 
     protected TheadTag getHead() {
@@ -695,5 +726,63 @@ public abstract class BaseMasterTableView extends BaseView {
                         beanName + "Del",
                         "delete_" + beanName,
                         tooltip));
+    }
+
+    protected ThTag showMoreLessCell() {
+        final ThTag cell = new ThTag().child(showMoreLink()).child(showLessLink());
+        if (thShowDataToogleCssClass != null)
+            cell.cssClass(thShowDataToogleCssClass);
+
+        return cell;
+    }
+
+    protected ATag showMoreLink() {
+        final SpanTag icon =
+                new SpanTag()
+                        .cssClass(iconLibrary + showMoreIcon)
+                        .title(showMoreLabel);
+
+        final ATag link = new ATag().href("#").id(tableId + "-masking-link-show").child(icon);
+        if (showAllData)
+            link.cssClass(maskingLinkCssClass + " " + maskedCssClass);
+        else
+            link.cssClass(maskingLinkCssClass);
+
+        return link;
+    }
+
+    protected ATag showLessLink() {
+        final SpanTag icon =
+                new SpanTag()
+                        .cssClass(iconLibrary + showLessIcon)
+                        .title(showLessLabel);
+
+        final ATag link = new ATag().href("#").id(tableId + "-masking-link-hide").child(icon);
+        if (showAllData)
+            link.cssClass(maskingLinkCssClass);
+        else
+            link.cssClass(maskingLinkCssClass + " " + maskedCssClass);
+
+        return link;
+    }
+
+    protected ThTag getMaskableHeader(final ThTag header) {
+        return header.changeCssClasses(addShowMoreOrLessCssClasses(header));
+    }
+
+    protected TdTag getMaskableCell(final TdTag cell) {
+        return cell.changeCssClasses(addShowMoreOrLessCssClasses(cell));
+    }
+
+    private String addShowMoreOrLessCssClasses(final Tag cell) {
+        final StringBuilder cssClasses = new StringBuilder();
+
+        cssClasses.append(cell.getCssClasses());
+        if (cssClasses.length() > 0)
+            cssClasses.append(" ");
+
+        cssClasses.append(maskableCssClass);
+
+        return cssClasses.toString();
     }
 }

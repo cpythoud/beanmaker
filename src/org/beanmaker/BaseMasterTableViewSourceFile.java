@@ -62,7 +62,17 @@ public class BaseMasterTableViewSourceFile extends BeanCodeWithDBInfo {
         final FunctionDeclaration masterFunction =
                 getFilterOrTitleRowFunction("FilterRow", "filterRow");
         addFunctionCallsTo(masterFunction, "filterRow", "Filter");
-        masterFunction.addContent(new ReturnStatement("filterRow"));
+        masterFunction
+                .addContent(EMPTY_LINE)
+                .addContent(
+                        new IfBlock(new Condition("doDataToggle"))
+                                .addContent(
+                                        new FunctionCall("child", "filterRow")
+                                                .addArgument(new FunctionCall("showMoreLessCell"))
+                                )
+                )
+                .addContent(EMPTY_LINE)
+                .addContent(new ReturnStatement("filterRow"));
         javaClass.addContent(masterFunction).addContent(EMPTY_LINE);
 
         addFilterCellGetterFunctions();
