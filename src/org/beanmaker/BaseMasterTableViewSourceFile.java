@@ -63,11 +63,11 @@ public class BaseMasterTableViewSourceFile extends BeanCodeWithDBInfo {
                 getFilterOrTitleRowFunction("FilterRow", "filterRow");
         addFunctionCallsTo(masterFunction, "filterRow", "Filter");
         masterFunction
-                .addContent(EMPTY_LINE)
                 .addContent(
                         new IfBlock(new Condition("doDataToggle"))
                                 .addContent(
                                         new FunctionCall("child", "filterRow")
+                                                .byItself()
                                                 .addArgument(new FunctionCall("showMoreLessCell"))
                                 )
                 )
