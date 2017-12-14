@@ -647,12 +647,45 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
     }
 
     private void addToString() {
-        final String returnExpression = "\"[" + beanName + " - " + tableName + " #\" + id + \"]\"";
         javaClass.addContent(
                 new FunctionDeclaration("toString", "String").annotate("@Override").addContent(
-                        new ReturnStatement(returnExpression)
+                        new ReturnStatement(getToStringReturnExpression())
                 )
         ).addContent(EMPTY_LINE);
+    }
+
+    private String getToStringReturnExpression() {
+	    final StringBuilder expression = new StringBuilder();
+
+	    expression.append("getClass().getName() + \"[id=\" + id");
+
+        for (Column column: columns.getList()) {
+            final String type = column.getJavaType();
+            final String field = column.getJavaName();
+            if (!field.equals("id")) {
+                expression.append(getToStringReturnExpressionPart(field));
+                if (!column.isSpecial() &&
+                        (JAVA_TEMPORAL_TYPES.contains(type)
+                                || type.equals("int")
+                                || (type.equals("long") && !field.startsWith("id"))
+                                || type.equals("Money")))
+                {
+                    expression.append(getToStringReturnExpressionPart(field + "Str"));
+                }
+            }
+        }
+
+        for (OneToManyRelationship relationship: columns.getOneToManyRelationships())
+            if (!relationship.isListOnly())
+                expression.append(getToStringReturnExpressionPart(relationship.getJavaName()));
+
+        expression.append(" + \"]\"");
+
+        return expression.toString();
+    }
+
+    private String getToStringReturnExpressionPart(final String field) {
+	    return " + \"," + field + "=\" + " + field;
     }
 	
 	private void addSetters() {
