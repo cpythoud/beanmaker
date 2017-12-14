@@ -372,7 +372,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
     }
 	
 	private void addSetIdFunction() {
-		final List<OneToManyRelationship> relationships = columns.getOneToManyRelationships();
+        final List<OneToManyRelationship> relationships = columns.getOneToManyRelationships();
 
         final FunctionDeclaration function = new FunctionDeclaration("setId")
                 .addArgument(new FunctionArgument("long", "id")).annotate("@Override");
@@ -380,7 +380,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         // function inner class for database row retrieval
         final JavaClass databaseInnerClass = new JavaClass("DataFromDBQuery").visibility(Visibility.NONE)
                 .implementsInterface("DBQuerySetupProcess");
-        for (Column column: columns.getList()) {
+        for (Column column : columns.getList()) {
             final String type = column.getJavaType();
             final String field = column.getJavaName();
             if (!field.equals("id")) {
@@ -401,7 +401,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         final FunctionDeclaration processRS = getInnerClassProcessRSFunctionStart();
         final IfBlock ifRsNext = new IfBlock(new Condition("rs.next()"));
         int index = 0;
-        for (Column column: columns.getList()) {
+        for (Column column : columns.getList()) {
             final String type = column.getJavaType();
             final String field = column.getJavaName();
             if (!field.equals("id")) {
@@ -448,42 +448,42 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
         // fields assignment
         function.addContent(new Assignment("this.id", "id"));
-        for (Column column: columns.getList()) {
+        for (Column column : columns.getList()) {
             final String type = column.getJavaType();
             final String field = column.getJavaName();
             if (!field.equals("id")) {
                 function.addContent(new Assignment("this." + field, "dataFromDBQuery." + field));
                 if (JAVA_TEMPORAL_TYPES.contains(type))
                     function.addContent(
-                            new Assignment(field +"Str",
+                            new Assignment(field + "Str",
                                     new FunctionCall("convert" + type + "ToString").addArgument(field))
                     );
                 if ((type.equals("int") || type.equals("long")) && !field.equals("itemOrder") && !field.startsWith("id"))
                     function.addContent(
-                            new Assignment(field +"Str",
+                            new Assignment(field + "Str",
                                     new FunctionCall("valueOf", "String").addArgument(field))
                     );
                 if (type.equals("Money"))
                     function.addContent(
-                            new Assignment(field +"Str",
+                            new Assignment(field + "Str",
                                     new FunctionCall("toString", field))
                     );
             }
         }
 
-        for (OneToManyRelationship relationship: relationships)
+        for (OneToManyRelationship relationship : relationships)
             if (!relationship.isListOnly())
                 function.addContent(
                         new Assignment(
                                 relationship.getJavaName(),
                                 new FunctionCall("initialized" + capitalize(relationship.getJavaName()))
                                         .addArgument("id")
-                ));
+                        ));
 
         // Nullification of labels
         if (columns.hasLabels()) {
             function.addContent(EMPTY_LINE);
-            for (Column column: columns.getList())
+            for (Column column : columns.getList())
                 if (column.isLabelReference())
                     function.addContent(new Assignment(uncapitalize(chopId(column.getJavaName())), "null"));
         }
@@ -493,7 +493,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
 
         // for objects containing one or more list of other kind of objects
-        for (OneToManyRelationship relationship: relationships)
+        for (OneToManyRelationship relationship : relationships)
             if (!relationship.isListOnly()) {
                 final FunctionDeclaration initializedBeansFunction =
                         new FunctionDeclaration(
@@ -554,7 +554,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 this.javaClass.addContent(initializedBeansFunction).addContent(EMPTY_LINE);
             }
 
-		javaClass.addContent(
+        javaClass.addContent(
                 new FunctionDeclaration("initExtraDbActions")
                         .visibility(Visibility.PROTECTED)
                         .addArgument(new FunctionArgument("long", "id"))
@@ -564,16 +564,16 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 new FunctionDeclaration("postInitActions")
                         .visibility(Visibility.PROTECTED)
         ).addContent(EMPTY_LINE);
-		
-		javaClass.addContent(
+
+        javaClass.addContent(
                 new FunctionDeclaration("resetId").annotate("@Override")
                         .addContent("id = 0;")
         ).addContent(EMPTY_LINE);
 
-		javaClass.addContent(
-		        new FunctionDeclaration("refreshFromDataBase").addContent(
-		                new IfBlock(new Condition("id == 0")).addContent(
-		                        new ExceptionThrow("IllegalArgumentException")
+        javaClass.addContent(
+                new FunctionDeclaration("refreshFromDataBase").addContent(
+                        new IfBlock(new Condition("id == 0")).addContent(
+                                new ExceptionThrow("IllegalArgumentException")
                                         .addArgument(quickQuote("Cannot refresh bean not yet commited to database"))
                         )
                 ).addContent(EMPTY_LINE).addContent(
@@ -582,6 +582,29 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                                 .byItself()
                 )
         ).addContent(EMPTY_LINE);
+
+        for (OneToManyRelationship relationship : relationships)
+            if (!relationship.isListOnly()) {
+                javaClass.addContent(
+                        new FunctionDeclaration("refresh" + relationship.getBeanClass() + "ListFromDataBase").addContent(
+                                new IfBlock(new Condition("id == 0")).addContent(
+                                        new ExceptionThrow("IllegalArgumentException")
+                                                .addArgument(quickQuote("Cannot refresh list in bean not yet commited to database"))
+                                )
+                        ).addContent(EMPTY_LINE).addContent(
+                                new VarDeclaration(
+                                        VarDeclaration.getParametrizedType("List", relationship.getBeanClass()),
+                                        "refreshedList",
+                                        new FunctionCall("initialized" + capitalize(relationship.getJavaName()))
+                                                .addArgument("id")).markAsFinal()
+                        ).addContent(
+                                new FunctionCall("clear", relationship.getJavaName()).byItself()
+                        ).addContent(
+                                new FunctionCall("addAll", relationship.getJavaName()).byItself()
+                                        .addArgument("refreshedList")
+                        )
+                ).addContent(EMPTY_LINE);
+            }
 	}
 
     private FunctionDeclaration getInnerClassSetupPSWithIdFunction() {
