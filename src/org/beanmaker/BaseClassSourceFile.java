@@ -1704,21 +1704,22 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
                 if ((type.equals("int") || type.equals("long"))) {
                     if (field.startsWith("id")) {
-                        isOKFunction.addContent(  // TODO: reexamine the reason for this test...
+                        // TODO: keep an eye open as to the consequences of removing the test below from the generated code
+                        /*isOKFunction.addContent(
                                 new IfBlock(new Condition("id == 0")).addContent(
                                         new ReturnStatement(
                                                 new Comparison(field, "0", Comparison.Comparator.GREATER_THAN)
                                         )
                                 )
-                        );
+                        ).addContent(EMPTY_LINE);*/
                         if (column.isLabelReference())
-                            isOKFunction.addContent(EMPTY_LINE).addContent(
+                            isOKFunction.addContent(
                                     new ReturnStatement(
                                             new FunctionCall("isIdOK", "Labels")
                                                     .addArgument(field))
                             );
                         else
-                            isOKFunction.addContent(EMPTY_LINE).addContent(
+                            isOKFunction.addContent(
                                     new ReturnStatement(
                                             new FunctionCall("isIdOK", column.getAssociatedBeanClass())
                                                     .addArgument(field))
