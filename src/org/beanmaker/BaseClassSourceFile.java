@@ -569,6 +569,19 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 new FunctionDeclaration("resetId").annotate("@Override")
                         .addContent("id = 0;")
         ).addContent(EMPTY_LINE);
+
+		javaClass.addContent(
+		        new FunctionDeclaration("refreshFromDataBase").addContent(
+		                new IfBlock(new Condition("id == 0")).addContent(
+		                        new ExceptionThrow("IllegalArgumentException")
+                                        .addArgument(quickQuote("Cannot refresh bean not yet commited to database"))
+                        )
+                ).addContent(EMPTY_LINE).addContent(
+                        new FunctionCall("setId")
+                                .addArgument("id")
+                                .byItself()
+                )
+        ).addContent(EMPTY_LINE);
 	}
 
     private FunctionDeclaration getInnerClassSetupPSWithIdFunction() {
