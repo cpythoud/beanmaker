@@ -1725,7 +1725,10 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                             );
                     } else {
                         importsManager.addImport("org.beanmaker.util.FormatCheckHelper");
-                        isOKFunction.addContent(new ReturnStatement(new FunctionCall("isNumber", "FormatCheckHelper").addArgument(field + "Str")));
+                        isOKFunction.addContent(
+                                new ReturnStatement(
+                                        new FunctionCall("is" + capitalize(type) + "Number", "FormatCheckHelper")
+                                                .addArgument(field + "Str")));
                     }
                 }
 

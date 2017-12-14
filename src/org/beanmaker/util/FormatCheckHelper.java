@@ -21,5 +21,25 @@ public class FormatCheckHelper {
 	
 	private static final Pattern NUMBER_PATTERN = Pattern.compile("\\d+");
 	private static final SimpleInputDateFormat ISO_DATE_FORMAT = new SimpleInputDateFormat(SimpleInputDateFormat.ElementOrder.YYMD, "-");
+
+	public static boolean isIntNumber(final String s) {
+		try {
+			Integer.parseInt(s);
+		} catch (final NumberFormatException nfex) {
+			return false;
+		}
+
+		return true;
+	}
+
+	public static boolean isLongNumber(final String s) {
+		try {
+			Long.parseLong(s);
+		} catch (final NumberFormatException nfex) {
+			return false;
+		}
+
+		return true;
+	}
 }
 
