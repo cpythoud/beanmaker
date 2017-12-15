@@ -45,6 +45,9 @@ public abstract class AbstractDatabaseServer implements DatabaseServer {
 	
 	protected String suggestBeanClass(final String tableName) {
 		final String base = Strings.capitalize(Strings.camelize(tableName));
+
+		if (base.endsWith("sses") || base.endsWith("shes") || base.endsWith("oes") || base.endsWith("uses"))
+			return base.substring(0, base.length() - 2);
 		
 		if (base.endsWith("ies"))
 			return base.substring(0, base.length() - 3) + "y";
