@@ -104,6 +104,9 @@ public abstract class BaseMasterTableView extends BaseView {
     protected String maskedCssClass = "tb-masked";
     protected String thShowDataToogleCssClass = null;
 
+    protected boolean enableDragNDrop = false;
+    protected String sortableCssClass = "tb-sortable";
+
     public BaseMasterTableView(final String resourceBundleName, final String tableId) {
         super(resourceBundleName);
         this.tableId = tableId;
@@ -177,6 +180,9 @@ public abstract class BaseMasterTableView extends BaseView {
 
     protected TbodyTag getBody() {
         final TbodyTag body = new TbodyTag();
+
+        if (enableDragNDrop)
+            body.cssClass(sortableCssClass);
 
         int count = 0;
         for (TrTag tr: getData()) {
@@ -323,6 +329,7 @@ public abstract class BaseMasterTableView extends BaseView {
         return thTitleCssClass + " th-" + name;
     }
 
+    @Deprecated
     protected TrTag getTableLine() {
         final TrTag line = new TrTag();
 
@@ -340,10 +347,12 @@ public abstract class BaseMasterTableView extends BaseView {
     }
 
     protected TrTag getTrTag(final long id) {
-        if (showBeanIdInRowId)
-            return new TrTag().id(tableId + "_row_" + id);
+        final TrTag line = new TrTag();
 
-        return new TrTag();
+        if (showBeanIdInRowId)
+            line.id(tableId + "_row_" + id);
+
+        return line;
     }
 
     protected TrTag getTableLine(final String code) {

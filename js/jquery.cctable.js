@@ -239,6 +239,42 @@
                     showOrHideColumns($table);
                 });
             }
+
+            $table.find('tbody.' + opts.sortableCssClass).sortable( {
+                axis: 'y',
+                containment: $table,
+                cursor: 'grabbing',
+                opacity: 0.7,
+                update: function (event, ui) {
+                    zebra($table);
+
+                    var $item = ui.item;
+
+                    var $prevItem = $item.prev();
+                    if ($prevItem.is('tr') && !$prevItem.hasClass(opts.filteredCssClass)) {
+                        opts.moveAfterFunction($item.attr('id'), $prevItem.attr('id'));
+                        return;
+                    }
+
+                    var $nextItem = $item.next();
+                    if ($nextItem.is('tr') && !$nextItem.hasClass(opts.filteredCssClass)) {
+                        opts.moveBeforeFunction($item.attr('id'), $nextItem.attr('id'));
+                        return;
+                    }
+
+                    console.log(event);
+                    console.log(ui);
+                    console.log('Moved element ID = ' + ui.item.attr('id'));
+                    console.log('Preceding element = ');
+                    console.log(ui.item.prev());
+                    console.log('Next element = ');
+                    console.log(ui.item.next());
+                    console.log('Preceding element ID = ' + ui.item.prev().attr('id'));
+                    console.log('Next element ID = ' + ui.item.next().attr('id'));
+
+                    throw 'Could not determine where to move items. Check console.';
+                }
+            });
         });
     };
 
@@ -252,6 +288,15 @@
         showLessCssClass: 'tb-show-less',
         maskableCssClass: 'tb-maskable',
         maskingLinkCssClass: 'tb-masking-link',
+        sortableCssClass: "tb-sortable",
+        moveAfterFunction: function (itemId, moveAfterItemId) {
+            console.log('Moved element ID = ' + itemId);
+            console.log('To be moved after element with ID = ' + moveAfterItemId);
+        },
+        moveBeforeFunction: function (itemId, moveBeforeItemId) {
+            console.log('Moved element ID = ' + itemId);
+            console.log('To be moved before element with ID = ' + moveBeforeItemId);
+        },
         zebraCssClass: 'alternate'
     };
 

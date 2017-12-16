@@ -9,3 +9,7 @@
 .tb-masked {
     display: none;
 }
+
+.tb-sortable {
+    cursor: grab;
+}
