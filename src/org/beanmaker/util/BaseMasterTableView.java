@@ -106,6 +106,7 @@ public abstract class BaseMasterTableView extends BaseView {
 
     protected boolean enableDragNDrop = false;
     protected String sortableCssClass = "tb-sortable";
+    protected String dragNDropActiveIcon = "resize-vertical";
 
     public BaseMasterTableView(final String resourceBundleName, final String tableId) {
         super(resourceBundleName);
@@ -684,6 +685,9 @@ public abstract class BaseMasterTableView extends BaseView {
             final String editTooltip)
     {
         final TdTag cell = new TdTag();
+
+        if (enableDragNDrop)
+            cell.child(new SpanTag().cssClass(iconLibrary + dragNDropActiveIcon));
 
         if (showEditLinks)
             cell.child(getEditLineLink(

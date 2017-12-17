@@ -96,7 +96,7 @@ public class BaseMasterTableViewSourceFile extends BeanCodeWithDBInfo {
 
         final Condition editLinkCheck;
         if (columns.hasItemOrder())
-            editLinkCheck = new Condition("showEditLinks || showOrderingLinks");
+            editLinkCheck = new Condition("showEditLinks || showOrderingLinks || enableDragNDrop");
         else
             editLinkCheck = new Condition("showEditLinks");
 
@@ -314,7 +314,7 @@ public class BaseMasterTableViewSourceFile extends BeanCodeWithDBInfo {
         final Condition editLinkCheck;
         final String operationName;
         if (columns.hasItemOrder()) {
-            editLinkCheck = new Condition("showEditLinks || showOrderingLinks");
+            editLinkCheck = new Condition("showEditLinks || showOrderingLinks || enableDragNDrop");
             operationName = "Operation";
         } else {
             editLinkCheck = new Condition("showEditLinks");

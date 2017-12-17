@@ -4,9 +4,13 @@ $.ajaxSetup({cache : false});
 
 var BEANMAKER = { };
 
-BEANMAKER.getItemId = function (linkOrButton) {
-    var parts = linkOrButton.attr('id').split('_');
+BEANMAKER.parseId = function (idString) {
+    var parts = idString.split('_');
     return parts[parts.length - 1];
+};
+
+BEANMAKER.getItemId = function (linkOrButton) {
+    return BEANMAKER.parseId(linkOrButton.attr('id'));
 };
 
 BEANMAKER.setupModal = function(linkId, addText, editText, url, formName, extraSetupFunc) {
@@ -170,6 +174,21 @@ BEANMAKER.ajaxItemOrderMoveOneStep = function(servlet, bean, id, direction, done
             bean: bean,
             id: id,
             direction: direction
+        },
+        success: doneFunction
+    });
+};
+
+BEANMAKER.ajaxItemOrderMove = function(servlet, bean, id, direction, companionId, doneFunction) {
+    $.ajax({
+        url: servlet,
+        type: 'post',
+        dataType: 'json',
+        data: {
+            bean: bean,
+            id: id,
+            direction: direction,
+            companionId: companionId
         },
         success: doneFunction
     });
