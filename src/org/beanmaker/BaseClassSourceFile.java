@@ -39,7 +39,12 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
     private final String internalsVar;
     private final String parametersVar;
 
-	public BaseClassSourceFile(final String beanName, final String packageName, final Columns columns, final String tableName) {
+	public BaseClassSourceFile(
+	        final String beanName,
+            final String packageName,
+            final Columns columns,
+            final String tableName)
+    {
         super(beanName, packageName, "Base", columns, tableName);
 
         internalsVar = beanVarName + "Internals";
@@ -169,23 +174,39 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                         newLine();
                         first = false;
                     }
-                    addProperty(VarDeclaration.createListDeclaration(relationship.getBeanClass(), relationship.getJavaName()));
+                    addProperty(VarDeclaration.createListDeclaration(
+                            relationship.getBeanClass(),
+                            relationship.getJavaName()));
                 }
         }
 
         newLine();
-        javaClass.addContent(new VarDeclaration("String", "DATABASE_TABLE_NAME", quickQuote(tableName)).visibility(Visibility.PROTECTED).markAsStatic().markAsFinal());
-        javaClass.addContent(new VarDeclaration("String", "DATABASE_FIELD_LIST", quickQuote(getStaticFieldList())).visibility(Visibility.PROTECTED).markAsStatic().markAsFinal());
+        javaClass.addContent(
+                new VarDeclaration("String", "DATABASE_TABLE_NAME", quickQuote(tableName))
+                        .visibility(Visibility.PROTECTED).markAsStatic()
+                        .markAsFinal()
+        );
+        javaClass.addContent(
+                new VarDeclaration("String", "DATABASE_FIELD_LIST", quickQuote(getStaticFieldList()))
+                        .visibility(Visibility.PROTECTED).markAsStatic()
+                        .markAsFinal()
+        );
 
         newLine();
         javaClass.addContent(
-                new VarDeclaration("BeanInternals", internalsVar,
-                        new ObjectCreation("BeanInternals").addArgument(quickQuote(bundleName))).markAsFinal().visibility(Visibility.PROTECTED)
+                new VarDeclaration(
+                        "BeanInternals",
+                        internalsVar,
+                        new ObjectCreation("BeanInternals").addArgument(quickQuote(bundleName))
+                ).markAsFinal().visibility(Visibility.PROTECTED)
         );
         final String parametersClass = beanName + "Parameters";
         javaClass.addContent(
-                new VarDeclaration(parametersClass, parametersVar,
-                        new ObjectCreation(parametersClass)).markAsFinal().markAsStatic().visibility(Visibility.PROTECTED)
+                new VarDeclaration(
+                        parametersClass,
+                        parametersVar,
+                        new ObjectCreation(parametersClass)
+                ).markAsFinal().markAsStatic().visibility(Visibility.PROTECTED)
         ).addContent(EMPTY_LINE);
 
         if (columns.hasExtraFields()) {
@@ -224,7 +245,9 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
     }
 
     private ConstructorDeclaration getIdArgumentConstructor() {
-        return getBaseConstructor().addArgument(new FunctionArgument("long", "id")).addContent("setId(id);");
+        return getBaseConstructor()
+                .addArgument(new FunctionArgument("long", "id"))
+                .addContent("setId(id);");
     }
 
     private ConstructorDeclaration getCopyConstructor() {
@@ -255,11 +278,15 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 final String beanObject = uncapitalize(beanClass);
                 final String javaName = relationship.getJavaName();
                 copyConstructor.addContent(EMPTY_LINE).addContent(
-                        new ForLoop(beanClass + " " + beanObject + ": " + modelVarName + "." + javaName).addContent(
-                                new FunctionCall("add", javaName).byItself().addArgument(
-                                        new ObjectCreation(beanClass).addArgument(new FunctionCall("getId", beanObject))
+                        new ForLoop(beanClass + " " + beanObject + ": " + modelVarName + "." + javaName)
+                                .addContent(
+                                        new FunctionCall("add", javaName)
+                                                .byItself()
+                                                .addArgument(
+                                                        new ObjectCreation(beanClass)
+                                                                .addArgument(
+                                                                        new FunctionCall("getId", beanObject)))
                                 )
-                        )
                 );
             }
 
@@ -315,7 +342,9 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                             new FunctionArgument(new GenericType("List", beanClass).toString(), javaName));
                     extraFieldConstructor.addContent(EMPTY_LINE).addContent(
                             new ForLoop(beanClass + " " + beanObject + ": " + javaName).addContent(
-                                    new FunctionCall("add", "this." + javaName).byItself().addArgument(beanObject)
+                                    new FunctionCall("add", "this." + javaName)
+                                            .byItself()
+                                            .addArgument(beanObject)
                             )
                     );
                 }
@@ -363,9 +392,12 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         for (Column column: columns.getList()) {
             if (column.getJavaType().equals("Money"))
                 thisCall.addArgument(new ObjectCreation("Money")
-                        .addArgument(new FunctionCall("getLong", "rs").addArgument(Integer.toString(++index))));
+                        .addArgument(
+                                new FunctionCall("getLong", "rs")
+                                        .addArgument(Integer.toString(++index))));
             else
-                thisCall.addArgument(new FunctionCall("get" + capitalize(column.getJavaType()), "rs").addArgument(Integer.toString(++index)));
+                thisCall.addArgument(new FunctionCall("get" + capitalize(column.getJavaType()), "rs")
+                        .addArgument(Integer.toString(++index)));
         }
 
         return thisCall;
@@ -408,7 +440,9 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 ++index;
                 if (type.equals("Money"))
                     ifRsNext.addContent(new Assignment(field, new ObjectCreation("Money")
-                            .addArgument(new FunctionCall("getLong", "rs").addArgument(Integer.toString(index)))
+                            .addArgument(
+                                    new FunctionCall("getLong", "rs")
+                                            .addArgument(Integer.toString(index)))
                             .addArgument(new FunctionCall("getDefaultMoneyFormat", parametersVar))));
                 else {
                     final String getterName = "get" + capitalize(type);
@@ -423,12 +457,18 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         function.addContent(databaseInnerClass).addContent(EMPTY_LINE);
 
         // check for bad ID
-        function.addContent(new IfBlock(new Condition("id <= 0")).addContent("throw new IllegalArgumentException(\"id = \" + id + \" <= 0\");"))
+        function.addContent(
+                new IfBlock(new Condition("id <= 0"))
+                        .addContent("throw new IllegalArgumentException(\"id = \" + id + \" <= 0\");"))
                 .addContent(EMPTY_LINE);
 
         // instantiate DBQuery inner class & use it to retrieve data
         function.addContent(
-                new VarDeclaration("DataFromDBQuery", "dataFromDBQuery", new ObjectCreation("DataFromDBQuery")).markAsFinal()
+                new VarDeclaration(
+                        "DataFromDBQuery",
+                        "dataFromDBQuery",
+                        new ObjectCreation("DataFromDBQuery")
+                ).markAsFinal()
         ).addContent(
                 new FunctionCall("processQuery", "dbAccess")
                         .byItself()
@@ -439,7 +479,8 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         // check if data was returned
         function.addContent(
                 new IfBlock(new Condition("!dataFromDBQuery.idOK")).addContent(
-                        new ExceptionThrow("IllegalArgumentException").addArgument("\"id = \" + id + \" does not exist\"")
+                        new ExceptionThrow("IllegalArgumentException")
+                                .addArgument("\"id = \" + id + \" does not exist\"")
                 )
         ).addContent(EMPTY_LINE);
 
@@ -458,7 +499,10 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                             new Assignment(field + "Str",
                                     new FunctionCall("convert" + type + "ToString").addArgument(field))
                     );
-                if ((type.equals("int") || type.equals("long")) && !field.equals("itemOrder") && !field.startsWith("id"))
+                if ((type.equals("int") || type.equals("long"))
+                        && !field.equals("itemOrder")
+                        && !field.startsWith("id")
+                        )
                     function.addContent(
                             new Assignment(field + "Str",
                                     new FunctionCall("valueOf", "String").addArgument(field))
@@ -502,20 +546,22 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                                 .addArgument(new FunctionArgument("long", "id"))
                                 .visibility(Visibility.PROTECTED);
 
-                final JavaClass extraDBInnerClass = new JavaClass("DataFromDBQuery" + capitalize(relationship.getJavaName()))
-                        .visibility(Visibility.NONE).implementsInterface("DBQuerySetupProcess")
-                        .addContent(VarDeclaration.createListDeclaration(
-                                relationship.getBeanClass(),
-                                relationship.getJavaName()).markAsFinal())
-                        .addContent(EMPTY_LINE)
-                        .addContent(getInnerClassSetupPSWithIdFunction())
-                        .addContent(EMPTY_LINE);
-                final FunctionDeclaration processRSExtra = getInnerClassProcessRSFunctionStart()
-                        .addContent(new WhileBlock(new Condition("rs.next()"))
-                                .addContent(new FunctionCall("add", relationship.getJavaName())
-                                        .byItself()
-                                        .addArgument(new ObjectCreation(relationship.getBeanClass())
-                                                .addArgument("rs"))));
+                final JavaClass extraDBInnerClass =
+                        new JavaClass("DataFromDBQuery" + capitalize(relationship.getJavaName()))
+                                .visibility(Visibility.NONE).implementsInterface("DBQuerySetupProcess")
+                                .addContent(VarDeclaration.createListDeclaration(
+                                        relationship.getBeanClass(),
+                                        relationship.getJavaName()).markAsFinal())
+                                .addContent(EMPTY_LINE)
+                                .addContent(getInnerClassSetupPSWithIdFunction())
+                                .addContent(EMPTY_LINE);
+                final FunctionDeclaration processRSExtra =
+                        getInnerClassProcessRSFunctionStart()
+                                .addContent(new WhileBlock(new Condition("rs.next()"))
+                                        .addContent(new FunctionCall("add", relationship.getJavaName())
+                                                .byItself()
+                                                .addArgument(new ObjectCreation(relationship.getBeanClass())
+                                                        .addArgument("rs"))));
                 extraDBInnerClass.addContent(processRSExtra);
 
                 initializedBeansFunction
@@ -574,7 +620,8 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 new FunctionDeclaration("refreshFromDataBase").addContent(
                         new IfBlock(new Condition("id == 0")).addContent(
                                 new ExceptionThrow("IllegalArgumentException")
-                                        .addArgument(quickQuote("Cannot refresh bean not yet commited to database"))
+                                        .addArgument(
+                                                quickQuote("Cannot refresh bean not yet commited to database"))
                         )
                 ).addContent(EMPTY_LINE).addContent(
                         new FunctionCall("setId")
@@ -586,17 +633,23 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         for (OneToManyRelationship relationship : relationships)
             if (!relationship.isListOnly()) {
                 javaClass.addContent(
-                        new FunctionDeclaration("refresh" + relationship.getBeanClass() + "ListFromDataBase").addContent(
-                                new IfBlock(new Condition("id == 0")).addContent(
-                                        new ExceptionThrow("IllegalArgumentException")
-                                                .addArgument(quickQuote("Cannot refresh list in bean not yet commited to database"))
-                                )
-                        ).addContent(EMPTY_LINE).addContent(
+                        new FunctionDeclaration("refresh" + relationship.getBeanClass() + "ListFromDataBase")
+                                .addContent(
+                                        new IfBlock(new Condition("id == 0")).addContent(
+                                                new ExceptionThrow("IllegalArgumentException")
+                                                        .addArgument(
+                                                                quickQuote(
+                                                                        "Cannot refresh list in bean not yet commited to database"))
+                                        )
+                                ).addContent(EMPTY_LINE).addContent(
                                 new VarDeclaration(
-                                        VarDeclaration.getParametrizedType("List", relationship.getBeanClass()),
+                                        VarDeclaration.getParametrizedType(
+                                                "List",
+                                                relationship.getBeanClass()),
                                         "refreshedList",
                                         new FunctionCall("initialized" + capitalize(relationship.getJavaName()))
-                                                .addArgument("id")).markAsFinal()
+                                                .addArgument("id")
+                                ).markAsFinal()
                         ).addContent(
                                 new FunctionCall("clear", relationship.getJavaName()).byItself()
                         ).addContent(
@@ -604,6 +657,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                                         .addArgument("refreshedList")
                         )
                 ).addContent(EMPTY_LINE);
+
             }
 	}
 
@@ -624,11 +678,14 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
     private void addEquals() {
         javaClass.addContent(
-                new FunctionDeclaration("equals", "boolean").addArgument(new FunctionArgument("Object", "object")).annotate("@Override").addContent(
-                        new IfBlock(new Condition(new Comparison("id", "0"))).addContent(
-                                new ReturnStatement("false")
-                        )
-                ).addContent(EMPTY_LINE).addContent(
+                new FunctionDeclaration("equals", "boolean")
+                        .addArgument(new FunctionArgument("Object", "object"))
+                        .annotate("@Override")
+                        .addContent(
+                                new IfBlock(new Condition(new Comparison("id", "0"))).addContent(
+                                        new ReturnStatement("false")
+                                )
+                        ).addContent(EMPTY_LINE).addContent(
                         new IfBlock(new Condition("object instanceof " + beanName)).addContent(
                                 new ReturnStatement("((" + beanName + ") object).getId() == id")
                         )
@@ -692,7 +749,11 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         for (Column column: columns.getList()) {
             final String type = column.getJavaType();
             final String field = column.getJavaName();
-            if (!field.equals("id") && !field.equals("lastUpdate") && !field.equals("modifiedBy") && !field.equals("itemOrder")) {
+            if (!field.equals("id")
+                    && !field.equals("lastUpdate")
+                    && !field.equals("modifiedBy")
+                    && !field.equals("itemOrder"))
+            {
                 final FunctionDeclaration setter = new FunctionDeclaration("set" + capitalize(field))
                         .addArgument(new FunctionArgument(type, field));
                 if (JAVA_TEMPORAL_TYPES.contains(type))
@@ -711,15 +772,18 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                     );
                 if (type.equals("int") && !field.startsWith("id"))
                     setter.addContent(
-                            new Assignment(field + "Str", new FunctionCall("toString", "Integer").addArgument(field))
+                            new Assignment(field + "Str", new FunctionCall("toString", "Integer")
+                                    .addArgument(field))
                     );
                 if (type.equals("long") && !field.startsWith("id"))
                     setter.addContent(
-                            new Assignment(field + "Str", new FunctionCall("toString", "Long").addArgument(field))
+                            new Assignment(field + "Str", new FunctionCall("toString", "Long")
+                                    .addArgument(field))
                     );
                 if (JAVA_TEMPORAL_TYPES.contains(type))
                     setter.addContent(
-                            new Assignment(field + "Str", new FunctionCall("convert" + capitalize(type) + "ToString").addArgument(field))
+                            new Assignment(field + "Str", new FunctionCall("convert" + capitalize(type) + "ToString")
+                                    .addArgument(field))
                     );
                 if (type.equals("Money"))
                     setter.addContent(
@@ -730,20 +794,40 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 if (column.couldHaveAssociatedBean() && column.hasAssociatedBean()) {
                     final String associatedBeanClass = column.getAssociatedBeanClass();
                     final String associatedBeanObject = uncapitalize(chopId(field));
-                    final FunctionDeclaration fromObjectSetter = new FunctionDeclaration("set" + capitalize(associatedBeanObject))
-                            .addArgument(new FunctionArgument(associatedBeanClass, associatedBeanObject))
-                            .addContent(new IfBlock(new Condition(new Comparison(new FunctionCall("getId", associatedBeanObject), "0")))
-                                    .addContent(new ExceptionThrow("IllegalArgumentException")
-                                            .addArgument(quickQuote("Cannot accept uninitialized " + associatedBeanClass + " bean (id = 0) as argument."))))
-                            .addContent(EMPTY_LINE)
-                            .addContent(new Assignment(field, new FunctionCall("getId", associatedBeanObject)));
+                    final FunctionDeclaration fromObjectSetter =
+                            new FunctionDeclaration("set" + capitalize(associatedBeanObject))
+                                    .addArgument(new FunctionArgument(associatedBeanClass, associatedBeanObject))
+                                    .addContent(
+                                            new IfBlock(
+                                                    new Condition(
+                                                            new Comparison(
+                                                                    new FunctionCall("getId", associatedBeanObject),
+                                                                    "0"))
+                                            ).addContent(
+                                                    new ExceptionThrow("IllegalArgumentException")
+                                                            .addArgument(
+                                                                    quickQuote(
+                                                                            "Cannot accept uninitialized "
+                                                                                    + associatedBeanClass
+                                                                                    + " bean (id = 0) as argument."))))
+                                    .addContent(EMPTY_LINE)
+                                    .addContent(
+                                            new Assignment(
+                                                    field,
+                                                    new FunctionCall("getId", associatedBeanObject)));
                     javaClass.addContent(fromObjectSetter).addContent(EMPTY_LINE);
                 }
 
-                if (JAVA_TEMPORAL_TYPES.contains(type) || type.equals("Money") || ((type.equals("int") || type.equals("long")) && !field.startsWith("id"))) {
-                    final FunctionDeclaration strSetter = new FunctionDeclaration("set" + capitalize(field) + "Str")
-                            .addArgument(new FunctionArgument("String", field + "Str"))
-                            .addContent(new Assignment("this." + field + "Str", field + "Str"));
+                if (JAVA_TEMPORAL_TYPES.contains(type)
+                        || type.equals("Money")
+                        || ((type.equals("int")
+                        || type.equals("long"))
+                        && !field.startsWith("id")))
+                {
+                    final FunctionDeclaration strSetter =
+                            new FunctionDeclaration("set" + capitalize(field) + "Str")
+                                    .addArgument(new FunctionArgument("String", field + "Str"))
+                                    .addContent(new Assignment("this." + field + "Str", field + "Str"));
                     javaClass.addContent(strSetter).addContent(EMPTY_LINE);
                 }
             }
@@ -767,11 +851,16 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
             if (JAVA_TEMPORAL_TYPES.contains(type))
                 getter.addContent(
-                        new IfBlock(new Condition(new Comparison(field, "null"))).addContent(new ReturnStatement("null"))
+                        new IfBlock(
+                                new Condition(
+                                        new Comparison(field, "null"))
+                        ).addContent(new ReturnStatement("null"))
                 ).addContent(
                         EMPTY_LINE
                 ).addContent(
-                        new ReturnStatement(new ObjectCreation(type).addArgument(new FunctionCall("getTime", field)))
+                        new ReturnStatement(
+                                new ObjectCreation(type)
+                                        .addArgument(new FunctionCall("getTime", field)))
                 );
             else
                 getter.addContent(
@@ -786,9 +875,13 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
                 final ReturnStatement returnStatement;
                 if (column.isLabelReference())
-                    returnStatement = new ReturnStatement(new FunctionCall("get", "Labels").addArgument(field));
+                    returnStatement =
+                            new ReturnStatement(new FunctionCall("get", "Labels")
+                                    .addArgument(field));
                 else
-                    returnStatement = new ReturnStatement(new ObjectCreation(associatedBeanClass).addArgument(field));
+                    returnStatement =
+                            new ReturnStatement(new ObjectCreation(associatedBeanClass)
+                                    .addArgument(field));
 
                 final String associatedBeanGetterFunctionName = "get" + chopId(field);
                 final FunctionDeclaration associatedBeanGetter =
@@ -818,32 +911,64 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
             }
 
-            if (JAVA_TEMPORAL_TYPES.contains(type) || type.equals("Money") || ((type.equals("int") || type.equals("long")) && !field.startsWith("id") && !field.equals("itemOrder"))) {
-                final FunctionDeclaration strGetter = new FunctionDeclaration("get" + capitalize(field) + "Str", "String")
-                        .addContent(new ReturnStatement(field + "Str"));
+            if (JAVA_TEMPORAL_TYPES.contains(type)
+                    || type.equals("Money")
+                    || ((type.equals("int")
+                    || type.equals("long"))
+                    && !field.startsWith("id")
+                    && !field.equals("itemOrder")))
+            {
+                final FunctionDeclaration strGetter =
+                        new FunctionDeclaration("get" + capitalize(field) + "Str", "String")
+                                .addContent(new ReturnStatement(field + "Str"));
                 javaClass.addContent(strGetter).addContent(EMPTY_LINE);
             }
 
             if (JAVA_TEMPORAL_TYPES.contains(type)) {
                 final String capField = capitalize(field);
-                final FunctionDeclaration formattedGetter = new FunctionDeclaration("get" + capField + "Formatted", "String")
-                        .addContent(new IfBlock(new Condition(new FunctionCall("is" + capField + "Empty")))
-                                .addContent(new IfBlock(new Condition(new FunctionCall("is" + capField + "Required")))
-                                        .addContent(getCannotDisplayBadDataException()))
-                                .addContent(new ReturnStatement(EMPTY_STRING)))
-                        .addContent(EMPTY_LINE)
-                        .addContent(new IfBlock(new Condition(new FunctionCall("is" + capField + "OK"), true)).addContent(getCannotDisplayBadDataException()))
-                        .addContent(EMPTY_LINE)
-                        .addContent(new ReturnStatement(new FunctionCall("format" + type).addArgument(new FunctionCall("convertStringTo" + type).addArgument(field + "Str"))));
+                final FunctionDeclaration formattedGetter =
+                        new FunctionDeclaration("get" + capField + "Formatted", "String")
+                                .addContent(
+                                        new IfBlock(
+                                                new Condition(
+                                                        new FunctionCall("is" + capField + "Empty"))
+                                        ).addContent(
+                                                new IfBlock(
+                                                        new Condition(
+                                                                new FunctionCall("is" + capField + "Required"))
+                                                ).addContent(getCannotDisplayBadDataException()))
+                                        .addContent(new ReturnStatement(EMPTY_STRING)))
+                                .addContent(EMPTY_LINE)
+                                .addContent(
+                                        new IfBlock(
+                                                new Condition(
+                                                        new FunctionCall("is" + capField + "OK"), true)
+                                        ).addContent(getCannotDisplayBadDataException()))
+                                .addContent(EMPTY_LINE)
+                                .addContent(
+                                        new ReturnStatement(
+                                                new FunctionCall("format" + type)
+                                                        .addArgument(
+                                                                new FunctionCall("convertStringTo" + type)
+                                                                        .addArgument(field + "Str"))));
                 javaClass.addContent(formattedGetter).addContent(EMPTY_LINE);
             }
 
             if (type.equals("boolean")) {
-                final FunctionDeclaration booleanValGetter = new FunctionDeclaration("get" + capitalize(field) + "Val", "String")
-                        .addContent(new IfBlock(new Condition(field))
-                            .addContent(new ReturnStatement(new FunctionCall("getLabel", internalsVar).addArgument(quickQuote("true_value")))))
-                        .addContent(EMPTY_LINE)
-                        .addContent(new ReturnStatement(new FunctionCall("getLabel", internalsVar).addArgument(quickQuote("false_value"))));
+                final FunctionDeclaration booleanValGetter =
+                        new FunctionDeclaration("get" + capitalize(field) + "Val", "String")
+                                .addContent(
+                                        new IfBlock(
+                                                new Condition(field)
+                                        ).addContent(
+                                                new ReturnStatement(
+                                                        new FunctionCall("getLabel", internalsVar)
+                                                                .addArgument(quickQuote("true_value")))))
+                                .addContent(EMPTY_LINE)
+                                .addContent(
+                                        new ReturnStatement(
+                                                new FunctionCall("getLabel", internalsVar)
+                                                        .addArgument(quickQuote("false_value"))));
                 javaClass.addContent(booleanValGetter).addContent(EMPTY_LINE);
             }
         }
@@ -893,53 +1018,109 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
             if (relationship.isListOnly()) {
                 importsManager.addImport("org.dbbeans.sql.DBQuerySetupRetrieveData");
 
-                final FunctionDeclaration preparedStatementSetup = new FunctionDeclaration("setupPreparedStatement")
-                        .annotate("@Override")
-                        .addException("SQLException")
-                        .addArgument(new FunctionArgument("PreparedStatement", "stat"))
-                        .addContent(new FunctionCall("setLong", "stat")
-                                .addArgument("1")
-                                .addArgument("id")
-                                .byItself());
+                final FunctionDeclaration preparedStatementSetup =
+                        new FunctionDeclaration("setupPreparedStatement")
+                                .annotate("@Override")
+                                .addException("SQLException")
+                                .addArgument(new FunctionArgument("PreparedStatement", "stat"))
+                                .addContent(new FunctionCall("setLong", "stat")
+                                        .addArgument("1")
+                                        .addArgument("id")
+                                        .byItself());
 
-                final FunctionCall dbAccessFunction = new FunctionCall("processQuery", "dbAccess").byItself();
+                final FunctionCall dbAccessFunction =
+                        new FunctionCall("processQuery", "dbAccess").byItself();
                 final FunctionDeclaration listGetter =
-                        new FunctionDeclaration("get" + capitalize(listName), new GenericType("List", beanClass))
-                                .addContent(VarDeclaration.createListDeclaration(beanClass, listName).markAsFinal())
-                                .addContent(EMPTY_LINE)
-                                .addContent(dbAccessFunction
-                                        .addArgument(new OperatorExpression(quickQuote("SELECT ") + " + " + beanClass + ".DATABASE_FIELD_LIST + " + quickQuote(" FROM " + relationship.getTable() + " WHERE " + relationship.getIdSqlName() + "=? ORDER BY "),
-                                                new FunctionCall("getOrderByFields", beanClass + "." + Strings.uncamelize(beanClass).toUpperCase() + "_PARAMETERS"),
+                        new FunctionDeclaration(
+                                "get" + capitalize(listName),
+                                new GenericType("List", beanClass)
+                        ).addContent(
+                                VarDeclaration.createListDeclaration(beanClass, listName)
+                                        .markAsFinal()
+                        ).addContent(EMPTY_LINE).addContent(
+                                dbAccessFunction
+                                        .addArgument(
+                                                new OperatorExpression(
+                                                        quickQuote("SELECT ") + " + "
+                                                                + beanClass
+                                                                + ".DATABASE_FIELD_LIST + "
+                                                                + quickQuote(
+                                                                        " FROM "
+                                                                                + relationship.getTable()
+                                                                                + " WHERE "
+                                                                                + relationship.getIdSqlName()
+                                                                                + "=? ORDER BY "),
+                                                new FunctionCall(
+                                                        "getOrderByFields",
+                                                        beanClass
+                                                                + "."
+                                                                + Strings.uncamelize(beanClass).toUpperCase()
+                                                                + "_PARAMETERS"),
                                                 OperatorExpression.Operator.ADD))
-                                        .addArgument(new AnonymousClassCreation("DBQuerySetupProcess").setContext(dbAccessFunction)
-                                                .addContent(preparedStatementSetup)
-                                                .addContent(EMPTY_LINE)
-                                                .addContent(new FunctionDeclaration("processResultSet")
-                                                        .annotate("@Override")
-                                                        .addException("SQLException")
-                                                        .addArgument(new FunctionArgument("ResultSet", "rs"))
-                                                        .addContent(new WhileBlock(new Condition("rs.next()"))
-                                                                .addContent(new FunctionCall("add", listName).byItself()
-                                                                        .addArgument(new ObjectCreation(beanClass)
-                                                                                .addArgument("rs")))))))
+                                        .addArgument(
+                                                new AnonymousClassCreation(
+                                                        "DBQuerySetupProcess")
+                                                        .setContext(dbAccessFunction)
+                                                        .addContent(preparedStatementSetup)
+                                                        .addContent(EMPTY_LINE)
+                                                        .addContent(new FunctionDeclaration("processResultSet")
+                                                                .annotate("@Override")
+                                                                .addException("SQLException")
+                                                                .addArgument(
+                                                                        new FunctionArgument(
+                                                                                "ResultSet",
+                                                                                "rs"))
+                                                                .addContent(
+                                                                        new WhileBlock
+                                                                                (new Condition("rs.next()")
+                                                                                ).addContent(
+                                                                                        new FunctionCall(
+                                                                                                "add",
+                                                                                                listName)
+                                                                                                .byItself()
+                                                                                .addArgument(new ObjectCreation(beanClass)
+                                                                                        .addArgument("rs")))))))
                                 .addContent(EMPTY_LINE)
                                 .addContent(new ReturnStatement(listName));
                 javaClass.addContent(listGetter).addContent(EMPTY_LINE);
 
-                final FunctionCall dbAccessForCountFunction = new FunctionCall("processQuery", "dbAccess");
+                final FunctionCall dbAccessForCountFunction =
+                        new FunctionCall("processQuery", "dbAccess");
                 final FunctionDeclaration countGetter =
                         new FunctionDeclaration("getCountFor" + capitalize(listName), "long")
                                 .addContent(new ReturnStatement(
                                         dbAccessForCountFunction
-                                                .addArgument(quickQuote("SELECT COUNT(id) FROM " + relationship.getTable() + " WHERE " + relationship.getIdSqlName() + "=?"))
-                                                .addArgument(new AnonymousClassCreation("DBQuerySetupRetrieveData<Long>").setContext(dbAccessFunction)
-                                                        .addContent(preparedStatementSetup)
-                                                        .addContent(new FunctionDeclaration("processResultSet", "Long")
-                                                                .annotate("@Override")
-                                                                .addException("SQLException")
-                                                                .addArgument(new FunctionArgument("ResultSet", "rs"))
-                                                                .addContent(new FunctionCall("next", "rs").byItself())
-                                                                .addContent(new ReturnStatement(new FunctionCall("getLong", "rs").addArgument("1")))))
+                                                .addArgument(
+                                                        quickQuote("SELECT COUNT(id) FROM "
+                                                                + relationship.getTable()
+                                                                + " WHERE "
+                                                                + relationship.getIdSqlName()
+                                                                + "=?"))
+                                                .addArgument(
+                                                        new AnonymousClassCreation("DBQuerySetupRetrieveData<Long>")
+                                                                .setContext(dbAccessFunction)
+                                                                .addContent(preparedStatementSetup)
+                                                                .addContent(
+                                                                        new FunctionDeclaration(
+                                                                                "processResultSet",
+                                                                                "Long")
+                                                                                .annotate("@Override")
+                                                                                .addException("SQLException")
+                                                                                .addArgument(
+                                                                                        new FunctionArgument(
+                                                                                                "ResultSet",
+                                                                                                "rs"))
+                                                                                .addContent(
+                                                                                        new FunctionCall(
+                                                                                                "next",
+                                                                                                "rs")
+                                                                                                .byItself())
+                                                                                .addContent(
+                                                                                        new ReturnStatement(
+                                                                                                new FunctionCall(
+                                                                                                        "getLong",
+                                                                                                        "rs")
+                                                                                                        .addArgument("1")))))
                                 ));
                 javaClass.addContent(countGetter).addContent(EMPTY_LINE);
             } else {
@@ -955,26 +1136,36 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                                 .addArgument(new FunctionArgument("int", "index"))
                                 .addContent(getOneToManyRelationshipIndexOutOfBoundTest(listName))
                                 .addContent(EMPTY_LINE)
-                                .addContent(new ReturnStatement(new FunctionCall("get", listName).addArgument("index")))
+                                .addContent(new ReturnStatement(
+                                        new FunctionCall("get", listName).addArgument("index")))
                 ).addContent(EMPTY_LINE).addContent(
                         new FunctionDeclaration("insert" + beanClass)
                                 .addArgument(new FunctionArgument("int", "index"))
                                 .addArgument(new FunctionArgument(beanClass, itemName))
                                 .addContent(getOneToManyRelationshipIndexOutOfBoundTest(listName))
                                 .addContent(EMPTY_LINE)
-                                .addContent(new FunctionCall("add", listName).addArgument("index").addArgument(itemName).byItself())
+                                .addContent(new FunctionCall("add", listName)
+                                        .addArgument("index")
+                                        .addArgument(itemName)
+                                        .byItself())
                 ).addContent(EMPTY_LINE).addContent(
                         new FunctionDeclaration("delete" + beanClass)
                                 .addArgument(new FunctionArgument("int", "index"))
                                 .addContent(getOneToManyRelationshipIndexOutOfBoundTest(listName))
                                 .addContent(EMPTY_LINE)
-                                .addContent(new FunctionCall("remove", listName).addArgument("index").byItself())
+                                .addContent(new FunctionCall("remove", listName)
+                                        .addArgument("index")
+                                        .byItself())
                 ).addContent(EMPTY_LINE).addContent(
                         new FunctionDeclaration("clear" + capitalize(listName))
                                 .addContent(new FunctionCall("clear", listName).byItself())
                 ).addContent(EMPTY_LINE).addContent(
-                        new FunctionDeclaration("get" + capitalize(listName), new GenericType("List", beanClass))
-                                .addContent(new ReturnStatement(new FunctionCall("unmodifiableList", "Collections").addArgument(listName)))
+                        new FunctionDeclaration(
+                                "get" + capitalize(listName),
+                                new GenericType("List", beanClass))
+                                .addContent(new ReturnStatement(
+                                        new FunctionCall("unmodifiableList", "Collections")
+                                                .addArgument(listName)))
                 ).addContent(EMPTY_LINE).addContent(
                         new FunctionDeclaration("getCountFor" + capitalize(listName), "long")
                                 .addContent(new ReturnStatement(new FunctionCall("size", listName)))
@@ -985,7 +1176,11 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
     private IfBlock getOneToManyRelationshipIndexOutOfBoundTest(final String listName) {
         return new IfBlock(new Condition(new Comparison("index", "0", Comparison.Comparator.LESS_THAN))
-                .orCondition(new Condition(new Comparison("index", new FunctionCall("size", listName), Comparison.Comparator.GT_EQUAL))))
+                .orCondition(new Condition(
+                        new Comparison(
+                                "index",
+                                new FunctionCall("size", listName),
+                                Comparison.Comparator.GT_EQUAL))))
                 .addContent(new ExceptionThrow("IndexOutOfBoundsException")
                         .addArgument(getOneToManyRelationshipIndexOutOfBoundExceptionText(listName)));
     }
@@ -1001,9 +1196,11 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         final Column itemOrderField = columns.getItemOrderField();
 
         javaClass.addContent(
-                new FunctionDeclaration("isFirstItemOrder", "boolean").annotate("@Override").addContent(
-                        checkForItemOrderOperationOnUninitializedBean()
-                ).addContent(EMPTY_LINE).addContent(
+                new FunctionDeclaration("isFirstItemOrder", "boolean")
+                        .annotate("@Override")
+                        .addContent(
+                                checkForItemOrderOperationOnUninitializedBean()
+                        ).addContent(EMPTY_LINE).addContent(
                         new ReturnStatement("itemOrder == 1")
                 )
         ).addContent(EMPTY_LINE);
@@ -1017,8 +1214,14 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
         if (!itemOrderField.isUnique())
             isLastItemOrderFunction.addContent(
-                    new IfBlock(new Condition(new Comparison(uncapitalize(camelize(itemOrderField.getItemOrderAssociatedField())), "0"))).addContent(
-                            new ReturnStatement(new Comparison("itemOrder", getMaxItemOrderFunctionCall(itemOrderField, false, true)))
+                    new IfBlock(new Condition(
+                            new Comparison(
+                                    uncapitalize(camelize(itemOrderField.getItemOrderAssociatedField())),
+                                    "0"))
+                    ).addContent(
+                            new ReturnStatement(new Comparison(
+                                    "itemOrder",
+                                    getMaxItemOrderFunctionCall(itemOrderField, false, true)))
                     ).addContent(EMPTY_LINE)
             );
 
@@ -1033,7 +1236,9 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                         checkForItemOrderOperationOnUninitializedBean()
                 ).addContent(EMPTY_LINE).addContent(
                         new IfBlock(new Condition(new FunctionCall("isFirstItemOrder"))).addContent(
-                                new ExceptionThrow("IllegalArgumentException").addArgument(quickQuote("Cannot move Item Order above position 1 which it currently occupies"))
+                                new ExceptionThrow("IllegalArgumentException")
+                                        .addArgument(
+                                                quickQuote("Cannot move Item Order above position 1 which it currently occupies"))
                         )
                 ).addContent(EMPTY_LINE).addContent(
                         getItemOrderFunctionCalls("itemOrderMoveUp", itemOrderField)
@@ -1047,7 +1252,8 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                         checkForItemOrderOperationOnUninitializedBean()
                 ).addContent(EMPTY_LINE).addContent(
                         new IfBlock(new Condition(new FunctionCall("isLastItemOrder"))).addContent(
-                                new ExceptionThrow("IllegalArgumentException").addArgument("\"Cannot move Item Order below max position: \" + itemOrder")
+                                new ExceptionThrow("IllegalArgumentException")
+                                        .addArgument("\"Cannot move Item Order below max position: \" + itemOrder")
                         )
                 ).addContent(EMPTY_LINE).addContent(
                         getItemOrderFunctionCalls("itemOrderMoveDown", itemOrderField)
@@ -1062,7 +1268,8 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                             .addArgument(new FunctionArgument(beanName, beanVarName))
                             .addContent(
                                     new IfBlock(new Condition(new Comparison("itemOrder", new FunctionCall("getItemOrder", beanVarName), Comparison.Comparator.GREATER_THAN))).addContent(
-                                            new FunctionCall("itemOrderMove").byItself()
+                                            new FunctionCall("itemOrderMove")
+                                                    .byItself()
                                                     .addArgument(new OperatorExpression(new FunctionCall("getItemOrder", beanVarName), "1", OperatorExpression.Operator.ADD))
                                                     .addArgument(new FunctionCall("getIncreaseItemOrderBetweenQuery", parametersVar))
                                                     .addArgument(new FunctionCall("getItemOrder", beanVarName))

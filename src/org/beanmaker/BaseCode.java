@@ -5,9 +5,9 @@ import org.jcodegen.java.ImportsManager;
 import org.jcodegen.java.JavaClass;
 import org.jcodegen.java.ObjectCreation;
 import org.jcodegen.java.SourceFile;
-
 import org.jcodegen.java.VarDeclaration;
 import org.jcodegen.java.Visibility;
+
 import org.dbbeans.util.Strings;
 
 
@@ -30,6 +30,8 @@ public abstract class BaseCode {
         sourceFile = new SourceFile(packageName, className);
         javaClass = sourceFile.getJavaClass();
         importsManager = sourceFile.getImportsManager();
+
+        javaClass.visibility(Visibility.PACKAGE_PRIVATE);
     }
 
     public String getSourceCode() {

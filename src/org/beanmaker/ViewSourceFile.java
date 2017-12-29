@@ -15,6 +15,7 @@ public class ViewSourceFile extends BeanCode {
         super(beanName, packageName, viewName + "View");
         this.withLanguage = withLanguage;
         javaClass.extendsClass(beanName + viewName + "ViewBase");
+        javaClass.markAsFinal();
         createSourceCode();
     }
 

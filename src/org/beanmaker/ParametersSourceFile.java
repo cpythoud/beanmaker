@@ -12,6 +12,8 @@ public class ParametersSourceFile extends BaseCode {
 
         this.beanName = beanName;
 
+        javaClass.markAsFinal();
+
         createSourceCode();
     }
 

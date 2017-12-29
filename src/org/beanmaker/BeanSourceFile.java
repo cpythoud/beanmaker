@@ -15,6 +15,8 @@ public class BeanSourceFile extends BeanCode {
 
         this.columns = columns;
 
+        javaClass.markAsFinal();
+
 		createSourceCode();
 	}
 	
