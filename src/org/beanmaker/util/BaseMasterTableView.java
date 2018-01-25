@@ -1,6 +1,7 @@
 package org.beanmaker.util;
 
 import org.dbbeans.util.Money;
+import org.dbbeans.util.Pair;
 import org.dbbeans.util.Strings;
 
 import org.jcodegen.html.ATag;
@@ -293,6 +294,16 @@ public abstract class BaseMasterTableView extends BaseView {
         select.child(new OptionTag("", "").selected());
         for (String value: values)
             select.child(new OptionTag(value));
+
+        return getTableFilterCell().child(select);
+    }
+
+    protected ThTag getPairBasedSelectFilterCell(final String name, final List<Pair<String, String>> nameValuePairs) {
+        final SelectTag select = new SelectTag().name("tb-" + name).cssClass(formElementFilterCssClass);
+
+        select.child(new OptionTag("", "").selected());
+        for (Pair<String, String> pair: nameValuePairs)
+            select.child(new OptionTag(pair.e2, pair.e1));
 
         return getTableFilterCell().child(select);
     }
