@@ -16,16 +16,27 @@ import java.util.List;
 public abstract class BeanMakerBaseServlet extends HttpServlet {
 
     @Override
-    public void doGet(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
+    public void doGet(
+            final HttpServletRequest request,
+            final HttpServletResponse response)
+            throws ServletException, IOException
+    {
         doPost(request, response);
     }
 
     @Override
-    public void doPost(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
+    public void doPost(
+            final HttpServletRequest request,
+            final HttpServletResponse response)
+            throws ServletException, IOException
+    {
         processRequest(request, response);
     }
 
-    abstract protected void processRequest(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException;
+    abstract protected void processRequest(
+            final HttpServletRequest request,
+            final HttpServletResponse response)
+            throws ServletException, IOException;
 
     protected String getRootPath() {
         return getServletContext().getRealPath("/");
