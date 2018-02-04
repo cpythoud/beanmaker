@@ -165,4 +165,70 @@ public abstract class BeanMakerBaseServlet extends HttpServlet {
     protected String getErrorMessageContainerHtml(final String idContainer, final String cssClass) {
         return "<div id='" + idContainer + "' class='" + cssClass + "'></div>";
     }
+
+    protected ChangeOrderDirection getChangeOrderDirection(final HttpServletRequest request) throws ServletException {
+        return getChangeOrderDirection(request, "direction");
+    }
+
+    protected ChangeOrderDirection getChangeOrderDirection(
+            final HttpServletRequest request,
+            final String parameterName
+    ) throws ServletException
+    {
+        final String direction = request.getParameter(parameterName);
+        if (direction == null)
+            throw new ServletException("Missing direction parameter");
+
+        return ChangeOrderDirection.valueOf(direction.toUpperCase());
+    }
+
+    protected <B extends DbBeanWithItemOrderInterface<B>> String changeOrder(
+            final B bean,
+            final ChangeOrderDirection direction,
+            final B companion)
+    {
+        switch (direction) {
+            case UP:
+                bean.itemOrderMoveUp();
+                break;
+            case DOWN:
+                bean.itemOrderMoveDown();
+                break;
+            case AFTER:
+                bean.itemOrderMoveAfter(companion);
+                break;
+            case BEFORE:
+                bean.itemOrderMoveBefore(companion);
+                break;
+            default:
+                throw new AssertionError("New/unchecked Direction ?");
+        }
+
+        return getJsonOk();
+    }
+
+    protected void changeLocalOrder(
+            final long itemOrder,
+            final ChangeOrderDirection direction,
+            final long companionItemOrder,
+            final TableLocalOrderContext context,
+            final String orderingTable)
+    {
+        switch (direction) {
+            case UP:
+                TableLocalOrderUtil.itemOrderMoveUp(itemOrder, context, orderingTable);
+                break;
+            case DOWN:
+                TableLocalOrderUtil.itemOrderMoveDown(itemOrder, context, orderingTable);
+                break;
+            case AFTER:
+                TableLocalOrderUtil.itemOrderMoveAfter(itemOrder, companionItemOrder, context, orderingTable);
+                break;
+            case BEFORE:
+                TableLocalOrderUtil.itemOrderMoveBefore(itemOrder, companionItemOrder, context, orderingTable);
+                break;
+            default:
+                throw new AssertionError("New/unchecked Direction ?");
+        }
+    }
 }

@@ -276,16 +276,40 @@ public class BaseMasterTableViewSourceFile extends BeanCodeWithDBInfo {
     }
 
     private void addDataFunctions() {
+        final String inventoryFunctionName = "get" + beanName + "Inventory";
+
         javaClass.addContent(
-                new FunctionDeclaration("getData", "List<TrTag>").visibility(Visibility.PROTECTED).annotate("@Override").addContent(
-                        VarDeclaration.createListDeclaration("TrTag", "lines").markAsFinal()
-                ).addContent(EMPTY_LINE).addContent(
-                        new ForEach(beanName, beanVarName, new FunctionCall("getAll", beanName)).addContent(
-                                new FunctionCall("add", "lines").byItself().addArgument(new FunctionCall("getTableLine").addArgument(beanVarName))
+                new FunctionDeclaration("getData", "List<TrTag>")
+                        .visibility(Visibility.PROTECTED)
+                        .annotate("@Override")
+                        .addContent(
+                                VarDeclaration.createListDeclaration("TrTag", "lines")
+                                        .markAsFinal()
                         )
-                ).addContent(EMPTY_LINE).addContent(
-                        new ReturnStatement("lines")
-                )
+                        .addContent(EMPTY_LINE)
+                        .addContent(
+                                new ForEach(beanName, beanVarName, new FunctionCall(inventoryFunctionName))
+                                        .addContent(
+                                                new FunctionCall("add", "lines")
+                                                        .byItself()
+                                                        .addArgument(new FunctionCall("getTableLine")
+                                                                .addArgument(beanVarName))
+                                )
+                        )
+                        .addContent(EMPTY_LINE)
+                        .addContent(
+                                new ReturnStatement("lines")
+                        )
+        ).addContent(EMPTY_LINE);
+
+        javaClass.addContent(
+                new FunctionDeclaration(inventoryFunctionName, "List<" + beanName + ">")
+                        .visibility(Visibility.PROTECTED)
+                        .addContent(
+                                new ReturnStatement(
+                                        new FunctionCall("getBeansInLocalOrder")
+                                                .addArgument(new FunctionCall("getAll", beanName)))
+                        )
         ).addContent(EMPTY_LINE);
 
         javaClass.addContent(
@@ -295,6 +319,7 @@ public class BaseMasterTableViewSourceFile extends BeanCodeWithDBInfo {
                         )
                 )
         ).addContent(EMPTY_LINE);
+
 
         final FunctionDeclaration masterFunction = getTableLineFunction();
         addFunctionCallsTo(masterFunction);

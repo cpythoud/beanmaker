@@ -109,6 +109,9 @@ public abstract class BaseMasterTableView extends BaseView {
     protected String sortableCssClass = "tb-sortable";
     protected String dragNDropActiveIcon = "resize-vertical";
 
+    protected TableLocalOrderContext localOrderContext = null;
+    protected String localOrderingTable = null;
+
     public BaseMasterTableView(final String resourceBundleName, final String tableId) {
         super(resourceBundleName);
         this.tableId = tableId;
@@ -149,6 +152,14 @@ public abstract class BaseMasterTableView extends BaseView {
 
     public void setShowAllData(final boolean showAllData) {
         this.showAllData = showAllData;
+    }
+
+    public void setLocalOrderContext(final TableLocalOrderContext localOrderContext) {
+        this.localOrderContext = localOrderContext;
+    }
+
+    public void setLocalOrderingTable(final String localOrderingTable) {
+        this.localOrderingTable = localOrderingTable;
     }
 
     public TableTag getMasterTableTag() {
@@ -808,5 +819,15 @@ public abstract class BaseMasterTableView extends BaseView {
         cssClasses.append(maskableCssClass);
 
         return cssClasses.toString();
+    }
+
+    protected <B extends DbBeanInterface> List<B> getBeansInLocalOrder(final List<B> beans) {
+        if (localOrderContext == null)
+            return beans;
+
+        if (localOrderingTable == null)
+            throw new IllegalStateException("Ordering table not specified");
+
+        return TableLocalOrderUtil.getBeansInOrder(beans, localOrderContext, localOrderingTable);
     }
 }

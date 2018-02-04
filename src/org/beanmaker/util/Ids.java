@@ -33,8 +33,10 @@ public class Ids {
     }
 
     public static <T extends DbBeanInterface> Set<Long> getIdSet(final Collection<T> beans) {
-        final Set<Long> set = new HashSet<Long>();
+        return getIdSet(beans, new HashSet<Long>());
+    }
 
+    public static <T extends DbBeanInterface> Set<Long> getIdSet(final Collection<T> beans, final Set<Long> set) {
         for (DbBeanInterface bean: beans)
             set.add(bean.getId());
 
