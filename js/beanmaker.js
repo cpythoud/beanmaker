@@ -194,6 +194,22 @@ BEANMAKER.ajaxItemOrderMove = function(servlet, bean, id, direction, companionId
     });
 };
 
+BEANMAKER.ajaxItemOrderLocalMove = function(servlet, bean, id, direction, companionId, context, doneFunction) {
+    $.ajax({
+        url: servlet,
+        type: 'post',
+        dataType: 'json',
+        data: {
+            bean: bean,
+            id: id,
+            direction: direction,
+            companionId: companionId,
+            context: context
+        },
+        success: doneFunction
+    });
+};
+
 BEANMAKER.ajaxExecuteOperation = function(servlet, idBean, operation, doneFunction) {
     $.ajax({
         url: servlet,
@@ -222,3 +238,4 @@ BEANMAKER.reloadToHashAfterChange = function(hash) {
     window.location.href = window.location.pathname + hash;
     window.location.reload();
 };
+
