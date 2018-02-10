@@ -725,18 +725,39 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                     setter.addContent(
                             new Assignment(field + "Str", new FunctionCall("toString", field))
                     );
+                if (column.isLabelReference())
+                    setter.addContent(
+                            new FunctionCall("init" + chopId(field)).byItself()
+                    );
                 javaClass.addContent(setter).addContent(EMPTY_LINE);
 
                 if (column.couldHaveAssociatedBean() && column.hasAssociatedBean()) {
                     final String associatedBeanClass = column.getAssociatedBeanClass();
                     final String associatedBeanObject = uncapitalize(chopId(field));
-                    final FunctionDeclaration fromObjectSetter = new FunctionDeclaration("set" + capitalize(associatedBeanObject))
-                            .addArgument(new FunctionArgument(associatedBeanClass, associatedBeanObject))
-                            .addContent(new IfBlock(new Condition(new Comparison(new FunctionCall("getId", associatedBeanObject), "0")))
-                                    .addContent(new ExceptionThrow("IllegalArgumentException")
-                                            .addArgument(quickQuote("Cannot accept uninitialized " + associatedBeanClass + " bean (id = 0) as argument."))))
-                            .addContent(EMPTY_LINE)
-                            .addContent(new Assignment(field, new FunctionCall("getId", associatedBeanObject)));
+                    final FunctionDeclaration fromObjectSetter =
+                            new FunctionDeclaration("set" + capitalize(associatedBeanObject))
+                                    .addArgument(new FunctionArgument(associatedBeanClass, associatedBeanObject))
+                                    .addContent(
+                                            new IfBlock(
+                                                    new Condition(
+                                                            new Comparison(
+                                                                    new FunctionCall(
+                                                                            "getId",
+                                                                            associatedBeanObject)
+                                                                    , "0")))
+                                                    .addContent(new ExceptionThrow("IllegalArgumentException")
+                                                            .addArgument(quickQuote("Cannot accept uninitialized "
+                                                                    + associatedBeanClass + " bean (id = 0) as argument."))))
+                                    .addContent(EMPTY_LINE)
+                                    .addContent(new Assignment(
+                                            field,
+                                            new FunctionCall("getId", associatedBeanObject)));
+
+                    if (column.isLabelReference())
+                        fromObjectSetter.addContent(
+                                new FunctionCall("init" + capitalize(associatedBeanObject)).byItself()
+                        );
+
                     javaClass.addContent(fromObjectSetter).addContent(EMPTY_LINE);
                 }
 
@@ -1513,7 +1534,16 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
 
         final FunctionDeclaration preUpdateConversionsFunction =
-                new FunctionDeclaration("preUpdateConversions").annotate("@Override");
+                new FunctionDeclaration("preUpdateConversions")
+                        .annotate("@Override");
+
+        for (Column column: columns.getList())
+            if (column.isLabelReference())
+                preUpdateConversionsFunction.addContent(
+                        new FunctionCall("init" + chopId(column.getJavaName()))
+                                .byItself()
+                );
+
         preUpdateConversionsFunction.addContent(
                 ifNotDataOK().addContent(
                         new ExceptionThrow("IllegalArgumentException")
@@ -1521,6 +1551,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                                         .addArgument(new FunctionCall("getErrorMessages")))
                 )
         ).addContent(EMPTY_LINE);
+
         for (Column column: columns.getList()) {
             if (!column.isSpecial()) {
                 final String type = column.getJavaType();
