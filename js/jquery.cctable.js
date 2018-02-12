@@ -231,7 +231,7 @@
             if (tableDoesMasking($table, opts)) {
                 showOrHideColumns($table, opts);
 
-                $('a.' + opts.maskingLinkCssClass).on('click', function (event) {
+                $table.find('a.' + opts.maskingLinkCssClass).on('click', function (event) {
                     event.preventDefault();
                     toogleTableMaskingStatus($table, opts);
                     showOrHideColumns($table, opts);
