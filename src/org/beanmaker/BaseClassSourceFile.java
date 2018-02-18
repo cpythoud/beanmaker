@@ -1537,13 +1537,6 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 new FunctionDeclaration("preUpdateConversions")
                         .annotate("@Override");
 
-        for (Column column: columns.getList())
-            if (column.isLabelReference())
-                preUpdateConversionsFunction.addContent(
-                        new FunctionCall("init" + chopId(column.getJavaName()))
-                                .byItself()
-                );
-
         preUpdateConversionsFunction.addContent(
                 ifNotDataOK().addContent(
                         new ExceptionThrow("IllegalArgumentException")
@@ -1585,9 +1578,18 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         final FunctionDeclaration dataOKFunction =
                 new FunctionDeclaration("isDataOK", "boolean").annotate("@Override").addContent(
                         new FunctionCall("clearErrorMessages", internalsVar).byItself()
-                ).addContent(
+                );
+
+        for (Column column: columns.getList())
+            if (column.isLabelReference())
+                dataOKFunction.addContent(
+                        new FunctionCall("init" + chopId(column.getJavaName()))
+                                .byItself()
+                );
+
+        dataOKFunction.addContent(
                         new VarDeclaration("boolean", "ok", "true")
-                ).addContent(EMPTY_LINE);
+        ).addContent(EMPTY_LINE);
 
         int okAssignCount = 0;
         for (Column column: columns.getList())
