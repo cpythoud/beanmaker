@@ -113,6 +113,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 importsManager.addImport("org.beanmaker.util.DbBeanMultilingual");
         }
 
+        importsManager.addImport("org.beanmaker.util.ToStringMaker");
     }
 	
 	private void addClassModifiers() {
@@ -647,47 +648,58 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
     }
 
     private void addToString() {
-        javaClass.addContent(
-                new FunctionDeclaration("toString", "String").annotate("@Override").addContent(
-                        new ReturnStatement(getToStringReturnExpression())
-                )
-        ).addContent(EMPTY_LINE);
-    }
-
-    private String getToStringReturnExpression() {
-	    final StringBuilder expression = new StringBuilder();
-
-	    expression.append("getClass().getName() + \"[id=\" + id");
+        final FunctionDeclaration toStringFunction =
+                new FunctionDeclaration("toString", "String")
+                        .annotate("@Override")
+                        .addContent(
+                                new VarDeclaration(
+                                        "ToStringMaker",
+                                        "stringMaker",
+                                        new ObjectCreation("ToStringMaker").addArgument("this")
+                                ).markAsFinal()
+                        );
 
         for (Column column: columns.getList()) {
             final String type = column.getJavaType();
             final String field = column.getJavaName();
             if (!field.equals("id")) {
-                expression.append(getToStringReturnExpressionPart(field));
+                toStringFunction.addContent(
+                        new FunctionCall("addField", "stringMaker")
+                                .addArguments(quickQuote(field), field)
+                                .byItself()
+                );
                 if (!column.isSpecial() &&
                         (JAVA_TEMPORAL_TYPES.contains(type)
                                 || type.equals("int")
                                 || (type.equals("long") && !field.startsWith("id"))
                                 || type.equals("Money")))
                 {
-                    expression.append(getToStringReturnExpressionPart(field + "Str"));
+                    toStringFunction.addContent(
+                            new FunctionCall("addField", "stringMaker")
+                                    .addArguments(quickQuote(field + "Str"), field + "Str")
+                                    .byItself()
+                    );
                 }
             }
         }
 
         for (OneToManyRelationship relationship: columns.getOneToManyRelationships())
             if (!relationship.isListOnly())
-                expression.append(getToStringReturnExpressionPart(relationship.getJavaName()));
+                toStringFunction.addContent(
+                        new FunctionCall("addField", "stringMaker")
+                                .addArguments(quickQuote(relationship.getJavaName()), relationship.getJavaName())
+                                .byItself()
+                );
 
-        expression.append(" + \"]\"");
+        toStringFunction.addContent(
+                new ReturnStatement(
+                        new FunctionCall("toString", "stringMaker")
+                )
+        );
 
-        return expression.toString();
+        javaClass.addContent(toStringFunction).addContent(EMPTY_LINE);
     }
 
-    private String getToStringReturnExpressionPart(final String field) {
-	    return " + \"," + field + "=\" + " + field;
-    }
-	
 	private void addSetters() {
         for (Column column: columns.getList()) {
             final String type = column.getJavaType();
