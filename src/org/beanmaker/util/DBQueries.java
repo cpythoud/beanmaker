@@ -58,21 +58,36 @@ public class DBQueries {
         return query.toString();
     }
 
+    private static class ValidIdCheck implements DBQuerySetupRetrieveData<Boolean> {
 
-    public static boolean isIdOK(final DB db, final String table, final long id) {
-        return new DBAccess(db).processQuery("SELECT id FROM " + table + " WHERE id=?", new DBQuerySetupRetrieveData<Boolean>() {
-            @Override
-            public Boolean processResultSet(ResultSet rs) throws SQLException {
-                return rs.next();
-            }
+        private final long id;
 
-            @Override
-            public void setupPreparedStatement(PreparedStatement stat) throws SQLException {
-                stat.setLong(1, id);
-            }
-        });
+        ValidIdCheck(final long id) {
+            this.id = id;
+        }
+
+        @Override
+        public void setupPreparedStatement(PreparedStatement stat) throws SQLException {
+            stat.setLong(1, id);
+        }
+
+        @Override
+        public Boolean processResultSet(ResultSet rs) throws SQLException {
+            return rs.next();
+        }
     }
 
+    public static boolean isIdOK(final DB db, final String table, final long id) {
+        return new DBAccess(db).processQuery(
+                "SELECT id FROM " + table + " WHERE id=?",
+                new ValidIdCheck(id));
+    }
+
+    public static boolean isIdOK(final DBTransaction transaction, final String table, final long id) {
+        return transaction.addQuery(
+                "SELECT id FROM " + table + " WHERE id=?",
+                new ValidIdCheck(id));
+    }
 
     public static String getHumanReadableTitle(final DB db, final String table, final long id, final List<String> fields) {
         class Query extends HumanReadableNameProcess {

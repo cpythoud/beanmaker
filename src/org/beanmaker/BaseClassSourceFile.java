@@ -1408,8 +1408,13 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         );
     }
     
-    private static FunctionCall getPreUpdateConversionCall() {
-        return new FunctionCall("preUpdateConversions").byItself();
+    private static FunctionCall getPreUpdateConversionCall(final boolean withTransaction) {
+	    final FunctionCall functionCall = new FunctionCall("preUpdateConversions").byItself();
+
+	    if (withTransaction)
+	        functionCall.addArgument("transaction");
+
+	    return functionCall;
     }
 
     private void addInitSetLabelFunctions() {
@@ -1481,7 +1486,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
             updateDBFunction.addArgument(new FunctionArgument("String", "username"));
 
         updateDBFunction.addContent(
-                getPreUpdateConversionCall()
+                getPreUpdateConversionCall(false)
         ).addContent(EMPTY_LINE);
 
         final FunctionCall createRecordCall = new FunctionCall("createRecord").byItself();
@@ -1519,7 +1524,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         ).addContent(EMPTY_LINE);
 
         updateDBFunctionWithTransaction.addContent(
-                getPreUpdateConversionCall()
+                getPreUpdateConversionCall(true)
         ).addContent(EMPTY_LINE);
 
         final FunctionCall createRecordCallWithTransaction = new FunctionCall("createRecord").addArgument("transaction");
@@ -1545,12 +1550,22 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         javaClass.addContent(updateDBFunctionWithTransaction).addContent(EMPTY_LINE);
 
 
-        final FunctionDeclaration preUpdateConversionsFunction =
+        javaClass.addContent(
                 new FunctionDeclaration("preUpdateConversions")
-                        .annotate("@Override");
+                        .annotate("@Override")
+                        .addContent(
+                                new FunctionCall("preUpdateConversions").addArgument("null").byItself()
+                        )
+        ).addContent(EMPTY_LINE);
 
-        preUpdateConversionsFunction.addContent(
-                ifNotDataOK().addContent(
+        final FunctionDeclaration protectedPreUpdateConversionsFunction =
+                new FunctionDeclaration("preUpdateConversions")
+                        .visibility(Visibility.PROTECTED)
+                        .addArgument(new FunctionArgument("DBTransaction", "transaction"));
+
+        protectedPreUpdateConversionsFunction.addContent(
+                ifNotDataOKWithTransaction()
+                        .addContent(
                         new ExceptionThrow("IllegalArgumentException")
                                 .addArgument(new FunctionCall("toStrings", "ErrorMessage")
                                         .addArgument(new FunctionCall("getErrorMessages")))
@@ -1562,12 +1577,12 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 final String type = column.getJavaType();
                 final String field = column.getJavaName();
                 if ((type.equals("int") || type.equals("long")) && !field.startsWith("id"))
-                    preUpdateConversionsFunction.addContent(
+                    protectedPreUpdateConversionsFunction.addContent(
                             new Assignment(field,
                                     new FunctionCall("Strings.get" + capitalize(type) + "Val").addArgument(field + "Str"))
                     );
                 if (JAVA_TEMPORAL_TYPES.contains(type))
-                    preUpdateConversionsFunction.addContent(
+                    protectedPreUpdateConversionsFunction.addContent(
                             new IfBlock(new Condition(new FunctionCall("isEmpty", "Strings").addArgument(field + "Str"), true)).addContent(
                                     new Assignment(field, new FunctionCall("convertStringTo" + type).addArgument(field + "Str"))
                             ).elseClause(new ElseBlock().addContent(
@@ -1575,7 +1590,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                             ))
                     );
                 if (type.equals("Money"))
-                    preUpdateConversionsFunction.addContent(
+                    protectedPreUpdateConversionsFunction.addContent(
                             new Assignment(field, new ObjectCreation("Money")
                                     .addArgument(field + "Str")
                                     .addArgument(new FunctionCall("getDefaultMoneyFormat", parametersVar)))
@@ -1583,39 +1598,56 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
             }
         }
 
-        javaClass.addContent(preUpdateConversionsFunction).addContent(EMPTY_LINE);
+        javaClass.addContent(protectedPreUpdateConversionsFunction).addContent(EMPTY_LINE);
 	}
 
+    private IfBlock ifNotDataOKWithTransaction() {
+        return new IfBlock(new Condition(new FunctionCall("isDataOK").addArgument("transaction"), true));
+    }
+
     private void addDataOK() {
-        final FunctionDeclaration dataOKFunction =
+	    javaClass.addContent(
                 new FunctionDeclaration("isDataOK", "boolean").annotate("@Override").addContent(
-                        new FunctionCall("clearErrorMessages", internalsVar).byItself()
-                );
+                        new ReturnStatement(new FunctionCall("isDataOK").addArgument("null"))
+                )
+        ).addContent(EMPTY_LINE);
+
+        final FunctionDeclaration protectedDataOKFunction =
+                new FunctionDeclaration("isDataOK", "boolean")
+                        .visibility(Visibility.PROTECTED)
+                        .addArgument(new FunctionArgument("DBTransaction", "transaction"))
+                        .addContent(
+                                new FunctionCall("clearErrorMessages", internalsVar).byItself()
+                        );
 
         for (Column column: columns.getList())
             if (column.isLabelReference())
-                dataOKFunction.addContent(
+                protectedDataOKFunction.addContent(
                         new FunctionCall("init" + chopId(column.getJavaName()))
                                 .byItself()
                 );
 
-        dataOKFunction.addContent(
+        protectedDataOKFunction.addContent(
                         new VarDeclaration("boolean", "ok", "true")
         ).addContent(EMPTY_LINE);
 
         int okAssignCount = 0;
         for (Column column: columns.getList())
             if (!column.isSpecial() && !column.getJavaType().equals("boolean")) {
-                dataOKFunction.addContent(
-                        new Assignment("ok", "checkDataFor" + capitalize(column.getJavaName()) + "() && ok"));
+                protectedDataOKFunction.addContent(
+                        new Assignment(
+                                "ok",
+                                dataOkOKUpdateExpression(
+                                        column.getJavaName(),
+                                        column.getSqlName().startsWith("id_"))));
                 ++okAssignCount;
             }
         if (okAssignCount > 0)
-            dataOKFunction.addContent(EMPTY_LINE);
+            protectedDataOKFunction.addContent(EMPTY_LINE);
 
-        dataOKFunction.addContent(new ReturnStatement("ok"));
+        protectedDataOKFunction.addContent(new ReturnStatement("ok"));
 
-        javaClass.addContent(dataOKFunction).addContent(EMPTY_LINE);
+        javaClass.addContent(protectedDataOKFunction).addContent(EMPTY_LINE);
 
         for (Column column: columns.getList()) {
             if (!column.isSpecial() && !column.getJavaType().equals("boolean")) {
@@ -1623,9 +1655,17 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 final String field = column.getJavaName();
                 final String fieldCap = capitalize(field);
 
-                final FunctionDeclaration checkFieldFunction =
-                        new FunctionDeclaration("checkDataFor" + fieldCap, "boolean")
-                                .visibility(Visibility.PROTECTED);
+                final FunctionDeclaration checkFieldFunction = getCheckFieldFunction(fieldCap);
+
+                if (column.getSqlName().startsWith("id_")) {
+                    javaClass.addContent(
+                            getCheckFieldFunction(fieldCap).addContent(
+                                    new ReturnStatement(new FunctionCall("checkDataFor" + fieldCap).addArgument("null"))
+                            )
+                    ).addContent(EMPTY_LINE);
+
+                    checkFieldFunction.addArgument(new FunctionArgument("DBTransaction", "transaction"));
+                }
 
                 if (column.isLabelReference()) {
                     final String localVar = uncapitalize(chopId(field));
@@ -1670,8 +1710,12 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                                     ).addContent(new ReturnStatement("false"))
                             );
 
+                    final FunctionCall isOKFunctionCall = new FunctionCall("is" + fieldCap + "OK");
+                    if (column.getSqlName().startsWith("id_"))
+                        isOKFunctionCall.addArgument("transaction");
+
                     final ElseIfBlock checkOK =
-                            new ElseIfBlock(new Condition(new FunctionCall("is" + fieldCap + "OK"), true)).addContent(
+                            new ElseIfBlock(new Condition(isOKFunctionCall, true)).addContent(
                                     new FunctionCall("addErrorMessage", internalsVar).byItself()
                                             .addArgument("id")
                                             .addArgument(quickQuote(field))
@@ -1702,6 +1746,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
             }
         }
 
+        // idFieldEmpty() functions
         for (Column column: columns.getList()) {
             if (!column.isSpecial() && !column.getJavaType().equals("boolean")) {
                 final String type = column.getJavaType();
@@ -1726,6 +1771,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
             }
         }
 
+        // getFieldEmptyErrorMessage() functions
         for (Column column: columns.getList()) {
             if (!column.isSpecial() && !column.getJavaType().equals("boolean")) {
                 final String field = column.getJavaName();
@@ -1739,24 +1785,29 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
             }
         }
 
+        // isFieldOK() functions
         for (Column column: columns.getList()) {
             if (!column.isSpecial() && !column.getJavaType().equals("boolean")) {
                 final String type = column.getJavaType();
                 final String field = column.getJavaName();
                 final String fieldCap = capitalize(field);
+                final boolean isIdReference = column.getSqlName().startsWith("id_");
 
-                final FunctionDeclaration isOKFunction = new FunctionDeclaration("is" + fieldCap + "OK", "boolean");
+                final FunctionDeclaration isOKFunction = getIsFieldOKFunction(fieldCap);
+
+                if (isIdReference) {
+                    javaClass.addContent(
+                            getIsFieldOKFunction(fieldCap).addContent(
+                                    new ReturnStatement(new FunctionCall("is" + fieldCap + "OK").addArgument("null"))
+                            )
+                    ).addContent(EMPTY_LINE);
+
+                    isOKFunction.visibility(Visibility.PROTECTED)
+                            .addArgument(new FunctionArgument("DBTransaction", "transaction"));
+                }
 
                 if ((type.equals("int") || type.equals("long"))) {
-                    if (field.startsWith("id")) {
-                        // TODO: keep an eye open as to the consequences of removing the test below from the generated code
-                        /*isOKFunction.addContent(
-                                new IfBlock(new Condition("id == 0")).addContent(
-                                        new ReturnStatement(
-                                                new Comparison(field, "0", Comparison.Comparator.GREATER_THAN)
-                                        )
-                                )
-                        ).addContent(EMPTY_LINE);*/
+                    if (isIdReference) {
                         if (column.isLabelReference())
                             isOKFunction.addContent(
                                     new ReturnStatement(
@@ -1765,9 +1816,15 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                             );
                         else
                             isOKFunction.addContent(
+                                    new IfBlock(new Condition("transaction == null")).addContent(
+                                            new ReturnStatement(
+                                                    new FunctionCall("isIdOK", column.getAssociatedBeanClass())
+                                                            .addArgument(field))
+                                    )
+                            ).addContent(EMPTY_LINE).addContent(
                                     new ReturnStatement(
                                             new FunctionCall("isIdOK", column.getAssociatedBeanClass())
-                                                    .addArgument(field))
+                                                    .addArguments(field, "transaction"))
                             );
                     } else {
                         importsManager.addImport("org.beanmaker.util.FormatCheckHelper");
@@ -1873,6 +1930,26 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                         new ReturnStatement(new FunctionCall("getErrorMessages", internalsVar))
                 )
         ).addContent(EMPTY_LINE);
+    }
+
+    private FunctionDeclaration getCheckFieldFunction(final String fieldCap) {
+        return new FunctionDeclaration("checkDataFor" + fieldCap, "boolean")
+                .visibility(Visibility.PROTECTED);
+    }
+
+    private String dataOkOKUpdateExpression(final String varName, final boolean referenceToOtherBean) {
+        if (referenceToOtherBean)
+            return "checkDataFor" + capitalize(varName) + "(transaction) && ok";
+
+        return "checkDataFor" + capitalize(varName) + "() && ok";
+    }
+
+    private FunctionDeclaration getIsFieldOKFunction(String fieldCap) {
+        return new FunctionDeclaration("is" + fieldCap + "OK", "boolean");
+    }
+
+    private FunctionCall getOtherBeanCheckIdFunctionCall(final String associatedBeanClass, final String field) {
+        return new FunctionCall("isIdOK", associatedBeanClass).addArgument(field);
     }
 
     private String getLabelLabelComposition(final String fieldCap) {
@@ -2725,9 +2802,22 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 	
 	private void addIdOK() {
         javaClass.addContent(
-                new FunctionDeclaration("isIdOK", "boolean").markAsStatic().addArgument(new FunctionArgument("long", "id")).addContent(
-                        new ReturnStatement(new FunctionCall("isIdOK", "DBQueries").addArguments("db", quickQuote(tableName), "id"))
-                )
+                new FunctionDeclaration("isIdOK", "boolean")
+                        .markAsStatic()
+                        .addArgument(new FunctionArgument("long", "id"))
+                        .addContent(
+                                new ReturnStatement(new FunctionCall("isIdOK", "DBQueries")
+                                        .addArguments("db", quickQuote(tableName), "id"))
+                        )
+        ).addContent(EMPTY_LINE).addContent(
+                new FunctionDeclaration("isIdOK", "boolean")
+                        .markAsStatic()
+                        .addArgument(new FunctionArgument("long", "id"))
+                        .addArgument(new FunctionArgument("DBTransaction", "transaction"))
+                        .addContent(
+                                new ReturnStatement(new FunctionCall("isIdOK", "DBQueries")
+                                        .addArguments("transaction", quickQuote(tableName), "id"))
+                        )
         ).addContent(EMPTY_LINE);
 	}
 
