@@ -131,6 +131,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         for (Column column: columns.getList()) {
             final String type = column.getJavaType();
             final String field = column.getJavaName();
+            final boolean isIdReference = column.getSqlName().startsWith("id_") || field.equals("id");
             final VarDeclaration declaration;
 
             if (type.equals("String"))
@@ -152,10 +153,10 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
             if (JAVA_TEMPORAL_TYPES.contains(type)
                     || ((type.equals("int")
                     || type.equals("long"))
-                    && !field.startsWith("id")
+                    && !isIdReference
                     && !field.equals("itemOrder")))
                 addProperty(new VarDeclaration("String", field + "Str", EMPTY_STRING));
-            if (field.startsWith("id") && field.endsWith("Label"))
+            if (isIdReference && field.endsWith("Label"))
                 addProperty(new VarDeclaration("DbBeanLabel", uncapitalize(chopId(field))));
         }
 
@@ -238,10 +239,11 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         for (Column column: columns.getList()) {
             final String type = column.getJavaType();
             final String field = column.getJavaName();
+            final boolean isIdReference = column.getSqlName().startsWith("id_");
             if (!field.equals("id")) {
                 if (field.equals("itemOrder"))
                     copyConstructor.addContent(new Assignment("itemOrder", "0"));
-                else if (field.startsWith("id") || type.equals("boolean") || type.equals("String"))
+                else if (isIdReference || type.equals("boolean") || type.equals("String"))
                     copyConstructor.addContent(new Assignment(field, modelVarName + "." + field));
                 else
                     copyConstructor
@@ -275,7 +277,8 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         for (Column column: columns.getList()) {
             final String type = column.getJavaType();
             final String field = column.getJavaName();
-            if (field.startsWith("id") || field.equals("itemOrder") || type.equals("boolean") || type.equals("String"))
+            final boolean isIdReference = column.getSqlName().startsWith("id_") || field.equals("id");
+            if (isIdReference || field.equals("itemOrder") || type.equals("boolean") || type.equals("String"))
                 fieldConstructor.addContent(new Assignment("this." + field, field));
             else
                 fieldConstructor.addContent(new FunctionCall("set" + capitalize(field)).addArgument(field).byItself());
@@ -452,6 +455,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         for (Column column : columns.getList()) {
             final String type = column.getJavaType();
             final String field = column.getJavaName();
+            final boolean isIdReference = column.getSqlName().startsWith("id_");
             if (!field.equals("id")) {
                 function.addContent(new Assignment("this." + field, "dataFromDBQuery." + field));
                 if (JAVA_TEMPORAL_TYPES.contains(type))
@@ -459,7 +463,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                             new Assignment(field + "Str",
                                     new FunctionCall("convert" + type + "ToString").addArgument(field))
                     );
-                if ((type.equals("int") || type.equals("long")) && !field.equals("itemOrder") && !field.startsWith("id"))
+                if ((type.equals("int") || type.equals("long")) && !field.equals("itemOrder") && !isIdReference)
                     function.addContent(
                             new Assignment(field + "Str",
                                     new FunctionCall("valueOf", "String").addArgument(field))
@@ -662,6 +666,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         for (Column column: columns.getList()) {
             final String type = column.getJavaType();
             final String field = column.getJavaName();
+            final boolean isIdReference = column.getSqlName().startsWith("id_");
             if (!field.equals("id")) {
                 toStringFunction.addContent(
                         new FunctionCall("addField", "stringMaker")
@@ -671,7 +676,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 if (!column.isSpecial() &&
                         (JAVA_TEMPORAL_TYPES.contains(type)
                                 || type.equals("int")
-                                || (type.equals("long") && !field.startsWith("id"))
+                                || (type.equals("long") && !isIdReference)
                                 || type.equals("Money")))
                 {
                     toStringFunction.addContent(
@@ -704,6 +709,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         for (Column column: columns.getList()) {
             final String type = column.getJavaType();
             final String field = column.getJavaName();
+            final boolean isIdReference = column.getSqlName().startsWith("id_");
             if (!field.equals("id") && !field.equals("lastUpdate") && !field.equals("modifiedBy") && !field.equals("itemOrder")) {
                 final FunctionDeclaration setter = new FunctionDeclaration("set" + capitalize(field))
                         .addArgument(new FunctionArgument(type, field));
@@ -721,17 +727,20 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                     setter.addContent(
                             new Assignment("this." + field, field)
                     );
-                if (type.equals("int") && !field.startsWith("id"))
+                if (type.equals("int") && !isIdReference)
                     setter.addContent(
-                            new Assignment(field + "Str", new FunctionCall("toString", "Integer").addArgument(field))
+                            new Assignment(field + "Str", new FunctionCall("toString", "Integer")
+                                    .addArgument(field))
                     );
-                if (type.equals("long") && !field.startsWith("id"))
+                if (type.equals("long") && !isIdReference)
                     setter.addContent(
-                            new Assignment(field + "Str", new FunctionCall("toString", "Long").addArgument(field))
+                            new Assignment(field + "Str", new FunctionCall("toString", "Long")
+                                    .addArgument(field))
                     );
                 if (JAVA_TEMPORAL_TYPES.contains(type))
                     setter.addContent(
-                            new Assignment(field + "Str", new FunctionCall("convert" + capitalize(type) + "ToString").addArgument(field))
+                            new Assignment(field + "Str", new FunctionCall("convert" + capitalize(type) + "ToString")
+                                    .addArgument(field))
                     );
                 if (type.equals("Money"))
                     setter.addContent(
@@ -773,7 +782,12 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                     javaClass.addContent(fromObjectSetter).addContent(EMPTY_LINE);
                 }
 
-                if (JAVA_TEMPORAL_TYPES.contains(type) || type.equals("Money") || ((type.equals("int") || type.equals("long")) && !field.startsWith("id"))) {
+                if (JAVA_TEMPORAL_TYPES.contains(type)
+                        || type.equals("Money")
+                        || ((type.equals("int")
+                        || type.equals("long"))
+                        && !isIdReference))
+                {
                     final FunctionDeclaration strSetter = new FunctionDeclaration("set" + capitalize(field) + "Str")
                             .addArgument(new FunctionArgument("String", field + "Str"))
                             .addContent(new Assignment("this." + field + "Str", field + "Str"));
@@ -787,6 +801,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         for (Column column: columns.getList()) {
             final String type = column.getJavaType();
             final String field = column.getJavaName();
+            final boolean isIdReference = column.getSqlName().startsWith("id_") || field.equals("id");
 
             final String prefix;
             if (type.equals("boolean"))
@@ -800,11 +815,13 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
             if (JAVA_TEMPORAL_TYPES.contains(type))
                 getter.addContent(
-                        new IfBlock(new Condition(new Comparison(field, "null"))).addContent(new ReturnStatement("null"))
+                        new IfBlock(new Condition(new Comparison(field, "null")))
+                                .addContent(new ReturnStatement("null"))
                 ).addContent(
                         EMPTY_LINE
                 ).addContent(
-                        new ReturnStatement(new ObjectCreation(type).addArgument(new FunctionCall("getTime", field)))
+                        new ReturnStatement(
+                                new ObjectCreation(type).addArgument(new FunctionCall("getTime", field)))
                 );
             else
                 getter.addContent(
@@ -819,9 +836,11 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
                 final ReturnStatement returnStatement;
                 if (column.isLabelReference())
-                    returnStatement = new ReturnStatement(new FunctionCall("get", "Labels").addArgument(field));
+                    returnStatement =
+                            new ReturnStatement(new FunctionCall("get", "Labels").addArgument(field));
                 else
-                    returnStatement = new ReturnStatement(new ObjectCreation(associatedBeanClass).addArgument(field));
+                    returnStatement =
+                            new ReturnStatement(new ObjectCreation(associatedBeanClass).addArgument(field));
 
                 final String associatedBeanGetterFunctionName = "get" + chopId(field);
                 final FunctionDeclaration associatedBeanGetter =
@@ -851,9 +870,16 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
             }
 
-            if (JAVA_TEMPORAL_TYPES.contains(type) || type.equals("Money") || ((type.equals("int") || type.equals("long")) && !field.startsWith("id") && !field.equals("itemOrder"))) {
-                final FunctionDeclaration strGetter = new FunctionDeclaration("get" + capitalize(field) + "Str", "String")
-                        .addContent(new ReturnStatement(field + "Str"));
+            if (JAVA_TEMPORAL_TYPES.contains(type)
+                    || type.equals("Money")
+                    || ((type.equals("int")
+                    || type.equals("long"))
+                    && !isIdReference
+                    && !field.equals("itemOrder")))
+            {
+                final FunctionDeclaration strGetter =
+                        new FunctionDeclaration("get" + capitalize(field) + "Str", "String")
+                                .addContent(new ReturnStatement(field + "Str"));
                 javaClass.addContent(strGetter).addContent(EMPTY_LINE);
             }
 
@@ -1576,7 +1602,8 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
             if (!column.isSpecial()) {
                 final String type = column.getJavaType();
                 final String field = column.getJavaName();
-                if ((type.equals("int") || type.equals("long")) && !field.startsWith("id"))
+                final boolean isIdReference = column.getSqlName().startsWith("id_");
+                if ((type.equals("int") || type.equals("long")) && !isIdReference)
                     protectedPreUpdateConversionsFunction.addContent(
                             new Assignment(field,
                                     new FunctionCall("Strings.get" + capitalize(type) + "Val").addArgument(field + "Str"))
@@ -1752,9 +1779,10 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 final String type = column.getJavaType();
                 final String field = column.getJavaName();
                 final String fieldCap = capitalize(field);
+                final boolean isIdReference = column.getSqlName().startsWith("id_");
 
                 final ReturnStatement returnStatement;
-                if ((type.equals("int") || type.equals("long")) && field.startsWith("id"))
+                if ((type.equals("int") || type.equals("long")) && isIdReference)
                     returnStatement = new ReturnStatement(new Comparison(field, "0", Comparison.Comparator.EQUAL));
                 else {
                     final String arg;
@@ -1980,6 +2008,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
             if (!column.isSpecial()) {
                 final String type = column.getJavaType();
                 final String field = column.getJavaName();
+                final boolean isIdReference = column.getSqlName().startsWith("id_");
 
                 if (type.equals("boolean"))
                     resetFunction.addContent(new Assignment(field, "false"));
@@ -1994,7 +2023,11 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 else
                     resetFunction.addContent(new Assignment(field, "null"));
 
-                if (JAVA_TEMPORAL_TYPES.contains(type) || type.equals("Money") || ((type.equals("int") || type.equals("int")) && !field.startsWith("id")))
+                if (JAVA_TEMPORAL_TYPES.contains(type)
+                        || type.equals("Money")
+                        || ((type.equals("int")
+                        || type.equals("int"))
+                        && !isIdReference))
                     resetFunction.addContent(new Assignment(field + "Str", EMPTY_STRING));
             }
         }
