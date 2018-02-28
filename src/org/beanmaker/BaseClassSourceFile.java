@@ -109,6 +109,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         if (columns.hasLabels()) {
             importsManager.addImport("org.beanmaker.util.DbBeanLabel");
             importsManager.addImport("org.beanmaker.util.DbBeanLanguage");
+            importsManager.addImport("org.beanmaker.util.DbBeanRequiredLanguages");
             if (columns.hasLabelField())
                 importsManager.addImport("org.beanmaker.util.DbBeanMultilingual");
         }
@@ -189,6 +190,20 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 new VarDeclaration(parametersClass, parametersVar,
                         new ObjectCreation(parametersClass)).markAsFinal().markAsStatic().visibility(Visibility.PROTECTED)
         ).addContent(EMPTY_LINE);
+
+        if (columns.hasLabels()) {
+            for (Column column: columns.getList())
+                if (column.isLabelReference())
+                    javaClass.addContent(
+                            new VarDeclaration(
+                                    "DbBeanRequiredLanguages",
+                                    "requiredLanguagesFor" + chopId(column.getJavaName()),
+                                    "null",
+                                    Visibility.PROTECTED)
+                    );
+
+            newLine();
+        }
 
         if (columns.hasExtraFields()) {
             for (ExtraField extraField: columns.getExtraFields()) {
@@ -934,8 +949,38 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
     }
 
     private void addRequiredIndicators() {
-        for (Column column: columns.getList())
-            addIndicator(column.getJavaName(), "Required", column.isRequired(), false);
+        for (Column column: columns.getList()) {
+            final String field = column.getJavaName();
+            addIndicator(field,"Required", column.isRequired(), false);
+
+            if (column.isLabelReference()) {
+                final String requiredLanguageField = "requiredLanguagesFor" + chopId(field);
+                javaClass.addContent(
+                        new FunctionDeclaration("is" + capitalize(field) + "Required", "boolean")
+                                .addArgument(new FunctionArgument("DbBeanLanguage", "dbBeanLanguage"))
+                                .addContent(
+                                        new IfBlock(new Condition(requiredLanguageField + " != null"))
+                                                .addContent(
+                                                        new ReturnStatement(
+                                                                new FunctionCall(
+                                                                        "isRequired",
+                                                                        requiredLanguageField
+                                                                ).addArgument("dbBeanLanguage")
+                                                        )
+                                                )
+                                )
+                                .addContent(EMPTY_LINE)
+                                .addContent(
+                                        new ReturnStatement(
+                                                new FunctionCall(
+                                                        "isRequired",
+                                                        parametersVar + "." + requiredLanguageField
+                                                ).addArgument("dbBeanLanguage")
+                                        )
+                                )
+                ).addContent(EMPTY_LINE);
+            }
+        }
     }
 
     private void addUniqueIndicators() {
@@ -1712,7 +1757,8 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                                                                     .addArgument("dbBeanLanguage"))))
                                                     .addContent(
                                                             new IfBlock(new Condition(
-                                                                    new FunctionCall("is" + fieldCap + "Required")))
+                                                                    new FunctionCall("is" + fieldCap + "Required")
+                                                                            .addArgument("dbBeanLanguage")))
                                                                     .addContent(
                                                                             new FunctionCall("addErrorMessage", internalsVar)
                                                                                     .byItself()

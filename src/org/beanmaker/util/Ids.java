@@ -47,9 +47,9 @@ public class Ids {
             final Collection<T> beans,
             final String separator)
     {
-        final List<Long> ids = new ArrayList<Long>();
 
-        ids.addAll(getIdSet(beans));
+        final List<Long> ids = new ArrayList<Long>(getIdSet(beans));
+
         Collections.sort(ids);
 
         return Strings.concatWithSeparator(separator, Strings.asListOfStrings(ids));

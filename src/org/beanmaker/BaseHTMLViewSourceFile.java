@@ -75,11 +75,27 @@ public class BaseHTMLViewSourceFile extends ViewCode {
 
     private void addChecksForRequiredFields() {
         for (Column column: columns.getList())
-            if (!column.isSpecial())
-                javaClass.addContent(
-                        new FunctionDeclaration("is" + capitalize(column.getJavaName() + "RequiredInHtmlForm"), "boolean")
-                                .addContent(new ReturnStatement(new FunctionCall("is" + capitalize(column.getJavaName() + "Required"), beanVarName)))
-                ).addContent(EMPTY_LINE);
+            if (!column.isSpecial()) {
+                composeCheckForRequiredField(column.getJavaName(), false);
+                if (column.isLabelReference())
+                    composeCheckForRequiredField(column.getJavaName(), true);
+            }
+    }
+
+    private void composeCheckForRequiredField(final String field, final boolean isLabel) {
+        final FunctionDeclaration checkFunctionDeclaration =
+                new FunctionDeclaration("is" + capitalize(field + "RequiredInHtmlForm"), "boolean");
+        final FunctionCall checkFunctionCall =
+                new FunctionCall("is" + capitalize(field + "Required"), beanVarName);
+
+        if (isLabel) {
+            checkFunctionDeclaration.addArgument(new FunctionArgument("DbBeanLanguage", "dbBeanLanguage"));
+            checkFunctionCall.addArgument("dbBeanLanguage");
+        }
+
+        javaClass.addContent(
+                checkFunctionDeclaration.addContent(new ReturnStatement(checkFunctionCall))
+        ).addContent(EMPTY_LINE);
     }
 
     private void addHTMLFormGetter() {
@@ -394,7 +410,8 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         paramsFunctionDeclaration.addContent(
                 getParamAdjunctionCall(
                         "setRequired",
-                        new FunctionCall("is" + capitalize(field) + "RequiredInHtmlForm")));
+                        new FunctionCall("is" + capitalize(field) + "RequiredInHtmlForm")
+                                .addArgument("dbBeanLanguage")));
         paramsFunctionDeclaration.addContent(new ReturnStatement("params"));
 
         final FunctionDeclaration getElementFunctionDeclaration = getNewElementFunctionDeclaration(field);

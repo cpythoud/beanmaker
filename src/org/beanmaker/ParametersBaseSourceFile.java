@@ -2,9 +2,12 @@ package org.beanmaker;
 
 import org.jcodegen.java.FunctionCall;
 import org.jcodegen.java.FunctionDeclaration;
+import org.jcodegen.java.ObjectCreation;
 import org.jcodegen.java.ReturnStatement;
 
 import org.dbbeans.util.Strings;
+import org.jcodegen.java.VarDeclaration;
+import org.jcodegen.java.Visibility;
 
 public class ParametersBaseSourceFile extends BeanCodeWithDBInfo {
 
@@ -204,6 +207,28 @@ public class ParametersBaseSourceFile extends BeanCodeWithDBInfo {
         );
     }
 
+    private void addDefaultRequiredLanguagesForLabels() {
+        importsManager.addImport("org.beanmaker.util.DbBeanRequiredLanguages");
+        newLine();
+        for (Column column: columns.getList())
+            if (column.isLabelReference()) {
+                final ObjectCreation requiredLanguageObjectCreation = new ObjectCreation("DbBeanRequiredLanguages");
+                if (column.isRequired())
+                    requiredLanguageObjectCreation.addArgument(
+                            new FunctionCall("getAllActiveLanguages", "Labels")
+                    );
+
+                javaClass.addContent(
+                        new VarDeclaration(
+                                "DbBeanRequiredLanguages",
+                                "requiredLanguagesFor" + SourceFiles.chopId(column.getJavaName()),
+                                requiredLanguageObjectCreation,
+                                Visibility.PROTECTED)
+                                .markAsFinal()
+                );
+            }
+    }
+
     private void createSourceCode() {
         sourceFile.setStartComment(SourceFiles.getCommentAndVersion());
 
@@ -236,6 +261,8 @@ public class ParametersBaseSourceFile extends BeanCodeWithDBInfo {
         }
         if (columns.containsFinancialData())
             addDefaultMoneyFormatGetter();
+        if (columns.hasLabels())
+            addDefaultRequiredLanguagesForLabels();
     }
 
     private void appendSecondaryFieldCondition(final StringBuilder query, final boolean isNull, final boolean firstCondition) {
