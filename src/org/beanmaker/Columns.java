@@ -196,6 +196,22 @@ public class Columns {
 
     	return false;
 	}
+
+	public boolean hasFiles() {
+		for (Column column: columns)
+			if (column.isFileReference())
+				return true;
+
+		return false;
+	}
+
+	public boolean hasFileField() {
+		for (Column column: columns)
+			if (column.getJavaName().equals("idFile"))
+				return true;
+
+		return false;
+	}
 	
 	public boolean isOK() {
         return hasId() && !hasBadField() && !hasDuplicateSpecial();

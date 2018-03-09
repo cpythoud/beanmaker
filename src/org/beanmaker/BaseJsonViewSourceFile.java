@@ -111,11 +111,7 @@ public class BaseJsonViewSourceFile extends ViewCode {
                 if (column.isLabelReference()) {
                     importsManager.addImport("org.dbbeans.util.json.JsonStringElement");
                     final String choppedIdFieldName = chopId(field);
-                    getJsonElementFunction =
-                            new FunctionDeclaration(
-                                    "get" + choppedIdFieldName + "JsonElement",
-                                    "JsonElement")
-                                    .visibility(Visibility.PROTECTED);
+                    getJsonElementFunction = createJsonElementGetter(choppedIdFieldName);
                     getJsonElementFunction.addContent(
                             new ReturnStatement(
                                     new ObjectCreation("JsonStringElement")
@@ -126,26 +122,40 @@ public class BaseJsonViewSourceFile extends ViewCode {
                                             )
                             )
                     );
+                } else if (column.isFileReference()) {
+                    importsManager.addImport("org.dbbeans.util.json.JsonStringElement");
+                    final String choppedIdFieldName = chopId(field);
+                    getJsonElementFunction = createJsonElementGetter(choppedIdFieldName);
+                    getJsonElementFunction.addContent(
+                            new ReturnStatement(
+                                    new ObjectCreation("JsonStringElement")
+                                            .addArgument(quickQuote(uncapitalize(choppedIdFieldName)))
+                                            .addArgument(getFilenameFunctionCall(beanVarName, field))
+                            )
+                    );
                 } else if (field.startsWith("id") && column.hasAssociatedBean()) {
                     importsManager.addImport("org.dbbeans.util.json.JsonObjectElement");
+                    final String choppedIdFieldName = chopId(field);
+                    getJsonElementFunction = createJsonElementGetter(choppedIdFieldName);
                     final String associatedBeanClass = column.getAssociatedBeanClass();
-                    getJsonElementFunction = new FunctionDeclaration("get" + chopId(field) + "JsonElement", "JsonElement")
-                            .visibility(Visibility.PROTECTED)
+
+                    getJsonElementFunction
                             .addContent(
                                     new VarDeclaration(
                                             associatedBeanClass + "JsonView",
                                             getVarNameForClass(associatedBeanClass) + "JsonView",
                                             new ObjectCreation(associatedBeanClass + "JsonView")
-                                                    .addArgument(getFieldValue(chopId(field))))
-                                            .markAsFinal()
-                    ).addContent(EMPTY_LINE).addContent(
+                                                    .addArgument(getFieldValue(chopId(field)))
+                                    ).markAsFinal()
+                            )
+                            .addContent(EMPTY_LINE).addContent(
                             new ReturnStatement(
                                     new ObjectCreation("JsonObjectElement")
                                             .addArgument(quickQuote(uncapitalize(chopId(field))))
                                             .addArgument(new FunctionCall(
                                                     "getJsonObject",
-                                                    getVarNameForClass(associatedBeanClass) + "JsonView")
-                                                    .addArgument("false")))
+                                                    getVarNameForClass(associatedBeanClass) + "JsonView"
+                                            ).addArgument("false")))
                     );
                 } else {
                     final ObjectCreation jsonElementCreation;
@@ -171,9 +181,13 @@ public class BaseJsonViewSourceFile extends ViewCode {
                         jsonElementCreation.addArgument(getFieldValue(field + "Str"));
                     else
                         jsonElementCreation.addArgument(getFieldValue(field));
-                    getJsonElementFunction = new FunctionDeclaration("get" + capitalize(field) + "JsonElement", "JsonElement").visibility(Visibility.PROTECTED).addContent(
-                            new ReturnStatement(jsonElementCreation)
-                    );
+                    getJsonElementFunction = new FunctionDeclaration(
+                            "get" + capitalize(field) + "JsonElement",
+                            "JsonElement")
+                            .visibility(Visibility.PROTECTED)
+                            .addContent(
+                                    new ReturnStatement(jsonElementCreation)
+                            );
                 }
 
                 javaClass.addContent(getJsonElementFunction).addContent(EMPTY_LINE);
@@ -205,6 +219,13 @@ public class BaseJsonViewSourceFile extends ViewCode {
                 }
             }
         }
+    }
+
+    private FunctionDeclaration createJsonElementGetter(final String namePart) {
+        return new FunctionDeclaration(
+                "get" + namePart + "JsonElement",
+                "JsonElement")
+                .visibility(Visibility.PROTECTED);
     }
 
     private void createSourceCode() {

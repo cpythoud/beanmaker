@@ -434,6 +434,8 @@ public class BaseMasterTableViewSourceFile extends BeanCodeWithDBInfo {
             if (!column.isItemOrder()) {
                 if (column.isLabelReference())
                     addTableCellAddLabelFunctions(column);
+                else if (column.isFileReference())
+                    addTableCellFileReferenceFunctions(column);
                 else
                     addTableCellGetterFunction(column);
             }
@@ -479,6 +481,21 @@ public class BaseMasterTableViewSourceFile extends BeanCodeWithDBInfo {
                 .addArgument(new FunctionCall("get" + choppedIdName + "TableCell")
                         .addArgument("dbBeanLanguage")
                         .addArgument(beanVarName));
+    }
+
+    private void addTableCellFileReferenceFunctions(final Column column) {
+        final String field = column.getJavaName();
+
+        javaClass.addContent(
+                new FunctionDeclaration("get" + Strings.capitalize(field) + "TableCell", "TdTag")
+                        .visibility(Visibility.PROTECTED)
+                        .addArgument(new FunctionArgument(beanName, beanVarName))
+                        .addContent(new ReturnStatement(
+                                new FunctionCall("getTableCell")
+                                        .addArgument(Strings.quickQuote(field))
+                                        .addArgument(getFilenameFunctionCall(beanVarName, field))
+                        ))
+        ).addContent(EMPTY_LINE);
     }
 
     private void addTableCellGetterFunction(final Column column) {

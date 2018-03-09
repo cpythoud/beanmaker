@@ -114,6 +114,9 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 importsManager.addImport("org.beanmaker.util.DbBeanMultilingual");
         }
 
+        if (columns.hasFiles())
+            importsManager.addImport("org.beanmaker.util.DbBeanFile");
+
         importsManager.addImport("org.beanmaker.util.ToStringMaker");
     }
 	
@@ -853,6 +856,9 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 if (column.isLabelReference())
                     returnStatement =
                             new ReturnStatement(new FunctionCall("get", "Labels").addArgument(field));
+                else if (column.isFileReference())
+                    returnStatement =
+                            new ReturnStatement(new FunctionCall("get", "LocalFiles").addArgument(field));
                 else
                     returnStatement =
                             new ReturnStatement(new ObjectCreation(associatedBeanClass).addArgument(field));
@@ -1721,6 +1727,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
         javaClass.addContent(protectedDataOKFunction).addContent(EMPTY_LINE);
 
+        // checkDataForField functions
         for (Column column: columns.getList()) {
             if (!column.isSpecial() && !column.getJavaType().equals("boolean")) {
 
@@ -1819,7 +1826,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
             }
         }
 
-        // idFieldEmpty() functions
+        // isFieldEmpty() functions
         for (Column column: columns.getList()) {
             if (!column.isSpecial() && !column.getJavaType().equals("boolean")) {
                 final String type = column.getJavaType();
@@ -1883,23 +1890,11 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 if ((type.equals("int") || type.equals("long"))) {
                     if (isIdReference) {
                         if (column.isLabelReference())
-                            isOKFunction.addContent(
-                                    new ReturnStatement(
-                                            new FunctionCall("isIdOK", "Labels")
-                                                    .addArgument(field))
-                            );
+                            addOKFunctionBodyForBeanReference(isOKFunction, "Labels", field);
+                        else if (column.isFileReference())
+                            addOKFunctionBodyForBeanReference(isOKFunction, "LocalFiles", field);
                         else
-                            isOKFunction.addContent(
-                                    new IfBlock(new Condition("transaction == null")).addContent(
-                                            new ReturnStatement(
-                                                    new FunctionCall("isIdOK", column.getAssociatedBeanClass())
-                                                            .addArgument(field))
-                                    )
-                            ).addContent(EMPTY_LINE).addContent(
-                                    new ReturnStatement(
-                                            new FunctionCall("isIdOK", column.getAssociatedBeanClass())
-                                                    .addArguments(field, "transaction"))
-                            );
+                            addOKFunctionBodyForBeanReference(isOKFunction, column.getAssociatedBeanClass(), field);
                     } else {
                         importsManager.addImport("org.beanmaker.util.FormatCheckHelper");
                         isOKFunction.addContent(
@@ -2004,6 +1999,24 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                         new ReturnStatement(new FunctionCall("getErrorMessages", internalsVar))
                 )
         ).addContent(EMPTY_LINE);
+    }
+
+    private void addOKFunctionBodyForBeanReference(
+            final FunctionDeclaration isOKFunction,
+            final String beanClass,
+            final String field)
+    {
+        isOKFunction.addContent(
+                new IfBlock(new Condition("transaction == null")).addContent(
+                        new ReturnStatement(
+                                new FunctionCall("isIdOK", beanClass)
+                                        .addArgument(field))
+                )
+        ).addContent(EMPTY_LINE).addContent(
+                new ReturnStatement(
+                        new FunctionCall("isIdOK", beanClass)
+                                .addArguments(field, "transaction"))
+        );
     }
 
     private FunctionDeclaration getCheckFieldFunction(final String fieldCap) {

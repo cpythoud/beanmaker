@@ -1,5 +1,6 @@
 package org.beanmaker.util;
 
+import org.dbbeans.util.Strings;
 import org.jcodegen.html.ButtonTag;
 import org.jcodegen.html.InputTag;
 
@@ -295,6 +296,10 @@ public class HFHParameters {
         this.currentFile = currentFile;
 
         return this;
+    }
+
+    public boolean hasCurrentFile() {
+        return !Strings.isEmpty(currentFile);
     }
 
     public ButtonTag.ButtonType getButtonType() {

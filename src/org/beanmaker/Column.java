@@ -238,7 +238,7 @@ public class Column {
 	}
 	
 	private void suggestType() {
-        if (id || itemOrder || sqlName.startsWith("id"))
+        if (id || itemOrder || sqlName.startsWith("id_"))
             javaType = "long";
         else
             javaType = getSuggestedType(sqlTypeName, precision);
@@ -279,11 +279,21 @@ public class Column {
     	return couldHaveAssociatedBean() && sqlName.endsWith("_label");
 	}
 
-	public boolean isLabelReference() {
-		return associatedBeanClass != null && associatedBeanClass.equals("DbBeanLabel");
+	public boolean couldBeFileReference() {
+		return couldHaveAssociatedBean() && sqlName.endsWith("_file");
 	}
 
 	private static final String DEFAULT_LABEL_CLASS = "DbBeanLabel";
+
+	private static final String DEFAULT_FILE_CLASS  = "DbBeanFile";
+
+	public boolean isLabelReference() {
+		return associatedBeanClass != null && associatedBeanClass.equals(DEFAULT_LABEL_CLASS);
+	}
+
+	public boolean isFileReference() {
+		return associatedBeanClass != null && associatedBeanClass.equals(DEFAULT_FILE_CLASS);
+	}
 
 	private void suggestAssociatedBeanClass() {
 		if (!couldHaveAssociatedBean())
@@ -291,6 +301,8 @@ public class Column {
 
 		if (couldBeLabelReference())
 			associatedBeanClass = DEFAULT_LABEL_CLASS;
+		else if (couldBeFileReference())
+			associatedBeanClass = DEFAULT_FILE_CLASS;
 		else
 			associatedBeanClass = Strings.camelize(sqlName.substring(3));
 	}

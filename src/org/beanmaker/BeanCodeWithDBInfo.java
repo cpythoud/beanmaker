@@ -42,4 +42,9 @@ public class BeanCodeWithDBInfo extends BeanCode {
 
         return new IfBlock(new Condition(functionCall, true));
     }
+
+    protected FunctionCall getFilenameFunctionCall(final String bean, final String field) {
+        return new FunctionCall("getFilename", "LocalFiles")
+                .addArgument(new FunctionCall("get" + Strings.capitalize(field), bean));
+    }
 }

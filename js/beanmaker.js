@@ -1,4 +1,4 @@
-// beanmaker.js -- v0.2.2 -- 2017-11-19
+// beanmaker.js -- v0.3.0 -- 2018-03-09
 
 $.ajaxSetup({cache : false});
 
@@ -90,12 +90,15 @@ BEANMAKER.ajaxSubmit = function(event, nonDefaultParams, refreshOnSuccessFunctio
         $form = $('#' + params.formID);
     else
         $form = $('form[name="' + params.formName + '"]');
+    var multipart = $form.attr('enctype') === 'multipart/form-data';
     BEANMAKER.setLoadingStatus($form);
     $.ajax({
         url: params.action,
         type: 'post',
         dataType: 'json',
-        data: $form.serialize(),
+        data: multipart ? new FormData($form[0]) : $form.serialize(),
+        contentType: multipart ? false : 'application/x-www-form-urlencoded; charset=UTF-8',
+        processData: !multipart,
         success: function(data) {
             switch (data.status) {
                 case 'ok':

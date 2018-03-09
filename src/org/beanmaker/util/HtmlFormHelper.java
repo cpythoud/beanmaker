@@ -969,7 +969,7 @@ public class HtmlFormHelper {
                         params.getField(),
                         params.getCurrentFile());
 
-        if (params.isRequired() && useRequiredInHtml)
+        if (params.isRequired() && useRequiredInHtml && !params.hasCurrentFile())
             input.required();
         if (params.isDisabled())
             input.disabled();

@@ -1,6 +1,9 @@
 package org.beanmaker;
 
 import org.jcodegen.java.EmptyLine;
+import org.jcodegen.java.ExceptionThrow;
+import org.jcodegen.java.FunctionArgument;
+import org.jcodegen.java.FunctionDeclaration;
 import org.jcodegen.java.ImportsManager;
 import org.jcodegen.java.JavaClass;
 import org.jcodegen.java.ObjectCreation;
@@ -16,6 +19,8 @@ public abstract class BaseCode {
     protected final JavaClass javaClass;
     protected final ImportsManager importsManager;
 
+    protected final String className;
+
     protected static final EmptyLine EMPTY_LINE = new EmptyLine();
     protected static final String EMPTY_STRING = "\"\"";
 
@@ -30,6 +35,8 @@ public abstract class BaseCode {
         sourceFile = new SourceFile(packageName, className);
         javaClass = sourceFile.getJavaClass();
         importsManager = sourceFile.getImportsManager();
+
+        this.className = className;
     }
 
     public String getSourceCode() {
@@ -77,5 +84,31 @@ public abstract class BaseCode {
     protected String getVarNameForClass(final String className) {
         final String[] parts = className.split("\\.");
         return Strings.uncapitalize(parts[parts.length - 1]);
+    }
+
+    protected void addNonImplementedFunction(
+            final String returnType,
+            final String name,
+            final FunctionArgument... functionArguments)
+    {
+        final FunctionDeclaration functionDeclaration =
+                new FunctionDeclaration(name, returnType)
+                        .markAsStatic();
+
+        final StringBuilder argTypeList = new StringBuilder();
+        for (FunctionArgument argument: functionArguments) {
+            functionDeclaration.addArgument(argument);
+            argTypeList.append(argument.getType()).append(", ");
+        }
+        if (argTypeList.length() > 0)
+            argTypeList.delete(argTypeList.length() - 2, argTypeList.length());
+
+        functionDeclaration.addContent(
+                new ExceptionThrow("MissingImplementationException")
+                        .addArgument(Strings.quickQuote(
+                                className + "." + name + "(" + argTypeList.toString() + ")"))
+        );
+
+        javaClass.addContent(functionDeclaration).addContent(EMPTY_LINE);
     }
 }

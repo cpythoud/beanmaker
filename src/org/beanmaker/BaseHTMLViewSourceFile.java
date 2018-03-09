@@ -3,6 +3,7 @@ package org.beanmaker;
 import org.jcodegen.java.Assignment;
 import org.jcodegen.java.Comparison;
 import org.jcodegen.java.Condition;
+import org.jcodegen.java.ConstructorDeclaration;
 import org.jcodegen.java.ElseBlock;
 import org.jcodegen.java.Expression;
 import org.jcodegen.java.ForLoop;
@@ -36,10 +37,14 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         importsManager.addImport("org.beanmaker.util.DbBeanHTMLViewInterface");
         importsManager.addImport("org.beanmaker.util.DbBeanLanguage");
         importsManager.addImport("org.beanmaker.util.ErrorMessage");
+        importsManager.addImport("org.beanmaker.util.HFHParameters");
+        importsManager.addImport("org.beanmaker.util.HttpRequestParameters");
+
+        if (columns.hasFiles())
+            importsManager.addImport("org.beanmaker.util.DbBeanFileCreator");
 
         importsManager.addImport("javax.servlet.ServletRequest");
-
-        importsManager.addImport("org.beanmaker.util.HFHParameters");
+        importsManager.addImport("javax.servlet.http.HttpServletRequest");
 
         importsManager.addImport("org.jcodegen.html.FormTag");
         importsManager.addImport("org.jcodegen.html.Tag");
@@ -52,9 +57,20 @@ public class BaseHTMLViewSourceFile extends ViewCode {
     }
 
     @Override
+    protected void addProperties() {
+        super.addProperties();
+
+        if (columns.hasFiles())
+            javaClass.addContent(
+                    new VarDeclaration("DbBeanFileCreator", "dbBeanFileCreator")
+                            .visibility(Visibility.PROTECTED)
+            );
+    }
+
+    @Override
     protected void addConstructorWithBeanAndLanguage() {
-        javaClass.addContent(
-                javaClass.createConstructor()
+        final ConstructorDeclaration constructorWithBeanAndLanguage =
+                new ConstructorDeclaration(className)
                         .addArgument(new FunctionArgument(beanName, beanVarName))
                         .addArgument(new FunctionArgument("DbBeanLanguage", "dbBeanLanguage"))
                         .addContent(
@@ -69,6 +85,31 @@ public class BaseHTMLViewSourceFile extends ViewCode {
                                 new FunctionCall("setLanguage")
                                         .addArgument("dbBeanLanguage")
                                         .byItself()
+                        );
+
+        if (columns.hasFiles())
+            constructorWithBeanAndLanguage.addContent(
+                    new Assignment("dbBeanFileCreator", new FunctionCall("createDbBeanFileCreator"))
+            );
+
+        javaClass.addContent(constructorWithBeanAndLanguage);
+    }
+
+    private void addFileCreatorFunction() {
+        javaClass.addContent(
+                new FunctionDeclaration("createDbBeanFileCreator", "DbBeanFileCreator")
+                        .visibility(Visibility.PROTECTED)
+                        .addContent(
+                                new ReturnStatement(
+                                        new ObjectCreation("DbBeanFileCreator")
+                                                .addArguments(
+                                                        new FunctionCall(
+                                                                "getDefaultUploadDir",
+                                                                "LocalFiles"),
+                                                        new FunctionCall(
+                                                                "getDefaultFileStoredFileNameCalculator",
+                                                                "LocalFiles"))
+                                )
                         )
         );
     }
@@ -109,11 +150,21 @@ public class BaseHTMLViewSourceFile extends ViewCode {
                 new FunctionDeclaration("getHtmlFormTag", "FormTag")
                         .annotate("@Override")
                         .addContent(
-                                new VarDeclaration("FormTag", "form", new FunctionCall("getFormStart")).markAsFinal()
-                        ).addContent(
-                        new FunctionCall("composeHiddenSubmitField").byItself()
-                                .addArgument("form")
-                );
+                                new VarDeclaration("FormTag", "form", new FunctionCall("getFormStart"))
+                                        .markAsFinal()
+                        );
+
+        if (columns.hasFiles())
+            getHtmlFormFunction.addContent(
+                    new FunctionCall("enctype", "form")
+                            .addArgument("FormTag.EncodingType.MULTIPART")
+                            .byItself()
+            );
+
+        getHtmlFormFunction.addContent(
+                new FunctionCall("composeHiddenSubmitField").byItself()
+                        .addArgument("form")
+        );
 
 
         for (Column column: columns.getList()) {
@@ -238,6 +289,8 @@ public class BaseHTMLViewSourceFile extends ViewCode {
             if (field.startsWith("id") && column.hasAssociatedBean()) {
                 if (column.isLabelReference())
                     addLanguageDependantFieldFunctions(column);
+                else if (column.isFileReference())
+                    addInputFormElement("FILE", field);
                 else
                     addSelectForAssociatedBeanFunctions(column);
             } else
@@ -370,8 +423,16 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         paramsFunctionDeclaration.addContent(getNewHFHParametersDeclaration());
         paramsFunctionDeclaration.addContent(getParamAdjunctionCall("setField", quickQuote(field)));
         paramsFunctionDeclaration.addContent(getParamAdjunctionCall("setIdBean", getId()));
-        paramsFunctionDeclaration.addContent(
-                getParamAdjunctionCall("setValue", addFieldValueArgument(fieldVar, false)));
+        if (inputTypeVal.equals("FILE"))
+            paramsFunctionDeclaration.addContent(
+                    getParamAdjunctionCall(
+                            "setCurrentFile",
+                            getFilenameFunctionCall(beanVarName, field)));
+        else
+            paramsFunctionDeclaration.addContent(
+                    getParamAdjunctionCall(
+                            "setValue",
+                            addFieldValueArgument(fieldVar, false)));
         paramsFunctionDeclaration.addContent(getParamAdjunctionCall("setFieldLabel", getLabelArgument(field)));
         paramsFunctionDeclaration.addContent(
                 getParamAdjunctionCall("setInputType", "InputTag.InputType." + inputTypeVal));
@@ -383,18 +444,27 @@ public class BaseHTMLViewSourceFile extends ViewCode {
 
         final FunctionDeclaration getElementFunctionDeclaration = getNewElementFunctionDeclaration(field);
 
-        getElementFunctionDeclaration.addContent(
-                new FunctionCall("child", "form").byItself().addArgument(
-                        new FunctionCall("getTextField", "htmlFormHelper")
-                                .addArgument(new FunctionCall(paramsFunctionName))
-                )
-        );
+        if (inputTypeVal.equals("FILE"))
+            getElementFunctionDeclaration
+                    .addContent(getInputElementFunctionCall("getFileField", paramsFunctionName));
+        else
+            getElementFunctionDeclaration
+                    .addContent(getInputElementFunctionCall("getTextField", paramsFunctionName));
 
         javaClass
                 .addContent(paramsFunctionDeclaration)
                 .addContent(EMPTY_LINE)
                 .addContent(getElementFunctionDeclaration)
                 .addContent(EMPTY_LINE);
+    }
+
+    private FunctionCall getInputElementFunctionCall(final String function, final String paramsFunctionName) {
+        return new FunctionCall("child", "form")
+                .byItself()
+                .addArgument(
+                        new FunctionCall(function, "htmlFormHelper")
+                                .addArgument(new FunctionCall(paramsFunctionName))
+                );
     }
 
     private void addLanguageDependantFieldFunctions(final Column column) {
@@ -532,9 +602,47 @@ public class BaseHTMLViewSourceFile extends ViewCode {
     }
 
     private void addAllFieldsSetter() {
+        javaClass.addContent(
+                new FunctionDeclaration("setAllFields")
+                        .annotate("@Override")
+                        .addArgument(new FunctionArgument("ServletRequest", "request"))
+                        .addContent(
+                                new FunctionCall("setAllFields")
+                                        .byItself()
+                                        .addArgument("(HttpServletRequest) request")
+                        )
+        ).addContent(EMPTY_LINE).addContent(
+                new FunctionDeclaration("setAllFields")
+                        .addArgument(new FunctionArgument("HttpServletRequest", "request"))
+                        .addContent(
+                                new FunctionCall("setAllFields")
+                                        .byItself()
+                                        .addArgument(
+                                                new ObjectCreation("HttpRequestParameters")
+                                                        .addArgument("request")
+                                        )
+                        )
+        ).addContent(EMPTY_LINE);
+
         final FunctionDeclaration setAllFieldsFunction = new FunctionDeclaration("setAllFields")
-                .annotate("@Override")
-                .addArgument(new FunctionArgument("ServletRequest", "request"))
+                .addArgument(new FunctionArgument("HttpRequestParameters", "parameters"));
+
+        if (columns.hasFiles()) {
+            for (Column column: columns.getList())
+                if (column.isFileReference()) {
+                    final String field = column.getJavaName();
+                    setAllFieldsFunction.addContent(
+                            new VarDeclaration(
+                                    "long",
+                                    field,
+                                    new FunctionCall("get" + capitalize(field), beanVarName)
+                            ).markAsFinal()
+                    );
+                }
+            setAllFieldsFunction.addContent(EMPTY_LINE);
+        }
+
+        setAllFieldsFunction
                 .addContent(new FunctionCall("reset").byItself())
                 .addContent(EMPTY_LINE);
 
@@ -552,6 +660,27 @@ public class BaseHTMLViewSourceFile extends ViewCode {
                             ))
                     );
                 }
+
+                else if (column.isFileReference())
+                    setAllFieldsFunction.addContent(
+                            new IfBlock(
+                                    new Condition(
+                                            new FunctionCall("hasFileItem", "parameters")
+                                                    .addArgument(quickQuote(field)))
+                            ).addContent(
+                                    new FunctionCall("set" + chopId(field), beanVarName)
+                                            .byItself()
+                                            .addArgument(
+                                                    new FunctionCall("create", "dbBeanFileCreator")
+                                                            .addArgument(
+                                                                    new FunctionCall("getOrCreate", "LocalFiles")
+                                                                            .addArgument(
+                                                                                    new FunctionCall("get" + capitalize(field), beanVarName)))
+                                                            .addArgument(
+                                                                    new FunctionCall("getFileItem", "parameters")
+                                                                            .addArgument(quickQuote(field))))
+                            )
+                    );
 
                 else if (type.equals("int") || type.equals("long")) {
                     if (field.startsWith("id")) {
@@ -614,7 +743,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
                             new FunctionCall("set" + choppedIdFieldName, beanVarName)
                                     .addArgument("dbBeanLanguage")
                                     .addArgument(
-                                            new FunctionCall("getParameter", "request")
+                                            new FunctionCall("getValue", "parameters")
                                                     .addArgument(quickQuote(column.getJavaName())
                                                             + " + iso")
                                     )
@@ -633,13 +762,27 @@ public class BaseHTMLViewSourceFile extends ViewCode {
                                 new Assignment("captchaValue", EMPTY_STRING)
                         )
                 )
-        );
+        ).addContent(EMPTY_LINE);
+
+        for (Column column: columns.getList())
+            if (column.isFileReference()) {
+                final String field = column.getJavaName();
+                setAllFieldsFunction.addContent(
+                        new IfBlock(new Condition(new Comparison(
+                                new FunctionCall("get" + capitalize(field), beanVarName), "0"))
+                        ).addContent(
+                                new FunctionCall("set" + capitalize(field), beanVarName)
+                                        .byItself()
+                                        .addArguments(field)
+                        )
+                );
+            }
 
         javaClass.addContent(setAllFieldsFunction).addContent(EMPTY_LINE);
     }
 
     private FunctionCall getRequestParameterFunctionCall(final String param) {
-        return new FunctionCall("getParameter").addArguments("request", quickQuote(param));
+        return new FunctionCall("getValue", "parameters").addArguments(quickQuote(param));
     }
 
     private void addDataOKChecker() {
@@ -762,6 +905,8 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         addImports();
         addClassModifiers();
         addViewPrelude(true, false);
+        if (columns.hasFiles())
+            addFileCreatorFunction();
         addChecksForRequiredFields();
         newLine();
         addHTMLFormGetter();

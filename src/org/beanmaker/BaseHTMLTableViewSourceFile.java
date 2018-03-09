@@ -192,6 +192,8 @@ public class BaseHTMLTableViewSourceFile extends ViewCode {
                         new FunctionCall("get" + SourceFiles.chopId(field), beanVarName)
                                 .addArgument("dbBeanLanguage")
                 );
+            else if (column.isFileReference())
+                expression.addArgument(getFilenameFunctionCall(beanVarName, field));
             else {
                 if (field.startsWith("id"))
                     expression.addArgument(

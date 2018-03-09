@@ -74,35 +74,50 @@ public class BaseXMLViewSourceFile extends ViewCode {
             if (!column.isSpecial()) {
                 final String field = column.getJavaName();
                 if (column.isLabelReference()) {
-                    final FunctionCall addChild =
-                            new FunctionCall("addChild", "root")
-                                    .byItself()
-                                    .addArgument(
-                                            new FunctionCall("get" + chopId(field) + "XMLElement")
-                                    );
                     getXMLElementFunction.addContent(
                             new IfBlock(
                                     new Condition(
                                             new FunctionCall("is" + capitalize(field) + "Empty", beanVarName),
                                             true))
-                                    .addContent(addChild)
+                                    .addContent(createAddChildFunctionCall(chopId(field)))
+                    );
+                } else if (column.isFileReference()) {
+                    getXMLElementFunction.addContent(
+                            new IfBlock(
+                                    new Condition(
+                                            new FunctionCall("is" + capitalize(field) + "Empty", beanVarName),
+                                            true
+                                    ).orCondition(
+                                            new Condition(
+                                                    new Comparison(
+                                                            new FunctionCall(
+                                                                    "get" + capitalize(field),
+                                                                    beanVarName),
+                                                            "0"
+                                                    )
+                                            )
+                                    )
+                            ).addContent(createAddChildFunctionCall(chopId(field)))
                     );
                 } else if (field.startsWith("id") && column.hasAssociatedBean()) {
                     getXMLElementFunction.addContent(
                             new IfBlock(new Condition("recursion")
-                                    .andCondition(new Condition(new FunctionCall("is" + capitalize(field) + "Empty", beanVarName), true).needsParentheses()
-                                            .orCondition(new Condition(new Comparison(getFieldValue(field), "0"))))).addContent(
-                                    new FunctionCall("addChild", "root").byItself()
-                                            .addArgument(new FunctionCall("get" + chopId(field) + "XMLElement"))
-                            )
+                                    .andCondition(
+                                            new Condition(
+                                                    new FunctionCall(
+                                                            "is" + capitalize(field) + "Empty",
+                                                            beanVarName),
+                                                    true
+                                            ).needsParentheses()
+                                                    .orCondition(
+                                                            new Condition(
+                                                                    new Comparison(
+                                                                            getFieldValue(field),
+                                                                            "0")))))
+                                    .addContent(createAddChildFunctionCall(chopId(field)))
                     );
                 } else {
-                    final FunctionCall addChild =
-                            new FunctionCall("addChild", "root")
-                                    .byItself()
-                                    .addArgument(
-                                            new FunctionCall("get" + capitalize(field) + "XMLElement")
-                                    );
+                    final FunctionCall addChild = createAddChildFunctionCall(capitalize(field));
                     if (!column.getJavaType().equals("boolean"))
                         getXMLElementFunction.addContent(
                                 new IfBlock(
@@ -140,10 +155,7 @@ public class BaseXMLViewSourceFile extends ViewCode {
                 final FunctionDeclaration getXMLElement;
                 if (column.isLabelReference()) {
                     final String choppedIdFieldName = chopId(field);
-                    getXMLElement =
-                            new FunctionDeclaration(
-                                    "get" + choppedIdFieldName + "XMLElement",
-                                    "XMLElement");
+                    getXMLElement = createGetterFunctionDeclaration(choppedIdFieldName);
                     getXMLElement.addContent(
                             new ReturnStatement(
                                     new ObjectCreation("XMLElement")
@@ -152,16 +164,39 @@ public class BaseXMLViewSourceFile extends ViewCode {
                                                     .addArgument("dbBeanLanguage"))
                             )
                     );
-                } else if (field.startsWith("id") && column.hasAssociatedBean()) {
-                    final String associatedBeanClass = column.getAssociatedBeanClass();
-                    getXMLElement = new FunctionDeclaration("get" + chopId(field) + "XMLElement", "XMLElement").addContent(
-                            new VarDeclaration(associatedBeanClass + "XMLView", uncapitalize(associatedBeanClass)  + "XMLView",
-                                    new ObjectCreation(associatedBeanClass + "XMLView").addArgument(getFieldValue(chopId(field)))).markAsFinal()
-                    ).addContent(EMPTY_LINE).addContent(
-                            new ReturnStatement(new FunctionCall("getXMLElement", uncapitalize(associatedBeanClass) + "XMLView").addArgument("false"))
+                } else if (column.isFileReference()) {
+                    final String choppedIdFieldName = chopId(field);
+                    getXMLElement = createGetterFunctionDeclaration(choppedIdFieldName);
+                    getXMLElement.addContent(
+                            new ReturnStatement(
+                                    new ObjectCreation("XMLElement")
+                                            .addArgument(quickQuote(uncapitalize(choppedIdFieldName)))
+                                            .addArgument(getFilenameFunctionCall(beanVarName, field))
+                            )
                     );
+                } else if (field.startsWith("id") && column.hasAssociatedBean()) {
+                    final String choppedIdFieldName = chopId(field);
+                    final String associatedBeanClass = column.getAssociatedBeanClass();
+                    getXMLElement =
+                            createGetterFunctionDeclaration(choppedIdFieldName)
+                                    .addContent(
+                                            new VarDeclaration(
+                                                    associatedBeanClass + "XMLView",
+                                                    uncapitalize(associatedBeanClass)  + "XMLView",
+                                                    new ObjectCreation(associatedBeanClass + "XMLView")
+                                                            .addArgument(getFieldValue(choppedIdFieldName))
+                                            ).markAsFinal()
+                                    )
+                                    .addContent(EMPTY_LINE)
+                                    .addContent(
+                                            new ReturnStatement(
+                                                    new FunctionCall(
+                                                            "getXMLElement",
+                                                            uncapitalize(associatedBeanClass) + "XMLView"
+                                                    ).addArgument("false"))
+                                    );
                 } else {
-                    getXMLElement = new FunctionDeclaration("get" + capitalize(field) + "XMLElement", "XMLElement");
+                    getXMLElement = createGetterFunctionDeclaration(capitalize(field));
                     final ObjectCreation xmlElementCreation = new ObjectCreation("XMLElement");
                     xmlElementCreation.addArgument(quickQuote(field));
                     if (type.equals("boolean"))
@@ -207,6 +242,16 @@ public class BaseXMLViewSourceFile extends ViewCode {
             }
         }
 	}
+
+    private FunctionCall createAddChildFunctionCall(final String namePart) {
+        return new FunctionCall("addChild", "root")
+                .byItself()
+                .addArgument(new FunctionCall("get" + namePart + "XMLElement"));
+    }
+
+    private FunctionDeclaration createGetterFunctionDeclaration(final String namePart) {
+        return new FunctionDeclaration("get" + namePart + "XMLElement", "XMLElement");
+    }
 
     private void createSourceCode() {
         sourceFile.setStartComment(SourceFiles.getCommentAndVersion());

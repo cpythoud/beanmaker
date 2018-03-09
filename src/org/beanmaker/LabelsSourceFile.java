@@ -1,8 +1,5 @@
 package org.beanmaker;
 
-import org.dbbeans.util.Strings;
-
-import org.jcodegen.java.ExceptionThrow;
 import org.jcodegen.java.ForLoop;
 import org.jcodegen.java.FunctionArgument;
 import org.jcodegen.java.FunctionCall;
@@ -27,12 +24,20 @@ public class LabelsSourceFile extends BaseCode {
         importsManager.addImport("java.util.HashMap");
         importsManager.addImport("java.util.List");
         importsManager.addImport("java.util.Map");
+
+        importsManager.addImport("org.dbbeans.sql.DBTransaction");
     }
 
     private void addNonImplementedFunctions() {
         addNonImplementedFunction("DbBeanLabel", "get", new FunctionArgument("long", "id"));
 
         addNonImplementedFunction("boolean", "isIdOK", new FunctionArgument("long", "id"));
+
+        addNonImplementedFunction(
+                "boolean",
+                "isIdOK",
+                new FunctionArgument("long", "id"),
+                new FunctionArgument("DBTransaction", "transaction"));
 
         addNonImplementedFunction(
                 "String",
@@ -54,31 +59,6 @@ public class LabelsSourceFile extends BaseCode {
                 "DbBeanLanguage",
                 "getLanguage",
                 new FunctionArgument("long", "id"));
-    }
-
-    private void addNonImplementedFunction(
-            final String returnType,
-            final String name,
-            final FunctionArgument... functionArguments)
-    {
-            final FunctionDeclaration functionDeclaration =
-                    new FunctionDeclaration(name, returnType)
-                            .markAsStatic();
-
-            final StringBuilder argTypeList = new StringBuilder();
-            for (FunctionArgument argument: functionArguments) {
-                functionDeclaration.addArgument(argument);
-                argTypeList.append(argument.getType()).append(", ");
-            }
-            if (argTypeList.length() > 0)
-                argTypeList.delete(argTypeList.length() - 2, argTypeList.length());
-
-            functionDeclaration.addContent(
-                    new ExceptionThrow("MissingImplementationException")
-                            .addArgument(Strings.quickQuote("Labels." + name + "(" + argTypeList.toString() + ")"))
-            );
-
-            javaClass.addContent(functionDeclaration).addContent(EMPTY_LINE);
     }
 
     private void addLanguageCopyFunction() {
