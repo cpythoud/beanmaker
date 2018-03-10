@@ -122,6 +122,10 @@ public class HttpRequestParameters {
         return request.getSession();
     }
 
+    public boolean hasParameter(final String name) {
+        return parameters.containsKey(name) || multiValueParameters.containsKey(name);
+    }
+
     public String getValue(final String name) {
         if (multiValueParameters.containsKey(name))
             throw new IllegalArgumentException(

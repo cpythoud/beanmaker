@@ -1,0 +1,14 @@
+/* beanmaker.file-upload.css -- v0.1.0 -- 2018-03-10 */
+
+input.file {
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+    position: absolute;
+    z-index: -1;
+}
+
+.remove-file {
+    cursor: pointer;
+}

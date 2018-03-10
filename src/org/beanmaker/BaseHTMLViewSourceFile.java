@@ -5,6 +5,7 @@ import org.jcodegen.java.Comparison;
 import org.jcodegen.java.Condition;
 import org.jcodegen.java.ConstructorDeclaration;
 import org.jcodegen.java.ElseBlock;
+import org.jcodegen.java.ElseIfBlock;
 import org.jcodegen.java.Expression;
 import org.jcodegen.java.ForLoop;
 import org.jcodegen.java.FunctionArgument;
@@ -680,6 +681,29 @@ public class BaseHTMLViewSourceFile extends ViewCode {
                                                                     new FunctionCall("getFileItem", "parameters")
                                                                             .addArgument(quickQuote(field))))
                             )
+                    ).addContent(
+                            new IfBlock(
+                                    new Condition(
+                                            new FunctionCall("hasParameter", "parameters")
+                                                    .addArgument(quickQuote("delete_" + field)))
+                            ).addContent(
+                                    new FunctionCall("set" + capitalize(field), beanVarName)
+                                            .byItself()
+                                            .addArgument("0")
+                            ).addElseIfClause(
+                                    new ElseIfBlock(
+                                            new Condition(
+                                                    new Comparison(
+                                                            new FunctionCall(
+                                                                    "get" + capitalize(field),
+                                                                    beanVarName),
+                                                            "0"))
+                                    ).addContent(
+                                            new FunctionCall("set" + capitalize(field), beanVarName)
+                                                    .byItself()
+                                                    .addArgument(field)
+                                    )
+                            )
                     );
 
                 else if (type.equals("int") || type.equals("long")) {
@@ -762,21 +786,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
                                 new Assignment("captchaValue", EMPTY_STRING)
                         )
                 )
-        ).addContent(EMPTY_LINE);
-
-        for (Column column: columns.getList())
-            if (column.isFileReference()) {
-                final String field = column.getJavaName();
-                setAllFieldsFunction.addContent(
-                        new IfBlock(new Condition(new Comparison(
-                                new FunctionCall("get" + capitalize(field), beanVarName), "0"))
-                        ).addContent(
-                                new FunctionCall("set" + capitalize(field), beanVarName)
-                                        .byItself()
-                                        .addArguments(field)
-                        )
-                );
-            }
+        );
 
         javaClass.addContent(setAllFieldsFunction).addContent(EMPTY_LINE);
     }

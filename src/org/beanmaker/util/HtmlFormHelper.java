@@ -12,6 +12,7 @@ import org.jcodegen.html.LabelTag;
 import org.jcodegen.html.OptionTag;
 import org.jcodegen.html.PTag;
 import org.jcodegen.html.SelectTag;
+import org.jcodegen.html.SpanTag;
 import org.jcodegen.html.Tag;
 import org.jcodegen.html.TextareaTag;
 
@@ -45,6 +46,13 @@ public class HtmlFormHelper {
     private String cssClassForTimeFields = null;
 
     private String cssClassForFileFields = "file";
+    private String uploadButtonLabel = "Upload";
+    private String uploadButtonCssClasses = "btn btn-default btn-sm";
+    private String uploadNoFileLabel = "(no file)";
+    private String uploadFilenameDisplayCssClasses = "file-display";
+    private String uploadRemoveFileLabel = "";
+    private String uploadRemoveFileCssClasses = "remove-file glyphicons glyphicons-remove text-danger";
+    private String uploadRemoveFileTitle = "Remove file";
 
     private String extraFormCssClasses = null;
 
@@ -208,8 +216,68 @@ public class HtmlFormHelper {
         this.cssClassForFileFields = cssClassForFileFields;
     }
 
+    public void setUploadButtonLabel(final String uploadButtonLabel) {
+        this.uploadButtonLabel = uploadButtonLabel;
+    }
+
+    public void setUploadButtonCssClasses(final String uploadButtonCssClasses) {
+        this.uploadButtonCssClasses = uploadButtonCssClasses;
+    }
+
+    public void setUseRequiredInHtml(final boolean useRequiredInHtml) {
+        this.useRequiredInHtml = useRequiredInHtml;
+    }
+
+    public void setUploadNoFileLabel(final String uploadNoFileLabel) {
+        this.uploadNoFileLabel = uploadNoFileLabel;
+    }
+
+    public void setUploadFilenameDisplayCssClasses(final String uploadFilenameDisplayCssClasses) {
+        this.uploadFilenameDisplayCssClasses = uploadFilenameDisplayCssClasses;
+    }
+
+    public void setUploadRemoveFileLabel(final String uploadRemoveFileLabel) {
+        this.uploadRemoveFileLabel = uploadRemoveFileLabel;
+    }
+
+    public void setUploadRemoveFileCssClasses(final String uploadRemoveFileCssClasses) {
+        this.uploadRemoveFileCssClasses = uploadRemoveFileCssClasses;
+    }
+
+    public void setUploadRemoveFileTitle(final String uploadRemoveFileTitle) {
+        this.uploadRemoveFileTitle = uploadRemoveFileTitle;
+    }
+
     public String getCssClassForFileFields() {
         return cssClassForFileFields;
+    }
+
+    public String getUploadButtonLabel() {
+        return uploadButtonLabel;
+    }
+
+    public String getUploadButtonCssClasses() {
+        return uploadButtonCssClasses;
+    }
+
+    public String getUploadNoFileLabel() {
+        return uploadNoFileLabel;
+    }
+
+    public String getUploadFilenameDisplayCssClasses() {
+        return uploadFilenameDisplayCssClasses;
+    }
+
+    public String getUploadRemoveFileLabel() {
+        return uploadRemoveFileLabel;
+    }
+
+    public String getUploadRemoveFileCssClasses() {
+        return uploadRemoveFileCssClasses;
+    }
+
+    public String getUploadRemoveFileTitle() {
+        return uploadRemoveFileTitle;
     }
 
     public void setExtraFormCssClasses(final String extraFormCssClasses) {
@@ -960,7 +1028,9 @@ public class HtmlFormHelper {
 
     public DivTag getFileField(final HFHParameters params) {
         final String fieldId = getFieldId(params.getField(), params.getIdBean());
-        final LabelTag label = getLabel(params.getFieldLabel(), fieldId, params.isRequired());
+        final LabelTag label = getLabel(params.getFieldLabel(), null, params.isRequired());
+
+        final LabelTag uploadButton = new LabelTag(uploadButtonLabel, fieldId).cssClass(uploadButtonCssClasses);
 
         final InputTag input =
                 getInputTag(
@@ -969,12 +1039,53 @@ public class HtmlFormHelper {
                         params.getField(),
                         params.getCurrentFile());
 
+        final SpanTag filenameDisplay =
+                new SpanTag(params.hasCurrentFile() ? params.getCurrentFile() : uploadNoFileLabel)
+                        .cssClass(uploadFilenameDisplayCssClasses)
+                        .id("display_" + fieldId);
+
+        final SpanTag removeFileButton =
+                new SpanTag(uploadRemoveFileLabel)
+                        .cssClass(uploadRemoveFileCssClasses + (params.hasCurrentFile() ? "" : " hidden"))
+                        .id("remove_" + fieldId)
+                        .data("fileinput", fieldId)
+                        .title(uploadRemoveFileTitle);
+
         if (params.isRequired() && useRequiredInHtml && !params.hasCurrentFile())
             input.required();
         if (params.isDisabled())
             input.disabled();
 
-        return getFormGroup(label, input);
+        return getFileFormGroup(label, uploadButton, input, filenameDisplay, removeFileButton);
+    }
+
+    private DivTag getFileFormGroup(
+            final LabelTag label,
+            final LabelTag uploadButton,
+            final InputTag input,
+            final SpanTag filenameDisplay,
+            final SpanTag removeFileButton)
+    {
+        final DivTag formGroup =
+                new DivTag().cssClass("form-group")
+                        .child(label);
+
+        if (horizontal) {
+            final DivTag formElements =
+                    new DivTag().cssClass(getHorizontalFieldClass())
+                            .child(uploadButton)
+                            .child(input)
+                            .child(filenameDisplay)
+                            .child(removeFileButton);
+            formGroup.child(formElements);
+        } else {
+            formGroup.child(uploadButton)
+                    .child(input)
+                    .child(filenameDisplay)
+                    .child(removeFileButton);
+        }
+
+        return formGroup;
     }
 
     public Tag getHiddenInfo(final String field, final long idBean, final String value) {
