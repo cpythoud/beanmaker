@@ -2,12 +2,16 @@ package org.beanmaker.util;
 
 import org.dbbeans.sql.DBTransaction;
 
+import java.util.List;
+
 public interface DbBeanLabel {
 
     void setId(final long id);
     long getId();
 
     String get(final DbBeanLanguage dbBeanLanguage);
+    String get(final DbBeanLanguage dbBeanLanguage, final Object... parameters);
+    String get(final DbBeanLanguage dbBeanLanguage, final List<Object> parameters);
 
     void cacheLabelsFromDB();
     void clearCache();
