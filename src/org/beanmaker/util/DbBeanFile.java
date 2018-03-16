@@ -1,5 +1,7 @@
 package org.beanmaker.util;
 
+import java.io.File;
+
 public interface DbBeanFile extends DbBeanInterface {
 
     String getCode();
@@ -14,4 +16,8 @@ public interface DbBeanFile extends DbBeanInterface {
 
     boolean isStoredFilenameEmpty();
     boolean isAltDirEmpty();
+
+    File getFile();
+    String getInternalFilename();
+    String getFileUrl();
 }

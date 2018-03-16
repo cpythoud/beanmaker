@@ -1,5 +1,6 @@
 package org.beanmaker.util;
 
+import org.dbbeans.util.MimeTypes;
 import org.dbbeans.util.Pair;
 import org.dbbeans.util.Strings;
 
@@ -8,8 +9,12 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
+import java.io.OutputStream;
 import java.util.Enumeration;
 import java.util.List;
 
@@ -230,5 +235,42 @@ public abstract class BeanMakerBaseServlet extends HttpServlet {
             default:
                 throw new AssertionError("New/unchecked Direction ?");
         }
+    }
+
+    protected void writeFileToServletOutputStream(
+            final DbBeanFile dbBeanFile,
+            final HttpServletResponse response
+    ) throws IOException
+    {
+        writeFileToServletOutputStream(dbBeanFile.getFile(), dbBeanFile.getInternalFilename(), response);
+    }
+
+    protected void writeFileToServletOutputStream(final File file, final HttpServletResponse response) throws IOException {
+        writeFileToServletOutputStream(file, file.getName(), response);
+    }
+
+    protected void writeFileToServletOutputStream(
+            final File file,
+            final String filename,
+            final HttpServletResponse response
+    ) throws IOException
+    {
+        response.setContentType(MimeTypes.getType(filename));
+        response.setContentLength((int) file.length());
+        response.setHeader(
+                "Content-Disposition",
+                String.format("attachment; filename=\"%s\"", filename));
+
+        final FileInputStream inputStream = new FileInputStream(file);
+        final OutputStream outputStream = response.getOutputStream();
+
+        byte[] buffer = new byte[4096];
+        int bytesRead;
+
+        while ((bytesRead = inputStream.read(buffer)) != -1)
+            outputStream.write(buffer, 0, bytesRead);
+
+        inputStream.close();
+        outputStream.close();
     }
 }
