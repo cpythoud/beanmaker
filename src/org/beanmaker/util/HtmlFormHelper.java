@@ -44,6 +44,8 @@ public class HtmlFormHelper {
     private String cssClassForDateFields = null;
     private InputTag.InputType inputTypeForTimeFields = null;
     private String cssClassForTimeFields = null;
+    private InputTag.InputType inputTypeForNumberFields = null;
+    private String cssClassForNumberFields = null;
 
     private String cssClassForFileFields = "file";
     private String uploadButtonLabel = "Upload";
@@ -210,6 +212,22 @@ public class HtmlFormHelper {
 
     public String getCssClassForTimeFields() {
         return cssClassForTimeFields;
+    }
+
+    public void setInputTypeForNumberFields(final InputTag.InputType inputTypeForNumberFields) {
+        this.inputTypeForNumberFields = inputTypeForNumberFields;
+    }
+
+    public InputTag.InputType getInputTypeForNumberFields() {
+        return inputTypeForNumberFields;
+    }
+
+    public void setCssClassForNumberFields(final String cssClassForNumberFields) {
+        this.cssClassForNumberFields = cssClassForNumberFields;
+    }
+
+    public String getCssClassForNumberFields() {
+        return cssClassForNumberFields;
     }
 
     public void setCssClassForFileFields(final String cssClassForFileFields) {
@@ -476,6 +494,11 @@ public class HtmlFormHelper {
         if (type == InputTag.InputType.TIME)
             return new InputTag(inputTypeForTimeFields == null ? type : inputTypeForTimeFields)
                     .cssClass(cssClassForTimeFields == null ? "form-control" : "form-control " + cssClassForTimeFields)
+                    .id(id).name(name).value(value);
+
+        if (type == InputTag.InputType.NUMBER)
+            return new InputTag(inputTypeForNumberFields == null ? type : inputTypeForNumberFields)
+                    .cssClass(cssClassForNumberFields == null ? "form-control" : "form-control " + cssClassForNumberFields)
                     .id(id).name(name).value(value);
 
         if (type == InputTag.InputType.FILE) {
