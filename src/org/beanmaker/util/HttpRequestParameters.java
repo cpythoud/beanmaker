@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -75,7 +76,12 @@ public class HttpRequestParameters {
     }
 
     private void recordParameter(final FileItem item) {
-        final String value = item.getString();
+        final String value;
+        try {
+            value = item.getString("UTF-8");
+        } catch (final UnsupportedEncodingException ueex) {
+            throw new RuntimeException(ueex);
+        }
         if (Strings.isEmpty(value))
             return;
 
