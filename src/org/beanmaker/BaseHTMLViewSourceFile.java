@@ -372,10 +372,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
                 getParamAdjunctionCall("setSelected", addFieldValueArgument(field, false)));
         paramsFunctionDeclaration.addContent(getParamAdjunctionCall("setFieldLabel", getLabelArgument(field)));
         paramsFunctionDeclaration.addContent(getParamAdjunctionCall("setSelectPairs", "pairs"));
-        paramsFunctionDeclaration.addContent(
-                getParamAdjunctionCall(
-                        "setRequired",
-                        new FunctionCall("is" + capitalize(field) + "RequiredInHtmlForm")));
+        paramsFunctionDeclaration.addContent(getRequiredInHtmlFormFunctionCall(field));
         paramsFunctionDeclaration.addContent(new ReturnStatement("params"));
 
         final FunctionDeclaration getElementFunctionDeclaration =
@@ -395,6 +392,13 @@ public class BaseHTMLViewSourceFile extends ViewCode {
                 .addContent(EMPTY_LINE)
                 .addContent(getElementFunctionDeclaration)
                 .addContent(EMPTY_LINE);
+    }
+
+    private FunctionCall getRequiredInHtmlFormFunctionCall(final String field) {
+        return getParamAdjunctionCall(
+                "setRequired",
+                new FunctionCall("is" + capitalize(field) + "RequiredInHtmlForm")
+        );
     }
 
     private FunctionCall addFieldValueArgument(final String field, final boolean booleanField) {
@@ -437,10 +441,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         paramsFunctionDeclaration.addContent(getParamAdjunctionCall("setFieldLabel", getLabelArgument(field)));
         paramsFunctionDeclaration.addContent(
                 getParamAdjunctionCall("setInputType", "InputTag.InputType." + inputTypeVal));
-        paramsFunctionDeclaration.addContent(
-                getParamAdjunctionCall(
-                        "setRequired",
-                        new FunctionCall("is" + capitalize(field) + "RequiredInHtmlForm")));
+        paramsFunctionDeclaration.addContent(getRequiredInHtmlFormFunctionCall(field));
         paramsFunctionDeclaration.addContent(new ReturnStatement("params"));
 
         final FunctionDeclaration getElementFunctionDeclaration = getNewElementFunctionDeclaration(field);
@@ -477,12 +478,9 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         paramsFunctionDeclaration.addContent(getNewHFHParametersDeclaration());
         paramsFunctionDeclaration.addContent(getParamAdjunctionCall("setField", quickQuote(field)));
         paramsFunctionDeclaration.addContent(getParamAdjunctionCall("setIdBean", getId()));
-        paramsFunctionDeclaration.addContent(getParamAdjunctionCall("setFieldLabel", getLabelArgument(field)));
         paramsFunctionDeclaration.addContent(
-                getParamAdjunctionCall(
-                        "setRequired",
-                        new FunctionCall("is" + capitalize(field) + "RequiredInHtmlForm")
-                                .addArgument("dbBeanLanguage")));
+                getParamAdjunctionCall("setFieldLabel", getLabelArgument(field)));
+        paramsFunctionDeclaration.addContent(getRequiredInHtmlFormFunctionCall(field));
         paramsFunctionDeclaration.addContent(new ReturnStatement("params"));
 
         final FunctionDeclaration getElementFunctionDeclaration = getNewElementFunctionDeclaration(field);
@@ -496,6 +494,8 @@ public class BaseHTMLViewSourceFile extends ViewCode {
                                                 .addArgument(new FunctionCall("get" + chopId(field), beanVarName)
                                                         .addArgument("dbBeanLanguage"))
                                                 .addArgument("dbBeanLanguage")
+                                                .addArgument(new FunctionCall("is" + capitalize(field) + "RequiredInHtmlForm")
+                                                        .addArgument("dbBeanLanguage"))
                                                 .addArgument(new FunctionCall("get" + capitalize(field) + "FormElementParameters"))
                                 )
                 )
@@ -545,10 +545,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         paramsFunctionDeclaration.addContent(
                 getParamAdjunctionCall("setValue", addFieldValueArgument(field, false)));
         paramsFunctionDeclaration.addContent(getParamAdjunctionCall("setFieldLabel", getLabelArgument(field)));
-        paramsFunctionDeclaration.addContent(
-                getParamAdjunctionCall(
-                        "setRequired",
-                        new FunctionCall("is" + capitalize(field) + "RequiredInHtmlForm")));
+        paramsFunctionDeclaration.addContent(getRequiredInHtmlFormFunctionCall(field));
         paramsFunctionDeclaration.addContent(new ReturnStatement("params"));
 
         final FunctionDeclaration getElementFunctionDeclaration =

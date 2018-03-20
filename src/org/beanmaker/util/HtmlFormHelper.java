@@ -1156,9 +1156,20 @@ public class HtmlFormHelper {
         return new LabelTag().cssClass("radio-inline").addCodeFragment(buttonInside);
     }
 
+    // While waiting for code in client projects to be regenerated to solve this bug.
+    // This function will soon be removed. DO NOT USE.
     public DivTag getLabelFormField(
             final String value,
             final DbBeanLanguage dbBeanLanguage,
+            final HFHParameters params)
+    {
+        return getLabelFormField(value, dbBeanLanguage, params.isRequired(), params);
+    }
+
+    public DivTag getLabelFormField(
+            final String value,
+            final DbBeanLanguage dbBeanLanguage,
+            final boolean required,
             final HFHParameters params)
     {
         final HFHParameters actualParameters = new HFHParameters(params);
@@ -1167,6 +1178,7 @@ public class HtmlFormHelper {
         actualParameters.setField(params.getField() + iso);
         actualParameters.setValue(value);
         actualParameters.setFieldLabel(params.getFieldLabel() + " " + iso);
+        actualParameters.setRequired(required);
 
         if (params.isAsTextArea())
             return getTextAreaField(actualParameters);
