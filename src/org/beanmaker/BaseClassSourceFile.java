@@ -2321,17 +2321,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 );
 
         if (columns.hasLabels())
-            for (Column column: columns.getList())
-                if (column.isLabelReference()) {
-                    final String field = column.getJavaName();
-                    createRecordFunction.addContent(
-                            new FunctionCall("set" + capitalize(field))
-                                    .byItself()
-                                    .addArgument(new FunctionCall("updateDB", uncapitalize(chopId(field)))
-                                            .addArgument("transaction")
-                                    )
-                    );
-                }
+            addSetLabelIdFunctionCalls(createRecordFunction);
 
         createRecordFunction
                 .addContent(
@@ -2419,6 +2409,20 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         }
     }
 
+    private void addSetLabelIdFunctionCalls(final FunctionDeclaration createUpdateRecordFunction) {
+        for (Column column: columns.getList())
+            if (column.isLabelReference()) {
+                final String field = column.getJavaName();
+                createUpdateRecordFunction.addContent(
+                        new FunctionCall("set" + capitalize(field))
+                                .byItself()
+                                .addArgument(new FunctionCall("updateDB", uncapitalize(chopId(field)))
+                                        .addArgument("transaction")
+                                )
+                );
+            }
+    }
+
     private void addUpdate() {
         final FunctionDeclaration updateRecordFunction = new FunctionDeclaration("updateRecord")
                 .visibility(Visibility.PRIVATE)
@@ -2433,15 +2437,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 );
 
         if (columns.hasLabels())
-            for (Column column: columns.getList())
-                if (column.isLabelReference()) {
-                    final String field = column.getJavaName();
-                    updateRecordFunction.addContent(
-                            new FunctionCall("set" + capitalize(field))
-                                    .byItself()
-                                    .addArgument(new FunctionCall("getId", uncapitalize(chopId(field))))
-                    );
-                }
+            addSetLabelIdFunctionCalls(updateRecordFunction);
 
         updateRecordFunction.addContent(
                 new FunctionCall("updateRecord").byItself().addArgument("transaction")
