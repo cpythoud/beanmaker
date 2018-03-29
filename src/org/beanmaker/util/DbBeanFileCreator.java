@@ -7,6 +7,7 @@ import java.io.File;
 public class DbBeanFileCreator {
 
     private final String defaultUploadDir;
+    private final String alternateUploadDir;
     private final DbBeanFileStoredFilenameCalculator storedFilenameCalculator;
 
     public DbBeanFileCreator(final String defaultUploadDir) {
@@ -17,7 +18,19 @@ public class DbBeanFileCreator {
             final String defaultUploadDir,
             final DbBeanFileStoredFilenameCalculator storedFilenameCalculator)
     {
+        this(defaultUploadDir, null, storedFilenameCalculator);
+    }
+
+    public DbBeanFileCreator(
+            final String defaultUploadDir,
+            final String alternateUploadDir,
+            final DbBeanFileStoredFilenameCalculator storedFilenameCalculator)
+    {
         this.defaultUploadDir = defaultUploadDir;
+        if (alternateUploadDir == null || alternateUploadDir.equals(defaultUploadDir))
+            this.alternateUploadDir = null;
+        else
+            this.alternateUploadDir = alternateUploadDir;
         this.storedFilenameCalculator = storedFilenameCalculator;
     }
 
@@ -30,6 +43,9 @@ public class DbBeanFileCreator {
             dbBeanFile.setStoredFilename(null);
         else
             dbBeanFile.setStoredFilename(filename);
+
+        if (alternateUploadDir != null)
+            dbBeanFile.setAltDir(alternateUploadDir);
 
         if (dbBeanFile.getId() == 0) {
             dbBeanFile.updateDB();
