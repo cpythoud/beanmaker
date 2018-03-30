@@ -2283,9 +2283,16 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
     private void addCreate() {
         int index = 0;
 
-        final JavaClass recordCreationSetupClass = new JavaClass("RecordCreationSetup").implementsInterface("DBQuerySetup").visibility(Visibility.PRIVATE);
-        final FunctionDeclaration setupStatFunction = new FunctionDeclaration("setupPreparedStatement").annotate("@Override")
-                .addException("SQLException").addArgument(new FunctionArgument("PreparedStatement", "stat"));
+        final JavaClass recordCreationSetupClass =
+                new JavaClass("RecordCreationSetup")
+                        .implementsInterface("DBQuerySetup")
+                        .visibility(Visibility.PRIVATE);
+        final FunctionDeclaration setupStatFunction =
+                new FunctionDeclaration("setupPreparedStatement")
+                        .annotate("@Override")
+                        .addException("SQLException")
+                        .addArgument(new FunctionArgument("PreparedStatement", "stat"));
+
         for (Column column: columns.getList()) {
             final String type = column.getJavaType();
             final String field = column.getJavaName();
@@ -2294,11 +2301,17 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                     final String suggestedType = Column.getSuggestedType(column.getSqlTypeName(), column.getPrecision());
                     if (suggestedType.equals("int"))
                         setupStatFunction.addContent(
-                                new FunctionCall("setInt", "stat").byItself().addArgument(Integer.toString(++index)).addArgument(new FunctionCall("getIntVal", field))
+                                new FunctionCall("setInt", "stat")
+                                        .byItself()
+                                        .addArgument(Integer.toString(++index))
+                                        .addArgument(new FunctionCall("getIntVal", field))
                         );
                     else if (suggestedType.equals("long"))
                         setupStatFunction.addContent(
-                                new FunctionCall("setLong", "stat").byItself().addArgument(Integer.toString(++index)).addArgument(new FunctionCall("getVal", field))
+                                new FunctionCall("setLong", "stat")
+                                        .byItself()
+                                        .addArgument(Integer.toString(++index))
+                                        .addArgument(new FunctionCall("getVal", field))
                         );
                     else
                         throw new IllegalStateException("Money cannot be used with non INTEGER SQL field: " + column.getSqlName());
@@ -2313,35 +2326,53 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         javaClass.addContent(recordCreationSetupClass.addContent(setupStatFunction)).addContent(EMPTY_LINE);
 
         javaClass.addContent(
-                new JavaClass("RecordUpdateSetup").extendsClass("RecordCreationSetup").visibility(Visibility.PRIVATE).addContent(
-                        new FunctionDeclaration("setupPreparedStatement").annotate("@Override")
-                                .addException("SQLException").addArgument(new FunctionArgument("PreparedStatement", "stat")).addContent(
-                                new FunctionCall("setupPreparedStatement", "super").byItself().addArgument("stat")
-                        ).addContent(
-                                new FunctionCall("setLong", "stat").byItself().addArguments(Integer.toString(++index), "id")
+                new JavaClass("RecordUpdateSetup")
+                        .extendsClass("RecordCreationSetup")
+                        .visibility(Visibility.PRIVATE)
+                        .addContent(
+                                new FunctionDeclaration("setupPreparedStatement")
+                                        .annotate("@Override")
+                                        .addException("SQLException")
+                                        .addArgument(new FunctionArgument("PreparedStatement", "stat"))
+                                        .addContent(
+                                                new FunctionCall("setupPreparedStatement", "super")
+                                                        .byItself()
+                                                        .addArgument("stat")
+                                        )
+                                        .addContent(
+                                                new FunctionCall("setLong", "stat")
+                                                        .byItself()
+                                                        .addArguments(Integer.toString(++index), "id")
+                                        )
                         )
-                )
         ).addContent(EMPTY_LINE);
 
-        final FunctionDeclaration createRecordFunction = new FunctionDeclaration("createRecord")
-                .visibility(Visibility.PRIVATE)
-                .addContent(
-                        new VarDeclaration("DBTransaction", "transaction", new FunctionCall("createDBTransaction"))
-                                .markAsFinal()
-                )
-                .addContent(
-                        new FunctionCall("preCreateExtraDbActions")
-                                .byItself()
-                                .addArgument("transaction")
-                );
+        final FunctionDeclaration createRecordFunction =
+                new FunctionDeclaration("createRecord")
+                        .visibility(Visibility.PRIVATE)
+                        .addContent(
+                                new VarDeclaration(
+                                        "DBTransaction",
+                                        "transaction",
+                                        new FunctionCall("createDBTransaction")
+                                ).markAsFinal()
+                        )
+                        .addContent(
+                                new FunctionCall("preCreateExtraDbActions")
+                                        .byItself()
+                                        .addArgument("transaction")
+                        );
 
         if (columns.hasLabels())
             addSetLabelIdFunctionCalls(createRecordFunction);
 
         createRecordFunction
                 .addContent(
-                        new VarDeclaration("long", "id", new FunctionCall("createRecord").addArgument("transaction"))
-                                .markAsFinal()
+                        new VarDeclaration(
+                                "long",
+                                "id",
+                                new FunctionCall("createRecord").addArgument("transaction")
+                        ).markAsFinal()
                 );
 
         addOneToManyRelationshipDBUpdateFunctionCalls(createRecordFunction);
@@ -2366,24 +2397,52 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         javaClass.addContent(createRecordFunction).addContent(EMPTY_LINE);
 
         final FunctionDeclaration createRecordFunctionWithTransaction =
-                new FunctionDeclaration("createRecord", "long").addArgument(new FunctionArgument("DBTransaction", "transaction")).visibility(Visibility.PRIVATE);
+                new FunctionDeclaration("createRecord", "long")
+                        .addArgument(new FunctionArgument("DBTransaction", "transaction"))
+                        .visibility(Visibility.PRIVATE);
 
         if (columns.hasItemOrder()) {
             final Column itemOrderField = columns.getItemOrderField();
-            final IfBlock uninitializedItemOrderCase = new IfBlock(new Condition(new Comparison("itemOrder", "0")));
+            final IfBlock uninitializedItemOrderCase =
+                    new IfBlock(new Condition(new Comparison("itemOrder", "0")));
             if (itemOrderField.isUnique())
                 uninitializedItemOrderCase.addContent(
                         new Assignment("itemOrder",
-                                new OperatorExpression(getMaxItemOrderFunctionCall(columns.getItemOrderField(), true, false), "1", OperatorExpression.Operator.ADD))
+                                new OperatorExpression(
+                                        getMaxItemOrderFunctionCall(
+                                                columns.getItemOrderField(),
+                                                true,
+                                                false),
+                                        "1",
+                                        OperatorExpression.Operator.ADD))
                 );
             else {
                 uninitializedItemOrderCase.addContent(
-                        new IfBlock(new Condition(new Comparison(uncapitalize(camelize(itemOrderField.getItemOrderAssociatedField())), "0"))).addContent(
-                                new Assignment("itemOrder",
-                                        new OperatorExpression(getMaxItemOrderFunctionCall(columns.getItemOrderField(), true, true), "1", OperatorExpression.Operator.ADD))
+                        new IfBlock(
+                                new Condition(
+                                        new Comparison(
+                                                uncapitalize(camelize(itemOrderField.getItemOrderAssociatedField())),
+                                                "0"))
+                        ).addContent(
+                                new Assignment(
+                                        "itemOrder",
+                                        new OperatorExpression(
+                                                getMaxItemOrderFunctionCall(
+                                                        columns.getItemOrderField(),
+                                                        true,
+                                                        true),
+                                                "1",
+                                                OperatorExpression.Operator.ADD))
                         ).elseClause(new ElseBlock().addContent(
-                                new Assignment("itemOrder",
-                                        new OperatorExpression(getMaxItemOrderFunctionCall(columns.getItemOrderField(), true, false), "1", OperatorExpression.Operator.ADD))
+                                new Assignment(
+                                        "itemOrder",
+                                        new OperatorExpression(
+                                                getMaxItemOrderFunctionCall(
+                                                        columns.getItemOrderField(),
+                                                        true,
+                                                        false),
+                                                "1",
+                                                OperatorExpression.Operator.ADD))
                         ))
                 );
             }
@@ -2401,17 +2460,20 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
         javaClass.addContent(
                 new FunctionDeclaration("preCreateExtraDbActions")
-                        .addArgument(new FunctionArgument("DBTransaction", "transaction")).visibility(Visibility.PROTECTED)
+                        .addArgument(new FunctionArgument("DBTransaction", "transaction"))
+                        .visibility(Visibility.PROTECTED)
         ).addContent(EMPTY_LINE);
 
         javaClass.addContent(
                 new FunctionDeclaration("createExtraDbActions")
                         .addArgument(new FunctionArgument("DBTransaction", "transaction"))
-                        .addArgument(new FunctionArgument("long", "id")).visibility(Visibility.PROTECTED)
+                        .addArgument(new FunctionArgument("long", "id"))
+                        .visibility(Visibility.PROTECTED)
         ).addContent(EMPTY_LINE);
 
         javaClass.addContent(
-                new FunctionDeclaration("postCreateActions").visibility(Visibility.PROTECTED)
+                new FunctionDeclaration("postCreateActions")
+                        .visibility(Visibility.PROTECTED)
         ).addContent(EMPTY_LINE);
     }
 
@@ -2419,7 +2481,9 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         for (OneToManyRelationship relationship: columns.getOneToManyRelationships()) {
             if (!relationship.isListOnly())
                 function.addContent(
-                        new FunctionCall("update" + capitalize(relationship.getJavaName()) + "InDB").byItself().addArguments("transaction", "id")
+                        new FunctionCall("update" + capitalize(relationship.getJavaName()) + "InDB")
+                                .byItself()
+                                .addArguments("transaction", "id")
                 );
         }
     }
@@ -2478,25 +2542,32 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         javaClass.addContent(updateRecordFunction).addContent(EMPTY_LINE);
 
         javaClass.addContent(
-                new FunctionDeclaration("updateRecord").addArgument(new FunctionArgument("DBTransaction", "transaction")).visibility(Visibility.PRIVATE).addContent(
-                        new FunctionCall("addUpdate", "transaction").byItself()
-                                .addArgument(quickQuote(getUpdateSQLQuery()))
-                                .addArgument(new ObjectCreation("RecordUpdateSetup"))
-                )
+                new FunctionDeclaration("updateRecord")
+                        .addArgument(new FunctionArgument("DBTransaction", "transaction"))
+                        .visibility(Visibility.PRIVATE)
+                        .addContent(
+                                new FunctionCall("addUpdate", "transaction")
+                                        .byItself()
+                                        .addArgument(quickQuote(getUpdateSQLQuery()))
+                                        .addArgument(new ObjectCreation("RecordUpdateSetup"))
+                        )
         ).addContent(EMPTY_LINE);
 
         javaClass.addContent(
-                new FunctionDeclaration("preUpdateExtraDbActions").visibility(Visibility.PROTECTED)
+                new FunctionDeclaration("preUpdateExtraDbActions")
+                        .visibility(Visibility.PROTECTED)
                         .addArgument(new FunctionArgument("DBTransaction", "transaction"))
         ).addContent(EMPTY_LINE);
 
         javaClass.addContent(
-                new FunctionDeclaration("updateExtraDbActions").visibility(Visibility.PROTECTED)
+                new FunctionDeclaration("updateExtraDbActions")
+                        .visibility(Visibility.PROTECTED)
                         .addArgument(new FunctionArgument("DBTransaction", "transaction"))
         ).addContent(EMPTY_LINE);
 
         javaClass.addContent(
-                new FunctionDeclaration("postUpdateActions").visibility(Visibility.PROTECTED)
+                new FunctionDeclaration("postUpdateActions")
+                        .visibility(Visibility.PROTECTED)
         ).addContent(EMPTY_LINE);
     }
 
@@ -2534,32 +2605,52 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
     private void addOneToManyRelationshipInDB() {
         for (OneToManyRelationship relationship: columns.getOneToManyRelationships()) {
             if (!relationship.isListOnly()) {
-                final FunctionDeclaration updateRelationshipFunction = new FunctionDeclaration("update" + capitalize(relationship.getJavaName()) + "InDB")
-                        .addArgument(new FunctionArgument("DBTransaction", "transaction"))
-                        .addArgument(new FunctionArgument("long", "id"))
-                        .visibility(Visibility.PRIVATE);
+                final FunctionDeclaration updateRelationshipFunction =
+                        new FunctionDeclaration("update" + capitalize(relationship.getJavaName()) + "InDB")
+                                .addArgument(new FunctionArgument("DBTransaction", "transaction"))
+                                .addArgument(new FunctionArgument("long", "id"))
+                                .visibility(Visibility.PRIVATE);
 
-                final FunctionCall dbAccessFunction = new FunctionCall("addUpdate", "transaction").byItself();
+                final FunctionCall dbAccessFunction =
+                        new FunctionCall("addUpdate", "transaction")
+                                .byItself();
                 updateRelationshipFunction.addContent(
                         dbAccessFunction
-                                .addArgument(quickQuote(getDeleteOneToManyRelationshipQuery(relationship.getTable(), relationship.getIdSqlName())))
-                                .addArgument(new AnonymousClassCreation("DBQuerySetup").setContext(dbAccessFunction).addContent(
-                                        new FunctionDeclaration("setupPreparedStatement").annotate("@Override").addException("SQLException")
-                                                .addArgument(new FunctionArgument("PreparedStatement", "stat")).addContent(
-                                                new FunctionCall("setLong", "stat").byItself().addArguments("1", "id")
-                                        )
-                                ))
+                                .addArgument(
+                                        quickQuote(getDeleteOneToManyRelationshipQuery(
+                                                relationship.getTable(),
+                                                relationship.getIdSqlName())))
+                                .addArgument(
+                                        new AnonymousClassCreation("DBQuerySetup")
+                                                .setContext(dbAccessFunction)
+                                                .addContent(
+                                                        new FunctionDeclaration("setupPreparedStatement")
+                                                                .annotate("@Override")
+                                                                .addException("SQLException")
+                                                                .addArgument(
+                                                                        new FunctionArgument(
+                                                                                "PreparedStatement",
+                                                                                "stat"))
+                                                                .addContent(
+                                                                        new FunctionCall("setLong", "stat")
+                                                                                .byItself()
+                                                                                .addArguments("1", "id")
+                                                                )
+                                                ))
                 ).addContent(EMPTY_LINE);
 
                 final String var = uncapitalize(relationship.getBeanClass());
                 updateRelationshipFunction.addContent(
-                        new ForLoop(relationship.getBeanClass() + " " + var + ": " + relationship.getJavaName()).addContent(
-                                new FunctionCall("resetId", var).byItself()
-                        ).addContent(
-                                new FunctionCall("setId" + beanName, var).addArgument("id").byItself()
-                        ).addContent(
-                                new FunctionCall("updateDB", var).addArgument("transaction").byItself()
-                        )
+                        new ForLoop(relationship.getBeanClass() + " " + var + ": " + relationship.getJavaName())
+                                .addContent(
+                                        new FunctionCall("resetId", var).byItself()
+                                )
+                                .addContent(
+                                        new FunctionCall("setId" + beanName, var).addArgument("id").byItself()
+                                )
+                                .addContent(
+                                        new FunctionCall("updateDB", var).addArgument("transaction").byItself()
+                                )
                 );
 
                 javaClass.addContent(updateRelationshipFunction).addContent(EMPTY_LINE);
@@ -2570,36 +2661,47 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 	private void addTemporalFunctions() {
         if (types.contains("Date")) {
             javaClass.addContent(
-                    new FunctionDeclaration("formatDate", "String").visibility(Visibility.PROTECTED).addArgument(new FunctionArgument("Date", "date")).addContent(
-                            new ReturnStatement(
-                                    new FunctionCall(
-                                            "format",
+                    new FunctionDeclaration("formatDate", "String")
+                            .visibility(Visibility.PROTECTED)
+                            .addArgument(new FunctionArgument("Date", "date"))
+                            .addContent(
+                                    new ReturnStatement(
                                             new FunctionCall(
-                                                    "getDateInstance",
-                                                    "DateFormat").addArgument("DateFormat.LONG").addArgument(new FunctionCall("getLocale", internalsVar))
-                                    ).addArgument("date")
+                                                    "format",
+                                                    new FunctionCall("getDateInstance", "DateFormat")
+                                                            .addArgument("DateFormat.LONG")
+                                                            .addArgument(new FunctionCall("getLocale", internalsVar))
+                                            ).addArgument("date")
+                                    )
                             )
-                    )
             ).addContent(EMPTY_LINE);
 
             javaClass.addContent(
-                    new FunctionDeclaration("convertStringToDate", "Date").visibility(Visibility.PROTECTED).addArgument(new FunctionArgument("String", "str")).addContent(
-                            new ReturnStatement(
-                                    new FunctionCall("getDateFromYYMD", "Dates").addArguments("str", quickQuote("-"))
+                    new FunctionDeclaration("convertStringToDate", "Date")
+                            .visibility(Visibility.PROTECTED)
+                            .addArgument(new FunctionArgument("String", "str"))
+                            .addContent(
+                                    new ReturnStatement(
+                                            new FunctionCall("getDateFromYYMD", "Dates")
+                                                    .addArguments("str", quickQuote("-"))
+                                    )
                             )
-                    )
             ).addContent(EMPTY_LINE);
 
-            javaClass.addContent(getTemporalConvertToStringFunction("Date", "date")).addContent(EMPTY_LINE);
+            javaClass.addContent(getTemporalConvertToStringFunction("Date", "date"))
+                    .addContent(EMPTY_LINE);
 
             javaClass.addContent(
-                    new FunctionDeclaration("validateDateFormat", "boolean").visibility(Visibility.PROTECTED).addArgument(new FunctionArgument("String", "str")).addContent(
-                            new VarDeclaration(
-                                    "SimpleInputDateFormat", "simpleInputDateFormat",
-                                    new ObjectCreation("SimpleInputDateFormat")
-                                            .addArguments("SimpleInputDateFormat.ElementOrder.YYMD", quickQuote("-"))
-                            ).markAsFinal()
-                    ).addContent(
+                    new FunctionDeclaration("validateDateFormat", "boolean")
+                            .visibility(Visibility.PROTECTED)
+                            .addArgument(new FunctionArgument("String", "str"))
+                            .addContent(
+                                    new VarDeclaration(
+                                            "SimpleInputDateFormat", "simpleInputDateFormat",
+                                            new ObjectCreation("SimpleInputDateFormat")
+                                                    .addArguments("SimpleInputDateFormat.ElementOrder.YYMD", quickQuote("-"))
+                                    ).markAsFinal()
+                            ).addContent(
                             new ReturnStatement(
                                     new FunctionCall(
                                             "validate",
@@ -2612,35 +2714,46 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
         if (types.contains("Time")) {
             javaClass.addContent(
-                    new FunctionDeclaration("formatTime", "String").visibility(Visibility.PROTECTED).addArgument(new FunctionArgument("Time", "time")).addContent(
-                            new ReturnStatement(
-                                    new FunctionCall(
-                                            "format",
+                    new FunctionDeclaration("formatTime", "String")
+                            .visibility(Visibility.PROTECTED)
+                            .addArgument(new FunctionArgument("Time", "time"))
+                            .addContent(
+                                    new ReturnStatement(
                                             new FunctionCall(
-                                                    "getTimeInstance",
-                                                    "DateFormat").addArgument("DateFormat.LONG").addArgument(new FunctionCall("getLocale", internalsVar))
-                                    ).addArgument("time")
+                                                    "format",
+                                                    new FunctionCall("getTimeInstance", "DateFormat")
+                                                            .addArgument("DateFormat.LONG")
+                                                            .addArgument(new FunctionCall("getLocale", internalsVar))
+                                            ).addArgument("time")
+                                    )
                             )
-                    )
             ).addContent(EMPTY_LINE);
 
             javaClass.addContent(
-                    new FunctionDeclaration("convertStringToTime", "Time").visibility(Visibility.PROTECTED).addArgument(new FunctionArgument("String", "str")).addContent(
-                            new ReturnStatement(
-                                    new FunctionCall("getTimeFromString", "Dates").addArguments("str", quickQuote(":"))
+                    new FunctionDeclaration("convertStringToTime", "Time")
+                            .visibility(Visibility.PROTECTED)
+                            .addArgument(new FunctionArgument("String", "str"))
+                            .addContent(
+                                    new ReturnStatement(
+                                            new FunctionCall("getTimeFromString", "Dates")
+                                                    .addArguments("str", quickQuote(":"))
+                                    )
                             )
-                    )
             ).addContent(EMPTY_LINE);
 
-            javaClass.addContent(getTemporalConvertToStringFunction("Time", "time")).addContent(EMPTY_LINE);
+            javaClass.addContent(getTemporalConvertToStringFunction("Time", "time"))
+                    .addContent(EMPTY_LINE);
 
             javaClass.addContent(
-                    new FunctionDeclaration("validateTimeFormat", "boolean").visibility(Visibility.PROTECTED).addArgument(new FunctionArgument("String", "str")).addContent(
-                            new VarDeclaration(
-                                    "SimpleInputTimeFormat", "simpleInputTimeFormat",
-                                    new ObjectCreation("SimpleInputTimeFormat").addArgument(quickQuote(":"))
-                            ).markAsFinal()
-                    ).addContent(
+                    new FunctionDeclaration("validateTimeFormat", "boolean")
+                            .visibility(Visibility.PROTECTED)
+                            .addArgument(new FunctionArgument("String", "str"))
+                            .addContent(
+                                    new VarDeclaration(
+                                            "SimpleInputTimeFormat", "simpleInputTimeFormat",
+                                            new ObjectCreation("SimpleInputTimeFormat").addArgument(quickQuote(":"))
+                                    ).markAsFinal()
+                            ).addContent(
                             new ReturnStatement(
                                     new FunctionCall(
                                             "validate",
@@ -2653,36 +2766,50 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
         if (types.contains("Timestamp")) {
             javaClass.addContent(
-                    new FunctionDeclaration("formatTimestamp", "String").visibility(Visibility.PROTECTED).addArgument(new FunctionArgument("Timestamp", "timestamp")).addContent(
-                            new ReturnStatement(
-                                    new FunctionCall(
-                                            "format",
+                    new FunctionDeclaration("formatTimestamp", "String")
+                            .visibility(Visibility.PROTECTED)
+                            .addArgument(new FunctionArgument("Timestamp", "timestamp"))
+                            .addContent(
+                                    new ReturnStatement(
                                             new FunctionCall(
-                                                    "getDateTimeInstance",
-                                                    "DateFormat").addArguments("DateFormat.LONG", "DateFormat.LONG").addArgument(new FunctionCall("getLocale", internalsVar))
-                                    ).addArgument("timestamp")
+                                                    "format",
+                                                    new FunctionCall("getDateTimeInstance", "DateFormat")
+                                                            .addArguments("DateFormat.LONG", "DateFormat.LONG")
+                                                            .addArgument(new FunctionCall("getLocale", internalsVar))
+                                            ).addArgument("timestamp")
+                                    )
                             )
-                    )
             ).addContent(EMPTY_LINE);
 
             javaClass.addContent(
-                    new FunctionDeclaration("convertStringToTimestamp", "Timestamp").visibility(Visibility.PROTECTED).addArgument(new FunctionArgument("String", "str")).addContent(
-                            new ReturnStatement(
-                                    new FunctionCall("getTimestampFromYYMD", "Dates").addArguments("str", quickQuote("-"), quickQuote(":"))
+                    new FunctionDeclaration("convertStringToTimestamp", "Timestamp")
+                            .visibility(Visibility.PROTECTED)
+                            .addArgument(new FunctionArgument("String", "str"))
+                            .addContent(
+                                    new ReturnStatement(
+                                            new FunctionCall("getTimestampFromYYMD", "Dates")
+                                                    .addArguments("str", quickQuote("-"), quickQuote(":"))
+                                    )
                             )
-                    )
             ).addContent(EMPTY_LINE);
 
-            javaClass.addContent(getTemporalConvertToStringFunction("Timestamp", "timestamp")).addContent(EMPTY_LINE);
+            javaClass.addContent(getTemporalConvertToStringFunction("Timestamp", "timestamp"))
+                    .addContent(EMPTY_LINE);
 
             javaClass.addContent(
-                    new FunctionDeclaration("validateTimestampFormat", "boolean").visibility(Visibility.PROTECTED).addArgument(new FunctionArgument("String", "str")).addContent(
-                            new VarDeclaration(
-                                    "SimpleInputTimestampFormat", "simpleInputTimestampFormat",
-                                    new ObjectCreation("SimpleInputTimestampFormat")
-                                            .addArguments("SimpleInputDateFormat.ElementOrder.YYMD", quickQuote("-"), quickQuote(":"))
-                            ).markAsFinal()
-                    ).addContent(
+                    new FunctionDeclaration("validateTimestampFormat", "boolean")
+                            .visibility(Visibility.PROTECTED)
+                            .addArgument(new FunctionArgument("String", "str"))
+                            .addContent(
+                                    new VarDeclaration(
+                                            "SimpleInputTimestampFormat", "simpleInputTimestampFormat",
+                                            new ObjectCreation("SimpleInputTimestampFormat")
+                                                    .addArguments(
+                                                            "SimpleInputDateFormat.ElementOrder.YYMD",
+                                                            quickQuote("-"),
+                                                            quickQuote(":"))
+                                    ).markAsFinal()
+                            ).addContent(
                             new ReturnStatement(
                                     new FunctionCall(
                                             "validate",
