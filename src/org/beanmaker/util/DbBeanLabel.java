@@ -21,6 +21,8 @@ public interface DbBeanLabel {
     long updateDB(final DBTransaction transaction);
     void commitTextsToDatabase(final DBTransaction transaction);
 
+    boolean hasDataFor(final DbBeanLanguage dbBeanLanguage);
+
     void reset();
     void fullReset();
 }

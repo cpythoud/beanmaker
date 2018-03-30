@@ -851,34 +851,49 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
             if (column.hasAssociatedBean()) {
                 final String associatedBeanClass = column.getAssociatedBeanClass();
-
-                final ReturnStatement returnStatement;
-                if (column.isLabelReference())
-                    returnStatement =
-                            new ReturnStatement(new FunctionCall("get", "Labels").addArgument(field));
-                else if (column.isFileReference())
-                    returnStatement =
-                            new ReturnStatement(new FunctionCall("get", "LocalFiles").addArgument(field));
-                else
-                    returnStatement =
-                            new ReturnStatement(new ObjectCreation(associatedBeanClass).addArgument(field));
-
                 final String associatedBeanGetterFunctionName = "get" + chopId(field);
                 final FunctionDeclaration associatedBeanGetter =
-                        new FunctionDeclaration(associatedBeanGetterFunctionName, associatedBeanClass)
-                                .addContent(returnStatement);
+                        new FunctionDeclaration(associatedBeanGetterFunctionName, associatedBeanClass);
                 if (field.equals("idLabel"))
                     associatedBeanGetter.annotate("@Override");
+
+                if (column.isLabelReference()) {
+                    associatedBeanGetter.addContent(
+                            new VarDeclaration(
+                                    "DbBeanLabel",
+                                    "dbBeanLabel",
+                                    new FunctionCall("get", "Labels").addArgument(field)
+                            ).markAsFinal()
+                    ).addContent(EMPTY_LINE).addContent(
+                            new IfBlock(new Condition(new Comparison(uncapitalize(chopId(field)), "null")))
+                                    .addContent(new ReturnStatement("dbBeanLabel"))
+                    ).addContent(EMPTY_LINE).addContent(
+                            new ReturnStatement(
+                                    new FunctionCall("replaceData", "Labels")
+                                            .addArguments("dbBeanLabel", uncapitalize(chopId(field))))
+                    );
+                } else {
+                    final ReturnStatement returnStatement;
+                    if (column.isFileReference())
+                        returnStatement =
+                                new ReturnStatement(new FunctionCall("get", "LocalFiles").addArgument(field));
+                    else
+                        returnStatement =
+                                new ReturnStatement(new ObjectCreation(associatedBeanClass).addArgument(field));
+
+                    associatedBeanGetter.addContent(returnStatement);
+                }
+
                 javaClass.addContent(associatedBeanGetter).addContent(EMPTY_LINE);
 
                 if (column.isLabelReference()) {
                     final FunctionDeclaration labelGetter =
                             new FunctionDeclaration(associatedBeanGetterFunctionName, "String")
                                     .addArgument(new FunctionArgument("DbBeanLanguage", "dbBeanLanguage"))
+                                    .addContent(new FunctionCall("init" + chopId(field)).byItself())
                                     .addContent(
                                             new ReturnStatement(
-                                                    new FunctionCall("get", "Labels")
-                                                            .addArgument(field)
+                                                    new FunctionCall("get", uncapitalize(chopId(field)))
                                                             .addArgument("dbBeanLanguage")
                                             )
                                     );
