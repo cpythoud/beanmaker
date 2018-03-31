@@ -2158,11 +2158,16 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 	}
 	
 	private void addDelete() {
-        final FunctionDeclaration deleteFunction = new FunctionDeclaration("delete").annotate("@Override");
-        final FunctionCall accessDB = new FunctionCall("addUpdate", "transaction").byItself();
+        final FunctionDeclaration deleteFunction =
+                new FunctionDeclaration("delete")
+                        .annotate("@Override");
+        final FunctionCall accessDB =
+                new FunctionCall("addUpdate", "transaction")
+                        .byItself();
 
         deleteFunction.addContent(
-                new VarDeclaration("DBTransaction", "transaction", new FunctionCall("createDBTransaction")).markAsFinal()
+                new VarDeclaration("DBTransaction", "transaction", new FunctionCall("createDBTransaction"))
+                        .markAsFinal()
         );
 
         if (columns.hasItemOrder())
@@ -2178,16 +2183,27 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
         deleteFunction.addContent(
                 accessDB.addArgument(quickQuote(getDeleteSQLQuery()))
-                        .addArgument(new AnonymousClassCreation("DBQuerySetup").setContext(accessDB).addContent(
-                        new FunctionDeclaration("setupPreparedStatement").annotate("@Override").addException("SQLException")
-                                .addArgument(new FunctionArgument("PreparedStatement", "stat")).addContent(
-                                new FunctionCall("setLong", "stat").addArguments("1", "id").byItself()
-                        )
-                ))
+                        .addArgument(
+                                new AnonymousClassCreation("DBQuerySetup")
+                                        .setContext(accessDB)
+                                        .addContent(
+                                                new FunctionDeclaration("setupPreparedStatement")
+                                                        .annotate("@Override")
+                                                        .addException("SQLException")
+                                                        .addArgument(new FunctionArgument("PreparedStatement", "stat"))
+                                                        .addContent(
+                                                                new FunctionCall("setLong", "stat")
+                                                                        .addArguments("1", "id")
+                                                                        .byItself()
+                                                        )
+                                        ))
         );
 
         if (columns.hasItemOrder()) {
-            final IfBlock checkItemOrderNotMax = new IfBlock(new Condition(new Comparison("curItemOrder", "0", Comparison.Comparator.GREATER_THAN)));
+            final IfBlock checkItemOrderNotMax =
+                    new IfBlock(
+                            new Condition(
+                                    new Comparison("curItemOrder", "0", Comparison.Comparator.GREATER_THAN)));
 
             final Column itemOrderField = columns.getItemOrderField();
             if (itemOrderField.isUnique())
@@ -2195,12 +2211,17 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                         getUpdateItemOrderAboveFunctionCall("getUpdateItemOrdersAboveQuery", null)
                 );
             else {
-                final String itemOrderAssociatedField = uncapitalize(camelize(itemOrderField.getItemOrderAssociatedField()));
+                final String itemOrderAssociatedField =
+                        uncapitalize(camelize(itemOrderField.getItemOrderAssociatedField()));
                 checkItemOrderNotMax.addContent(
                         new IfBlock(new Condition(new Comparison(itemOrderAssociatedField, "0"))).addContent(
-                                getUpdateItemOrderAboveFunctionCall("getUpdateItemOrdersAboveQueryWithNullSecondaryField", null)
+                                getUpdateItemOrderAboveFunctionCall(
+                                        "getUpdateItemOrdersAboveQueryWithNullSecondaryField",
+                                        null)
                         ).elseClause(new ElseBlock().addContent(
-                                getUpdateItemOrderAboveFunctionCall("getUpdateItemOrdersAboveQuery", itemOrderAssociatedField)
+                                getUpdateItemOrderAboveFunctionCall(
+                                        "getUpdateItemOrdersAboveQuery",
+                                        itemOrderAssociatedField)
                         )));
             }
 
@@ -2232,16 +2253,23 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         javaClass.addContent(deleteFunction).addContent(EMPTY_LINE);
 
         javaClass.addContent(
-                new FunctionDeclaration("deleteExtraDbActions").visibility(Visibility.PROTECTED).addArgument(new FunctionArgument("DBTransaction", "transaction"))
+                new FunctionDeclaration("deleteExtraDbActions")
+                        .visibility(Visibility.PROTECTED)
+                        .addArgument(new FunctionArgument("DBTransaction", "transaction"))
         ).addContent(EMPTY_LINE);
 
         javaClass.addContent(
-                new FunctionDeclaration("postDeleteActions").visibility(Visibility.PROTECTED)
+                new FunctionDeclaration("postDeleteActions")
+                        .visibility(Visibility.PROTECTED)
         ).addContent(EMPTY_LINE);
 	}
 
-    private FunctionCall getUpdateItemOrderAboveFunctionCall(final String queryRetrievalFunction, final String itemOrderAssociatedField) {
-        final FunctionCall functionCall = new FunctionCall("updateItemOrdersAbove", "DBQueries").byItself()
+    private FunctionCall getUpdateItemOrderAboveFunctionCall(
+            final String queryRetrievalFunction,
+            final String itemOrderAssociatedField)
+    {
+        final FunctionCall functionCall = new FunctionCall("updateItemOrdersAbove", "DBQueries")
+                .byItself()
                 .addArgument(new FunctionCall(queryRetrievalFunction, parametersVar))
                 .addArgument("transaction")
                 .addArgument("curItemOrder");
@@ -2253,7 +2281,9 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
     }
 
     private FunctionCall getStatSetFunction(final String type, final String field, final int index) {
-        return new FunctionCall("set" + capitalize(type), "stat").byItself().addArguments(Integer.toString(index), field);
+        return new FunctionCall("set" + capitalize(type), "stat")
+                .byItself()
+                .addArguments(Integer.toString(index), field);
     }
 
     private JavaCodeBlock getFieldCreationOrUpdate(final Column column, final int index) {
@@ -2265,14 +2295,18 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
         if (column.hasAssociatedBean())
             return new IfBlock(new Condition(new Comparison(field, "0"))).addContent(
-                    new FunctionCall("setNull", "stat").byItself().addArguments(Integer.toString(index), "java.sql.Types.INTEGER")
+                    new FunctionCall("setNull", "stat")
+                            .byItself()
+                            .addArguments(Integer.toString(index), "java.sql.Types.INTEGER")
             ).elseClause(new ElseBlock().addContent(
                     getStatSetFunction(type, field, index)
             ));
 
         if (JAVA_TEMPORAL_TYPES.contains(type))
             return new IfBlock(new Condition(new Comparison(field, "null"))).addContent(
-                    new FunctionCall("setNull", "stat").byItself().addArguments(Integer.toString(index), "java.sql.Types." + type.toUpperCase())
+                    new FunctionCall("setNull", "stat")
+                            .byItself()
+                            .addArguments(Integer.toString(index), "java.sql.Types." + type.toUpperCase())
             ).elseClause(new ElseBlock().addContent(
                     getStatSetFunction(type, field, index)
             ));
@@ -2567,18 +2601,6 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
             );
 
         javaClass.addContent(updateRecordFunctionWithTransaction).addContent(EMPTY_LINE);
-
-        /*javaClass.addContent(
-                new FunctionDeclaration("updateRecord")
-                        .addArgument(new FunctionArgument("DBTransaction", "transaction"))
-                        .visibility(Visibility.PRIVATE)
-                        .addContent(
-                                new FunctionCall("addUpdate", "transaction")
-                                        .byItself()
-                                        .addArgument(quickQuote(getUpdateSQLQuery()))
-                                        .addArgument(new ObjectCreation("RecordUpdateSetup"))
-                        )
-        ).addContent(EMPTY_LINE);*/
 
         javaClass.addContent(
                 new FunctionDeclaration("preUpdateExtraDbActions")
