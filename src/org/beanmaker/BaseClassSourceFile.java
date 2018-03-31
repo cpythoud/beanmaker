@@ -2363,9 +2363,6 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                                         .addArgument("transaction")
                         );
 
-        /*if (columns.hasLabels())
-            addSetLabelIdFunctionCalls(createRecordFunction);*/
-
         createRecordFunction
                 .addContent(
                         new VarDeclaration(
@@ -2376,11 +2373,6 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 );
 
         addOneToManyRelationshipDBUpdateFunctionCalls(createRecordFunction);
-
-        /*if (columns.hasLabels())
-            createRecordFunction.addContent(
-                    new FunctionCall("updateLabels").addArgument("transaction").byItself()
-            );*/
 
         createRecordFunction.addContent(
                 new FunctionCall("createExtraDbActions").byItself().addArguments("transaction", "id")
@@ -2534,19 +2526,11 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                                 .addArgument("transaction")
                 );
 
-        /*if (columns.hasLabels())
-            addSetLabelIdFunctionCalls(updateRecordFunction);*/
-
         updateRecordFunction.addContent(
                 new FunctionCall("updateRecord").byItself().addArgument("transaction")
         );
 
         addOneToManyRelationshipDBUpdateFunctionCalls(updateRecordFunction);
-
-        /*if (columns.hasLabels())
-            updateRecordFunction.addContent(
-                    new FunctionCall("updateLabels").addArgument("transaction").byItself()
-            );*/
 
         updateRecordFunction.addContent(
                 new FunctionCall("updateExtraDbActions").byItself().addArgument("transaction")
