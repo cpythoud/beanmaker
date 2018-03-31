@@ -2162,13 +2162,6 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 new FunctionDeclaration("delete")
                         .annotate("@Override");
 
-        final FunctionDeclaration deleteFunctionWithTransaction =
-                new FunctionDeclaration("delete")
-                        .addArgument(new FunctionArgument("DBTransaction", "transaction"))
-                        .addContent(
-                                new FunctionCall("preDeleteExtraDbActions").byItself().addArgument("transaction")
-                        );
-
         final FunctionCall accessDB =
                 new FunctionCall("addUpdate", "transaction")
                         .byItself();
@@ -2179,6 +2172,36 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         ).addContent(
                 new FunctionCall("delete").addArgument("transaction").byItself()
         );
+
+        deleteFunction.addContent(
+                new FunctionCall("commit", "transaction").byItself()
+        ).addContent(
+                EMPTY_LINE
+        ).addContent(
+                new FunctionCall("postDeleteActions").byItself()
+        ).addContent(
+                EMPTY_LINE
+        ).addContent(
+                new IfBlock(new Condition(parametersVar + ".USE_CACHE")).addContent(
+                        new FunctionCall("delete", parametersVar + ".CACHE_SET")
+                                .addArgument("id")
+                                .byItself()
+                )
+        ).addContent(
+                EMPTY_LINE
+        ).addContent(
+                new FunctionCall("fullReset").byItself()
+        );
+
+        javaClass.addContent(deleteFunction).addContent(EMPTY_LINE);
+
+
+        final FunctionDeclaration deleteFunctionWithTransaction =
+                new FunctionDeclaration("delete")
+                        .addArgument(new FunctionArgument("DBTransaction", "transaction"))
+                        .addContent(
+                                new FunctionCall("preDeleteExtraDbActions").byItself().addArgument("transaction")
+                        );
 
         if (columns.hasItemOrder())
             deleteFunctionWithTransaction.addContent(
@@ -2242,28 +2265,8 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 new FunctionCall("deleteExtraDbActions").byItself().addArgument("transaction")
         );
 
-        deleteFunction.addContent(
-                new FunctionCall("commit", "transaction").byItself()
-        ).addContent(
-                EMPTY_LINE
-        ).addContent(
-                new FunctionCall("postDeleteActions").byItself()
-        ).addContent(
-                EMPTY_LINE
-        ).addContent(
-                new IfBlock(new Condition(parametersVar + ".USE_CACHE")).addContent(
-                        new FunctionCall("delete", parametersVar + ".CACHE_SET")
-                                .addArgument("id")
-                                .byItself()
-                )
-        ).addContent(
-                EMPTY_LINE
-        ).addContent(
-                new FunctionCall("fullReset").byItself()
-        );
-
-        javaClass.addContent(deleteFunction).addContent(EMPTY_LINE);
         javaClass.addContent(deleteFunctionWithTransaction).addContent(EMPTY_LINE);
+
 
         javaClass.addContent(
                 new FunctionDeclaration("preDeleteExtraDbActions")
@@ -2404,23 +2407,12 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 new FunctionDeclaration("createRecord")
                         .visibility(Visibility.PRIVATE);
 
-        final FunctionDeclaration createRecordFunctionWithTransaction =
-                new FunctionDeclaration("createRecord", "long")
-                        .addArgument(new FunctionArgument("DBTransaction", "transaction"))
-                        .visibility(Visibility.PRIVATE);
-
         createRecordFunction.addContent(
                 new VarDeclaration(
                         "DBTransaction",
                         "transaction",
                         new FunctionCall("createDBTransaction")
                 ).markAsFinal()
-        );
-
-        createRecordFunctionWithTransaction.addContent(
-                new FunctionCall("preCreateExtraDbActions")
-                        .byItself()
-                        .addArgument("transaction")
         );
 
         createRecordFunction.addContent(
@@ -2438,6 +2430,16 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         javaClass.addContent(createRecordFunction).addContent(EMPTY_LINE);
 
 
+        final FunctionDeclaration createRecordFunctionWithTransaction =
+                new FunctionDeclaration("createRecord", "long")
+                        .addArgument(new FunctionArgument("DBTransaction", "transaction"))
+                        .visibility(Visibility.PRIVATE);
+
+        createRecordFunctionWithTransaction.addContent(
+                new FunctionCall("preCreateExtraDbActions")
+                        .byItself()
+                        .addArgument("transaction")
+        );
 
         if (columns.hasItemOrder()) {
             final Column itemOrderField = columns.getItemOrderField();
@@ -2521,6 +2523,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
         javaClass.addContent(createRecordFunctionWithTransaction).addContent(EMPTY_LINE);
 
+
         javaClass.addContent(
                 new FunctionDeclaration("preCreateExtraDbActions")
                         .addArgument(new FunctionArgument("DBTransaction", "transaction"))
@@ -2574,18 +2577,6 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                                 .markAsFinal()
                 );
 
-        final FunctionDeclaration updateRecordFunctionWithTransaction =
-                new FunctionDeclaration("updateRecord")
-                        .visibility(Visibility.PRIVATE)
-                        .addArgument(new FunctionArgument("DBTransaction", "transaction"));
-
-        updateRecordFunctionWithTransaction.addContent(
-                new FunctionCall("preUpdateExtraDbActions")
-                        .byItself()
-                        .addArgument("transaction")
-        );
-
-
         updateRecordFunction.addContent(
                 new FunctionCall("updateRecord").byItself().addArgument("transaction")
         );
@@ -2599,6 +2590,18 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         );
 
         javaClass.addContent(updateRecordFunction).addContent(EMPTY_LINE);
+
+
+        final FunctionDeclaration updateRecordFunctionWithTransaction =
+                new FunctionDeclaration("updateRecord")
+                        .visibility(Visibility.PRIVATE)
+                        .addArgument(new FunctionArgument("DBTransaction", "transaction"));
+
+        updateRecordFunctionWithTransaction.addContent(
+                new FunctionCall("preUpdateExtraDbActions")
+                        .byItself()
+                        .addArgument("transaction")
+        );
 
         if (columns.hasLabels())
             addSetLabelIdFunctionCalls(updateRecordFunctionWithTransaction);
@@ -2624,6 +2627,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         );
 
         javaClass.addContent(updateRecordFunctionWithTransaction).addContent(EMPTY_LINE);
+
 
         javaClass.addContent(
                 new FunctionDeclaration("preUpdateExtraDbActions")
