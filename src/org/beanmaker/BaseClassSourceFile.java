@@ -2554,6 +2554,15 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         }
     }
 
+    private void addInitLabelFunctionCalls(final FunctionDeclaration functionDeclaration) {
+        for (Column column: columns.getList())
+            if (column.isLabelReference())
+                functionDeclaration.addContent(
+                        new FunctionCall("init" + chopId(column.getJavaName()))
+                                .byItself()
+                );
+    }
+
     private void addSetLabelIdFunctionCalls(final FunctionDeclaration createUpdateRecordFunction) {
         for (Column column: columns.getList())
             if (column.isLabelReference()) {
@@ -2603,8 +2612,10 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                         .addArgument("transaction")
         );
 
-        if (columns.hasLabels())
+        if (columns.hasLabels()) {
+            addInitLabelFunctionCalls(updateRecordFunctionWithTransaction);
             addSetLabelIdFunctionCalls(updateRecordFunctionWithTransaction);
+        }
 
         updateRecordFunctionWithTransaction.addContent(
                 new FunctionCall("addUpdate", "transaction")
