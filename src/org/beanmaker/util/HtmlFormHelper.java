@@ -5,6 +5,7 @@ import org.dbbeans.util.Strings;
 import org.jcodegen.html.ButtonTag;
 import org.jcodegen.html.CData;
 import org.jcodegen.html.DivTag;
+import org.jcodegen.html.FormElement;
 import org.jcodegen.html.FormTag;
 import org.jcodegen.html.HtmlCodeFragment;
 import org.jcodegen.html.InputTag;
@@ -465,6 +466,8 @@ public class HtmlFormHelper {
             input.placeholder(params.getPlaceholder());
         if (params.isDisabled())
             input.disabled();
+        if (params.isReadonly())
+            input.readonly();
 
         return getFormGroup(label, input, params.getHelpText());
     }
@@ -766,11 +769,32 @@ public class HtmlFormHelper {
         final String fieldId = getFieldId(params.getField(), params.getIdBean());
         final LabelTag label = getLabel(params.getFieldLabel(), fieldId, params.isRequired());
 
-        final SelectTag select = getSelectTag(params.getField(), fieldId);
+        final FormElement formElement;
+        if (params.isReadonly())
+            formElement = getReadOnlyFormElement(params, fieldId);
+        else
+            formElement = getReadWriteFormElement(params, fieldId);
+
         if (params.isRequired() && useRequiredInHtml)
-            select.required();
+            formElement.required();
         if (params.isDisabled())
-            select.disabled();
+            formElement.disabled();
+
+        return getFormGroup(label, formElement, params.getHelpText());
+    }
+
+    private FormElement getReadOnlyFormElement(final HFHParameters params, final String fieldId) {
+        String value = "";
+        for (IdNamePair pair: params.getSelectPairs())
+            if (pair.getId().equals(params.getSelected()))
+                value = pair.getName();
+
+        return getInputTag(InputTag.InputType.TEXT, fieldId, params.getField(), value)
+                .readonly();
+    }
+
+    private FormElement getReadWriteFormElement(final HFHParameters params, final String fieldId) {
+        final SelectTag select = getSelectTag(params.getField(), fieldId);
 
         for (IdNamePair pair: params.getSelectPairs()) {
             final OptionTag optionTag = new OptionTag(pair.getName(), pair.getId());
@@ -779,7 +803,7 @@ public class HtmlFormHelper {
             select.child(optionTag);
         }
 
-        return getFormGroup(label, select, params.getHelpText());
+        return select;
     }
 
     protected SelectTag getSelectTag(final String name, final String id) {
@@ -838,6 +862,8 @@ public class HtmlFormHelper {
             textarea.placeholder(params.getPlaceholder());
         if (params.isDisabled())
             textarea.disabled();
+        if (params.isReadonly())
+            textarea.readonly();
 
         return getFormGroup(label, textarea, params.getHelpText());
     }
@@ -1011,6 +1037,8 @@ public class HtmlFormHelper {
             checkbox.checked();
         if (params.isDisabled())
             checkbox.disabled();
+        if (params.isReadonly())
+            checkbox.readonly();
         if (params.getCheckboxValue() != null)
             checkbox.value(params.getCheckboxValue());
 
@@ -1078,6 +1106,8 @@ public class HtmlFormHelper {
             input.required();
         if (params.isDisabled())
             input.disabled();
+        if (params.isReadonly())
+            input.readonly();
 
         return getFileFormGroup(label, uploadButton, input, filenameDisplay, removeFileButton);
     }
@@ -1128,6 +1158,7 @@ public class HtmlFormHelper {
         return getFormGroup(label, wrapper);
     }
 
+    // TODO: split into 2 or more functions for clarity and separation of concerns
     private LabelTag getBooleanRadioButton(final HFHParameters params, final boolean positiveValue) {
         final String fieldLabel;
         final String fieldValue;
@@ -1150,6 +1181,8 @@ public class HtmlFormHelper {
             radioButton.checked();
         if (params.isDisabled())
             radioButton.disabled();
+        if (params.isReadonly())
+            radioButton.readonly();
         buttonInside.addTag(radioButton);
         buttonInside.addTag(new CData("&nbsp;" + fieldLabel));
 

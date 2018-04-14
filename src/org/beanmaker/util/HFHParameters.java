@@ -20,6 +20,7 @@ public class HFHParameters {
     private boolean disabled;
     private String placeholder;
     private String helpText;
+    private boolean readonly;
 
     // selects
     private String selected;
@@ -65,6 +66,7 @@ public class HFHParameters {
         disabled = params.disabled;
         placeholder = params.placeholder;
         helpText = params.helpText;
+        readonly = params.readonly;
 
         // selects
         selected = params.selected;
@@ -224,6 +226,14 @@ public class HFHParameters {
         this.helpText = helpText;
 
         return this;
+    }
+
+    public boolean isReadonly() {
+        return readonly;
+    }
+
+    public void setReadonly(final boolean readonly) {
+        this.readonly = readonly;
     }
 
     public String getSelected() {

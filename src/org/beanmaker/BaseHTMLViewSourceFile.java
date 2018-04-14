@@ -20,6 +20,7 @@ import org.jcodegen.java.Visibility;
 import static org.beanmaker.SourceFiles.chopId;
 
 import static org.dbbeans.util.Strings.capitalize;
+import static org.dbbeans.util.Strings.normalize;
 import static org.dbbeans.util.Strings.quickQuote;
 import static org.dbbeans.util.Strings.uncapitalize;
 
@@ -66,6 +67,19 @@ public class BaseHTMLViewSourceFile extends ViewCode {
                     new VarDeclaration("DbBeanFileCreator", "dbBeanFileCreator")
                             .visibility(Visibility.PROTECTED)
             );
+
+        addFormParameterProperties();
+    }
+
+    private void addFormParameterProperties() {
+        javaClass
+                .addContent(EMPTY_LINE)
+                .addContent(new VarDeclaration("String", "formName", quickQuote(beanName))
+                        .visibility(Visibility.PROTECTED))
+                .addContent(new VarDeclaration("boolean", "horizontal", "false")
+                        .visibility(Visibility.PROTECTED))
+                .addContent(new VarDeclaration("boolean", "readonly", "false")
+                        .visibility(Visibility.PROTECTED));
     }
 
     @Override
@@ -112,7 +126,26 @@ public class BaseHTMLViewSourceFile extends ViewCode {
                                                                 "LocalFiles"))
                                 )
                         )
-        );
+        ).addContent(EMPTY_LINE);
+    }
+
+    private void addFormParameterPropertySetters() {
+        javaClass.addContent(
+                new FunctionDeclaration("setFormName")
+                        .addArgument(new FunctionArgument("String", "formName")).addContent(
+                                new Assignment("this.formName", "formName")
+                )
+        ).addContent(EMPTY_LINE).addContent(
+                new FunctionDeclaration("setHorizontal")
+                        .addArgument(new FunctionArgument("boolean", "horizontal")).addContent(
+                        new Assignment("this.horizontal", "horizontal")
+                )
+        ).addContent(EMPTY_LINE).addContent(
+                new FunctionDeclaration("setReadonly")
+                        .addArgument(new FunctionArgument("boolean", "readonly")).addContent(
+                        new Assignment("this.readonly", "readonly")
+                )
+        ).addContent(EMPTY_LINE);
     }
 
     private void addChecksForRequiredFields() {
@@ -181,8 +214,10 @@ public class BaseHTMLViewSourceFile extends ViewCode {
                 new IfBlock(new Condition("captchaControl"))
                         .addContent(new FunctionCall("composeCaptchaField").byItself().addArgument("buf"))
         )*/.addContent(
-                new FunctionCall("composeButtons").byItself()
-                        .addArgument("form")
+                new IfBlock(new Condition("!readonly")).addContent(
+                        new FunctionCall("composeButtons").byItself()
+                                .addArgument("form")
+                )
         ).addContent(EMPTY_LINE).addContent(
                 new ReturnStatement("form")
         );
@@ -193,9 +228,19 @@ public class BaseHTMLViewSourceFile extends ViewCode {
                 new FunctionDeclaration("getFormStart", "FormTag")
                         .visibility(Visibility.PROTECTED)
                         .addContent(
+                                new IfBlock(new Condition("horizontal")).addContent(
+                                        new ReturnStatement(
+                                                new FunctionCall("getHorizontalForm", "htmlFormHelper")
+                                                        .addArgument("formName")
+                                                        .addArgument(new FunctionCall("getId", beanVarName))
+                                        )
+                                )
+                        )
+                        .addContent(EMPTY_LINE)
+                        .addContent(
                                 new ReturnStatement(
                                         new FunctionCall("getForm", "htmlFormHelper")
-                                                .addArgument(quickQuote(beanName))
+                                                .addArgument("formName")
                                                 .addArgument(new FunctionCall("getId", beanVarName))
                                 )
                         )
@@ -208,7 +253,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
                         .addContent(
                                 new FunctionCall("child", "form").byItself()
                                         .addArgument(new FunctionCall("getHiddenSubmitInput", "htmlFormHelper")
-                                                .addArgument(quickQuote(beanName))
+                                                .addArgument("formName")
                                                 .addArgument(new FunctionCall("getId", beanVarName)))
                         )
         ).addContent(EMPTY_LINE);
@@ -248,7 +293,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         javaClass.addContent(
                 new FunctionDeclaration("getSubmitButtonParameters", "HFHParameters").visibility(Visibility.PROTECTED)
                         .addContent(getNewHFHParametersDeclaration())
-                        .addContent(getParamAdjunctionCall("setBeanName", quickQuote(beanName)))
+                        .addContent(getParamAdjunctionCall("setBeanName", "formName"))
                         .addContent(getParamAdjunctionCall("setIdBean", getId()))
                         .addContent(getParamAdjunctionCall(
                                 "setButtonLabel",
@@ -373,6 +418,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         paramsFunctionDeclaration.addContent(getParamAdjunctionCall("setFieldLabel", getLabelArgument(field)));
         paramsFunctionDeclaration.addContent(getParamAdjunctionCall("setSelectPairs", "pairs"));
         paramsFunctionDeclaration.addContent(getRequiredInHtmlFormFunctionCall(field));
+        paramsFunctionDeclaration.addContent(getReadonlyParameterFunctionCall());
         paramsFunctionDeclaration.addContent(new ReturnStatement("params"));
 
         final FunctionDeclaration getElementFunctionDeclaration =
@@ -399,6 +445,10 @@ public class BaseHTMLViewSourceFile extends ViewCode {
                 "setRequired",
                 new FunctionCall("is" + capitalize(field) + "RequiredInHtmlForm")
         );
+    }
+
+    private FunctionCall getReadonlyParameterFunctionCall() {
+        return getParamAdjunctionCall("setReadonly", "readonly");
     }
 
     private FunctionCall addFieldValueArgument(final String field, final boolean booleanField) {
@@ -442,6 +492,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         paramsFunctionDeclaration.addContent(
                 getParamAdjunctionCall("setInputType", "InputTag.InputType." + inputTypeVal));
         paramsFunctionDeclaration.addContent(getRequiredInHtmlFormFunctionCall(field));
+        paramsFunctionDeclaration.addContent(getReadonlyParameterFunctionCall());
         paramsFunctionDeclaration.addContent(new ReturnStatement("params"));
 
         final FunctionDeclaration getElementFunctionDeclaration = getNewElementFunctionDeclaration(field);
@@ -481,6 +532,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         paramsFunctionDeclaration.addContent(
                 getParamAdjunctionCall("setFieldLabel", getLabelArgument(field)));
         paramsFunctionDeclaration.addContent(getRequiredInHtmlFormFunctionCall(field));
+        paramsFunctionDeclaration.addContent(getReadonlyParameterFunctionCall());
         paramsFunctionDeclaration.addContent(new ReturnStatement("params"));
 
         final FunctionDeclaration getElementFunctionDeclaration = getNewElementFunctionDeclaration(field);
@@ -546,6 +598,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
                 getParamAdjunctionCall("setValue", addFieldValueArgument(field, false)));
         paramsFunctionDeclaration.addContent(getParamAdjunctionCall("setFieldLabel", getLabelArgument(field)));
         paramsFunctionDeclaration.addContent(getRequiredInHtmlFormFunctionCall(field));
+        paramsFunctionDeclaration.addContent(getReadonlyParameterFunctionCall());
         paramsFunctionDeclaration.addContent(new ReturnStatement("params"));
 
         final FunctionDeclaration getElementFunctionDeclaration =
@@ -914,6 +967,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         addViewPrelude(true, false);
         if (columns.hasFiles())
             addFileCreatorFunction();
+        addFormParameterPropertySetters();
         addChecksForRequiredFields();
         newLine();
         addHTMLFormGetter();
