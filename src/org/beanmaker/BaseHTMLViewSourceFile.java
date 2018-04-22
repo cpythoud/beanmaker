@@ -630,6 +630,7 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         paramsFunctionDeclaration.addContent(
                 getParamAdjunctionCall("setChecked", addFieldValueArgument(field, true)));
         paramsFunctionDeclaration.addContent(getParamAdjunctionCall("setFieldLabel", getLabelArgument(field)));
+        paramsFunctionDeclaration.addContent(getReadonlyParameterFunctionCall());
         paramsFunctionDeclaration.addContent(new ReturnStatement("params"));
 
         final FunctionDeclaration getElementFunctionDeclaration = getNewElementFunctionDeclaration(field);
