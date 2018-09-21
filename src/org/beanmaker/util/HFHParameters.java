@@ -21,6 +21,7 @@ public class HFHParameters {
     private String placeholder;
     private String helpText;
     private boolean readonly;
+    private boolean autocomplete = true;
 
     // selects
     private String selected;
@@ -67,6 +68,7 @@ public class HFHParameters {
         placeholder = params.placeholder;
         helpText = params.helpText;
         readonly = params.readonly;
+        autocomplete = params.autocomplete;
 
         // selects
         selected = params.selected;
@@ -234,6 +236,14 @@ public class HFHParameters {
 
     public void setReadonly(final boolean readonly) {
         this.readonly = readonly;
+    }
+
+    public boolean isAutocomplete() {
+        return autocomplete;
+    }
+
+    public void setAutocomplete(final boolean autocomplete) {
+        this.autocomplete = autocomplete;
     }
 
     public String getSelected() {

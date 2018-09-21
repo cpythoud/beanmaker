@@ -478,6 +478,8 @@ public class HtmlFormHelper {
             input.disabled();
         if (params.isReadonly())
             input.readonly();
+        if (!params.isAutocomplete())
+            input.attribute("autocomplete", "off");
 
         return getFormGroup(label, input, params.getHelpText());
     }
@@ -1066,6 +1068,8 @@ public class HtmlFormHelper {
             checkbox.readonly()
                     .attribute("onclick", "return false;")
                     .attribute("onkeydown", "return false;");
+        if (!params.isAutocomplete())
+            checkbox.attribute("autocomplete", "off");
         if (params.getCheckboxValue() != null)
             checkbox.value(params.getCheckboxValue());
 
@@ -1213,6 +1217,8 @@ public class HtmlFormHelper {
             radioButton.readonly()
                     .attribute("onclick", "return false;")
                     .attribute("onkeydown", "return false;");
+        if (!params.isAutocomplete())
+            radioButton.attribute("autocomplete", "off");
         buttonInside.addTag(radioButton);
         buttonInside.addTag(new CData("&nbsp;" + fieldLabel));
 
