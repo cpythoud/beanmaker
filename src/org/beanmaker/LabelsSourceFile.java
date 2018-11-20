@@ -1,9 +1,12 @@
 package org.beanmaker;
 
+import org.jcodegen.java.Condition;
+import org.jcodegen.java.ForEach;
 import org.jcodegen.java.ForLoop;
 import org.jcodegen.java.FunctionArgument;
 import org.jcodegen.java.FunctionCall;
 import org.jcodegen.java.FunctionDeclaration;
+import org.jcodegen.java.IfBlock;
 import org.jcodegen.java.ReturnStatement;
 import org.jcodegen.java.VarDeclaration;
 
@@ -75,6 +78,34 @@ public class LabelsSourceFile extends BaseCode {
         ).addContent(EMPTY_LINE);
     }
 
+    private void addReplaceDataFunction() {
+        javaClass.addContent(
+                new FunctionDeclaration("replaceData", "DbBeanLabel")
+                        .markAsStatic()
+                        .addArgument(new FunctionArgument("DbBeanLabel", "into"))
+                        .addArgument(new FunctionArgument("DbBeanLabel", "from"))
+                        .addContent(
+                                new FunctionCall("clearCache", "into").byItself()
+                        )
+                        .addContent(
+                                new ForEach("DbBeanLanguage", "dbBeanLanguage", new FunctionCall("getAllActiveLanguages"))
+                                        .addContent(
+                                                new IfBlock(new Condition(new FunctionCall("hasDataFor", "from").addArgument("dbBeanLanguage")))
+                                                        .addContent(
+                                                                new FunctionCall("updateLater", "into")
+                                                                        .byItself()
+                                                                        .addArgument("dbBeanLanguage")
+                                                                        .addArgument(new FunctionCall("get", "from").addArgument("dbBeanLanguage"))
+                                                        )
+                                        )
+                        )
+                        .addContent(EMPTY_LINE)
+                        .addContent(
+                                new ReturnStatement("into")
+                        )
+        ).addContent(EMPTY_LINE);
+    }
+
     private void addLabelMapFunctions() {
         javaClass.addContent(
                 new FunctionDeclaration("getLabelMap", "Map<String, String>")
@@ -130,6 +161,7 @@ public class LabelsSourceFile extends BaseCode {
         addImports();
         addNonImplementedFunctions();
         addLanguageCopyFunction();
+        addReplaceDataFunction();
         addLabelMapFunctions();
     }
 }
