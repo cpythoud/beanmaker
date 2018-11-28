@@ -19,29 +19,29 @@ public class LocalFilesSourceFile extends BaseCode {
     }
 
     private void addNonImplementedFunctions() {
-        addNonImplementedFunction("DbBeanFile", "get", new FunctionArgument("long", "id"));
+        addNonImplementedStaticFunction("DbBeanFile", "get", new FunctionArgument("long", "id"));
 
-        addNonImplementedFunction(
+        addNonImplementedStaticFunction(
                 "DbBeanFile",
                 "getOrCreate",
                 new FunctionArgument("long", "id"));
 
-        addNonImplementedFunction("boolean", "isIdOK", new FunctionArgument("long", "id"));
+        addNonImplementedStaticFunction("boolean", "isIdOK", new FunctionArgument("long", "id"));
 
-        addNonImplementedFunction(
+        addNonImplementedStaticFunction(
                 "boolean",
                 "isIdOK",
                 new FunctionArgument("long", "id"),
                 new FunctionArgument("DBTransaction", "transaction"));
 
-        addNonImplementedFunction(
+        addNonImplementedStaticFunction(
                 "String",
                 "getFilename",
                 new FunctionArgument("long", "id"));
 
-        addNonImplementedFunction("String", "getDefaultUploadDir");
+        addNonImplementedStaticFunction("String", "getDefaultUploadDir");
 
-        addNonImplementedFunction(
+        addNonImplementedStaticFunction(
                 "DbBeanFileStoredFilenameCalculator",
                 "getDefaultFileStoredFileNameCalculator");
     }

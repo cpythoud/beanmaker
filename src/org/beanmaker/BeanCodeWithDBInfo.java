@@ -9,7 +9,7 @@ import org.dbbeans.util.Strings;
 import java.util.Arrays;
 import java.util.List;
 
-public class BeanCodeWithDBInfo extends BeanCode {
+public abstract class BeanCodeWithDBInfo extends BeanCode {
 
     protected final Columns columns;
     protected final String tableName;

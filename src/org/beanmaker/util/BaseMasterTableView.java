@@ -26,12 +26,16 @@ import java.sql.Timestamp;
 
 import java.text.DateFormat;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public abstract class BaseMasterTableView extends BaseView {
+public abstract class BaseMasterTableView extends TabularView {
 
     protected String tableId = "";
+
+    protected String iconLibrary = "glyphicons glyphicons-";
+    protected String filetypeIconLibrary = "filetypes filetypes-";
 
     protected String tableCssClass = "cctable";
     protected String thResetCssClass = null;
@@ -45,13 +49,12 @@ public abstract class BaseMasterTableView extends BaseView {
     protected String trTitleCssClass = null;
     protected String trSuperTitleCssClass = null;
 
+    protected String removeFilteringIcon = "remove-circle";
     protected String formElementFilterCssClass = "tb-filter";
     protected String removeFilteringLinkCssClass = "tb-nofilter";
     protected Tag removeFilteringHtmlTags =
-            new SpanTag().cssClass("glyphicon glyphicon-remove").title("Remove Filtering");
+            new SpanTag().cssClass(iconLibrary + removeFilteringIcon).title("Remove Filtering");
 
-    protected String yesName = "yes";
-    protected String noName = "no";
     protected String yesValue = "A";
     protected String noValue = "Z";
     protected String yesDisplay = "✔";
@@ -65,8 +68,6 @@ public abstract class BaseMasterTableView extends BaseView {
 
     protected int zeroFilledMaxDigits = 18;
 
-    protected boolean displayId = false;
-
     protected int columnCount = 2;
     protected String noDataMessage = "NO DATA";
 
@@ -76,12 +77,6 @@ public abstract class BaseMasterTableView extends BaseView {
 
     protected boolean showBeanIdInRowId = true;
 
-    protected DbBeanLanguage dbBeanLanguage = null;
-    protected boolean languageInfoRequired = false;
-    protected boolean displayAllLanguages = true;
-
-    protected String iconLibrary = "glyphicons glyphicons-";
-    protected String removeFilteringIcon = "remove-circle";
     protected String editIcon = "edit";
     protected String deleteIcon = "bin";
     protected boolean showEditLinks = false;
@@ -112,6 +107,15 @@ public abstract class BaseMasterTableView extends BaseView {
     protected TableLocalOrderContext localOrderContext = null;
     protected String localOrderingTable = null;
 
+    protected boolean excelExportAvailable = false;
+    protected String excelExportIdSuffix = "excel";
+    protected String excelExportCssClass = "excel_export";
+    protected String excelExportIcon = "xlsx";
+    protected Tag excelExportHtmlTags =
+            new SpanTag().cssClass(filetypeIconLibrary + excelExportIcon).title("Excel Export");
+    protected boolean excelExportDownloadLinkAlreadyShown = false;
+    protected Map<String, String> excelExportExtraParameters = new HashMap<String, String>();
+
     public BaseMasterTableView(final String resourceBundleName, final String tableId) {
         super(resourceBundleName);
         this.tableId = tableId;
@@ -120,6 +124,9 @@ public abstract class BaseMasterTableView extends BaseView {
     public String getMasterTable() {
         if (languageInfoRequired && dbBeanLanguage == null)
             throw new NullPointerException("Language is not defined.");
+
+        excelExportDownloadLinkAlreadyShown = false;
+        initExcelExportExtraParameters();
 
         return getMasterTableTag().toString();
     }
@@ -131,6 +138,11 @@ public abstract class BaseMasterTableView extends BaseView {
                 new SpanTag()
                         .cssClass(iconLibrary + removeFilteringIcon)
                         .title(labels.get("cct_remove_filtering"));
+
+        excelExportHtmlTags =
+                new SpanTag()
+                        .cssClass(filetypeIconLibrary + excelExportIcon)
+                        .title(labels.get("cct_excel_export"));
 
         yesName = labels.get("yes");
         noName = labels.get("no");
@@ -246,7 +258,14 @@ public abstract class BaseMasterTableView extends BaseView {
     }
 
     protected TrTag getDefaultStartOfTitleRow() {
-        final TrTag titleRow = new TrTag().child(getRemoveFilteringCell());
+        final TrTag titleRow = new TrTag();
+
+        if (excelExportDownloadLinkAlreadyShown || !excelExportAvailable)
+            titleRow.child(getRemoveFilteringCell());
+        else {
+            titleRow.child(getDownloadExcelFileCellWithLink());
+            excelExportDownloadLinkAlreadyShown = true;
+        }
 
         if (trTitleCssClass != null)
             titleRow.cssClass(trTitleCssClass);
@@ -256,7 +275,9 @@ public abstract class BaseMasterTableView extends BaseView {
 
     protected ThTag getRemoveFilteringCellWithLink() {
         return getRemoveFilteringCell().child(
-                new ATag().href("#").cssClass(removeFilteringLinkCssClass).child(removeFilteringHtmlTags)
+                new ATag().href("#")
+                        .cssClass(removeFilteringLinkCssClass)
+                        .child(removeFilteringHtmlTags)
         );
     }
 
@@ -267,6 +288,23 @@ public abstract class BaseMasterTableView extends BaseView {
             cell.cssClass(thResetCssClass);
 
         return cell;
+    }
+
+    protected ThTag getDownloadExcelFileCellWithLink() {
+        return getRemoveFilteringCell().child(getDownloadExcelFileLink());
+    }
+
+    protected ATag getDownloadExcelFileLink() {
+        final ATag link = new ATag()
+                .href("#")
+                .id(tableId + "_" + excelExportIdSuffix)
+                .cssClass(removeFilteringLinkCssClass + " " + excelExportCssClass)
+                .child(excelExportHtmlTags);
+
+        for (Map.Entry<String, String> parameter: excelExportExtraParameters.entrySet())
+            link.data(parameter.getKey(), parameter.getValue());
+
+        return link;
     }
 
     protected ThTag getTableFilterCell() {
@@ -830,4 +868,6 @@ public abstract class BaseMasterTableView extends BaseView {
 
         return TableLocalOrderUtil.getBeansInOrder(beans, localOrderContext, localOrderingTable);
     }
+
+    protected void initExcelExportExtraParameters() { }
 }

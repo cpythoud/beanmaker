@@ -32,33 +32,33 @@ public class LabelsSourceFile extends BaseCode {
     }
 
     private void addNonImplementedFunctions() {
-        addNonImplementedFunction("DbBeanLabel", "get", new FunctionArgument("long", "id"));
+        addNonImplementedStaticFunction("DbBeanLabel", "get", new FunctionArgument("long", "id"));
 
-        addNonImplementedFunction("boolean", "isIdOK", new FunctionArgument("long", "id"));
+        addNonImplementedStaticFunction("boolean", "isIdOK", new FunctionArgument("long", "id"));
 
-        addNonImplementedFunction(
+        addNonImplementedStaticFunction(
                 "boolean",
                 "isIdOK",
                 new FunctionArgument("long", "id"),
                 new FunctionArgument("DBTransaction", "transaction"));
 
-        addNonImplementedFunction(
+        addNonImplementedStaticFunction(
                 "String",
                 "get",
                 new FunctionArgument("long", "id"),
                 new FunctionArgument("DbBeanLanguage", "dbBeanLanguage"));
 
-        addNonImplementedFunction(
+        addNonImplementedStaticFunction(
                 "String",
                 "get",
                 new FunctionArgument("String", "name"),
                 new FunctionArgument("DbBeanLanguage", "dbBeanLanguage"));
 
-        addNonImplementedFunction("DbBeanLabel", "createInstance");
+        addNonImplementedStaticFunction("DbBeanLabel", "createInstance");
 
-        addNonImplementedFunction("List<DbBeanLanguage>", "getAllActiveLanguages");
+        addNonImplementedStaticFunction("List<DbBeanLanguage>", "getAllActiveLanguages");
 
-        addNonImplementedFunction(
+        addNonImplementedStaticFunction(
                 "DbBeanLanguage",
                 "getLanguage",
                 new FunctionArgument("long", "id"));

@@ -86,14 +86,32 @@ public abstract class BaseCode {
         return Strings.uncapitalize(parts[parts.length - 1]);
     }
 
-    protected void addNonImplementedFunction(
+    protected void addNonImplementedFunction(final String name, final FunctionArgument... functionArguments) {
+        addNonImplementedFunction(null, name, false, functionArguments);
+    }
+
+    protected void addNonImplementedStaticFunction(
             final String returnType,
             final String name,
             final FunctionArgument... functionArguments)
     {
-        final FunctionDeclaration functionDeclaration =
-                new FunctionDeclaration(name, returnType)
-                        .markAsStatic();
+        addNonImplementedFunction(returnType, name, true, functionArguments);
+    }
+
+    private void addNonImplementedFunction(
+            final String returnType,
+            final String name,
+            final boolean staticFunction,
+            final FunctionArgument... functionArguments)
+    {
+        final FunctionDeclaration functionDeclaration;
+        if (returnType == null)
+            functionDeclaration = new FunctionDeclaration(name);
+        else
+            functionDeclaration = new FunctionDeclaration(name, returnType);
+
+        if (staticFunction)
+            functionDeclaration.markAsStatic();
 
         final StringBuilder argTypeList = new StringBuilder();
         for (FunctionArgument argument: functionArguments) {

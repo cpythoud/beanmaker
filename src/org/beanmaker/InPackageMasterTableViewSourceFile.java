@@ -20,9 +20,13 @@ public class InPackageMasterTableViewSourceFile extends BaseCode {
 
     private void addConstructor() {
         javaClass.addContent(
-                javaClass.createConstructor().addArgument(new FunctionArgument("String", "resourceBundleName")).addArgument(new FunctionArgument("String", "tableId")).addContent(
-                        new FunctionCall("super").addArguments("resourceBundleName", "tableId").byItself()
-                )
+                javaClass.createConstructor()
+                        .addArgument(new FunctionArgument("String", "resourceBundleName"))
+                        .addArgument(new FunctionArgument("String", "tableId"))
+                        .addContent(
+                                new FunctionCall("super").addArguments("resourceBundleName", "tableId")
+                                        .byItself()
+                        )
         );
     }
 

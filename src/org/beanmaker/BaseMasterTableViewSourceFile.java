@@ -18,18 +18,23 @@ import org.jcodegen.java.Visibility;
 
 import static org.beanmaker.SourceFiles.chopId;
 
-public class BaseMasterTableViewSourceFile extends BeanCodeWithDBInfo {
+public class BaseMasterTableViewSourceFile extends BeanCodeForTabularView {
 
     private final String beanName;
     private final String beanVarName;
-    private final String bundleName;
+    //private final String bundleName;
 
-    public BaseMasterTableViewSourceFile(final String beanName, final String packageName, final Columns columns, final String tableName) {
-        super(beanName + "MasterTableView", packageName, "Base", columns, tableName);
+    public BaseMasterTableViewSourceFile(
+            final String beanName,
+            final String packageName,
+            final Columns columns,
+            final String tableName)
+    {
+        super(beanName, "MasterTableView", packageName, "Base", columns, tableName);
 
         this.beanName = beanName;
         beanVarName = getBeanVarName(beanName);
-        bundleName = getBundleName(beanName,  packageName);
+        //bundleName = getBundleName(beanName,  packageName);
 
         createSourceCode();
     }
@@ -48,14 +53,6 @@ public class BaseMasterTableViewSourceFile extends BeanCodeWithDBInfo {
 
     private void addClassModifiers() {
         javaClass.markAsAbstract().extendsClass("MasterTableView");
-    }
-
-    private void addConstructor() {
-        javaClass.addContent(
-                javaClass.createConstructor().addContent(
-                        new FunctionCall("super").byItself().addArguments(Strings.quickQuote(bundleName), beanName + ".DATABASE_TABLE_NAME")
-                )
-        ).addContent(EMPTY_LINE);
     }
 
     private void addFilterRowFunctions() {
