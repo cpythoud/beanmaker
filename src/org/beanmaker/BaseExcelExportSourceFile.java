@@ -272,17 +272,17 @@ public class BaseExcelExportSourceFile extends BeanCodeForTabularView {
                     else if (column.hasAssociatedBean())
                         addAssociatedBeanCellFunction(column.getJavaName(), column.getAssociatedBeanClass());
                     else
-                        addFormattedDataCellFunction(column.getJavaName(), "integerFormat");
+                        addDataCellFunction(column.getJavaName());
                 } else if (column.getJavaType().equals("String"))
                     addDataCellFunction(column.getJavaName());
                 else if (column.getJavaType().equals("Date"))
-                    addFormattedDataCellFunction(column.getJavaName(), "dateFormat");
+                    addDataCellFunction(column.getJavaName());
                 else if (column.getJavaType().equals("Time"))
-                    addFormattedDataCellFunction(column.getJavaName(), "timeFormat");
+                    addDataCellFunction(column.getJavaName());
                 else if (column.getJavaType().equals("Timestamp"))
-                    addFormattedDataCellFunction(column.getJavaName(), "timestampFormat");
+                    addDataCellFunction(column.getJavaName());
                 else if (column.getJavaType().equals("Money"))
-                    addMoneyDataCellFunction(column.getJavaName());
+                    addDataCellFunction(column.getJavaName());
                 else
                     throw new IllegalStateException("Could not identify field type for : " + column);
             }
@@ -291,18 +291,23 @@ public class BaseExcelExportSourceFile extends BeanCodeForTabularView {
     private void addBooleanCellFunction(final String javaName) {
         final FunctionDeclaration dataCellFunction = getDataFunctionDeclaration(javaName);
         dataCellFunction.addContent(
-                new FunctionCall("setCellValue", "row.createCell(cellNumber)")
-                        .byItself()
+                getAddDataCellFunctionCall()
                         .addArgument(
                                 new FunctionCall("getYesOrNoRepresentation")
                                         .addArgument(new FunctionCall("is" + Strings.capitalize(javaName), beanVarName))
-                        )
+                )
         );
         javaClass.addContent(dataCellFunction).addContent(EMPTY_LINE);
     }
 
     private FunctionDeclaration getDataFunctionDeclaration(final String javaName) {
         return getDataFunctionDeclaration(javaName, false);
+    }
+
+    private FunctionCall getAddDataCellFunctionCall() {
+        return new FunctionCall("addDataCell")
+                .byItself()
+                .addArguments("row", "cellNumber");
     }
 
     private FunctionDeclaration getDataFunctionDeclaration(final String javaName, final boolean forLabels) {
@@ -325,12 +330,11 @@ public class BaseExcelExportSourceFile extends BeanCodeForTabularView {
     private void addAssociatedBeanCellFunction(final String javaName, final String associatedBeanClass) {
         final FunctionDeclaration dataCellFunction = getDataFunctionDeclaration(javaName);
         dataCellFunction.addContent(
-                new FunctionCall("setCellValue", "row.createCell(cellNumber)")
-                        .byItself()
+                getAddDataCellFunctionCall()
                         .addArgument(
                                 new FunctionCall("getHumanReadableTitle", associatedBeanClass)
                                         .addArgument(new FunctionCall("get" + Strings.capitalize(javaName), beanVarName))
-                        )
+                )
         );
         javaClass.addContent(dataCellFunction).addContent(EMPTY_LINE);
     }
@@ -364,11 +368,11 @@ public class BaseExcelExportSourceFile extends BeanCodeForTabularView {
                         .addArgument(new FunctionArgument(beanName, beanVarName))
                         .addArgument(new FunctionArgument("int", "cellNumber"))
                         .addContent(
-                                new FunctionCall("setCellValue", "row.createCell(cellNumber)")
-                                        .byItself()
+                                getAddDataCellFunctionCall()
                                         .addArgument(
-                                                new FunctionCall("get" + labelJavaName, beanVarName).addArgument("dbBeanLanguage")
-                                        )
+                                                new FunctionCall("get" + labelJavaName, beanVarName)
+                                                        .addArgument("dbBeanLanguage")
+                                )
                         )
         ).addContent(EMPTY_LINE);
     }
@@ -376,14 +380,13 @@ public class BaseExcelExportSourceFile extends BeanCodeForTabularView {
     private void addFileDataCellFunction(String javaName) {
         final FunctionDeclaration dataCellFunction = getDataFunctionDeclaration(javaName);
         dataCellFunction.addContent(
-                new FunctionCall("setCellValue", "row.createCell(cellNumber)")
-                        .byItself()
+                getAddDataCellFunctionCall()
                         .addArgument(
                                 new FunctionCall("getFilename", "LocalFiles")
                                         .addArgument(
                                                 new FunctionCall("get" + Strings.capitalize(javaName), beanVarName)
                                         )
-                        )
+                )
         );
         javaClass.addContent(dataCellFunction).addContent(EMPTY_LINE);
     }
@@ -394,46 +397,15 @@ public class BaseExcelExportSourceFile extends BeanCodeForTabularView {
                 .addArguments("row", "dbBeanLanguage", beanVarName, "++currentCellNumber");
     }
 
-    private void addFormattedDataCellFunction(final String javaName, final String format) {
+    private void addDataCellFunction(final String javaName) {
         final FunctionDeclaration dataCellFunction = getDataFunctionDeclaration(javaName);
         dataCellFunction.addContent(
-                new FunctionCall("setCellValue", "row.createCell(cellNumber)")
-                        .byItself()
+                getAddDataCellFunctionCall()
                         .addArgument(
                                 new FunctionCall("get" + Strings.capitalize(javaName), beanVarName)
                         )
         );
-        if (format != null)
-            dataCellFunction.addContent(
-                    new FunctionCall("setCellStyle", "row.getCell(cellNumber)")
-                            .byItself()
-                            .addArgument(format)
-            );
         javaClass.addContent(dataCellFunction).addContent(EMPTY_LINE);
-    }
-
-    private void addMoneyDataCellFunction(final String javaName) {
-        final FunctionDeclaration dataCellFunction = getDataFunctionDeclaration(javaName);
-        dataCellFunction.addContent(
-                new FunctionCall("setCellValue", "row.createCell(cellNumber)")
-                        .byItself()
-                        .addArgument(
-                                new FunctionCall(
-                                        "toString",
-                                        new FunctionCall("get" + Strings.capitalize(javaName), beanVarName))
-                        )
-        );
-        dataCellFunction.addContent(
-                new FunctionCall("setCellStyle", "row.getCell(cellNumber)")
-                        .byItself()
-                        .addArgument("decimalFormat")
-        );
-
-        javaClass.addContent(dataCellFunction).addContent(EMPTY_LINE);
-    }
-
-    private void addDataCellFunction(String javaName) {
-        addFormattedDataCellFunction(javaName, null);
     }
 
     private void createSourceCode() {
