@@ -202,6 +202,11 @@ public abstract class BaseExcelExport extends TabularView {
         row.getCell(cellNumber).setCellStyle(decimalFormat);
     }
 
+    protected void addDataCell(final Row row, final int cellNumber, final double data) {
+        row.createCell(cellNumber).setCellValue(data);
+        row.getCell(cellNumber).setCellStyle(decimalFormat);
+    }
+
     protected void autosizeColumns(final Sheet sheet, final int columns) {
         for (int i = 0; i < columns; ++i)
             sheet.autoSizeColumn(i);
