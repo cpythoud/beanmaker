@@ -1,4 +1,4 @@
-// beanmaker.js -- v0.3.0 -- 2018-03-09
+// beanmaker.js -- v0.4.0 -- 2018-12-06
 
 $.ajaxSetup({cache : false});
 
