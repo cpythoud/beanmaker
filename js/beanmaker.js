@@ -237,8 +237,21 @@ BEANMAKER.reloadAfterChange = function() {
     window.location.reload();
 };
 
-BEANMAKER.reloadToHashAfterChange = function(hash) {
-    window.location.href = window.location.pathname + hash;
-    window.location.reload();
+BEANMAKER.endsWith = function(string, suffix) {
+    return string.indexOf(suffix, string.length - suffix.length) !== -1;
 };
 
+BEANMAKER.retargetLocationOrReload = function(target) {
+    if (BEANMAKER.endsWith(window.location.href, target))
+        window.location.reload();
+    else
+        window.location.href = target;
+};
+
+BEANMAKER.reloadToHashAfterChange = function(hash) {
+    BEANMAKER.retargetLocationOrReload(window.location.pathname + hash);
+};
+
+BEANMAKER.reloadAfterChangeNoParameters = function() {
+    BEANMAKER.retargetLocationOrReload(window.location.pathname);
+};
