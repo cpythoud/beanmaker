@@ -10,6 +10,7 @@ import org.jcodegen.java.Condition;
 import org.jcodegen.java.ConstructorDeclaration;
 import org.jcodegen.java.ElseBlock;
 import org.jcodegen.java.ElseIfBlock;
+import org.jcodegen.java.EmptyLine;
 import org.jcodegen.java.ExceptionThrow;
 import org.jcodegen.java.ForLoop;
 import org.jcodegen.java.FunctionArgument;
@@ -37,12 +38,14 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
     private final Set<String> types;
 
     private final String internalsVar;
+    private final String parametersClass;
     private final String parametersVar;
 
 	public BaseClassSourceFile(final String beanName, final String packageName, final Columns columns, final String tableName) {
         super(beanName, packageName, "Base", columns, tableName);
 
         internalsVar = beanVarName + "Internals";
+        parametersClass = beanName + "Parameters";
         parametersVar = Strings.uncamelize(beanName).toUpperCase() + "_PARAMETERS";
 		
 		types = columns.getJavaTypes();
@@ -1609,9 +1612,10 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
             updateDBFunctionWithTransaction.addArgument(new FunctionArgument("String", "username"));
 
         updateDBFunctionWithTransaction.addContent(
-                new IfBlock(new Condition(parametersVar + ".USE_CACHE")).addContent(
-                        new ExceptionThrow("UnsupportedOperationException")
-                                .addArgument(quickQuote("Cannot cache intermediate updates."))
+                new IfBlock(new Condition(parametersClass + ".USE_CACHE && " + parametersClass + ".PREVENT_CACHE_USE_WITH_TRANSACTIONS"))
+                        .addContent(
+                                new ExceptionThrow("UnsupportedOperationException")
+                                        .addArgument(quickQuote("Cannot cache intermediate updates."))
                 )
         ).addContent(EMPTY_LINE);
 
@@ -2170,7 +2174,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 new VarDeclaration("DBTransaction", "transaction", new FunctionCall("createDBTransaction"))
                         .markAsFinal()
         ).addContent(
-                new FunctionCall("delete").addArgument("transaction").byItself()
+                new FunctionCall("delete").addArguments("transaction", "false").byItself()
         );
 
         deleteFunction.addContent(
@@ -2182,8 +2186,8 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         ).addContent(
                 EMPTY_LINE
         ).addContent(
-                new IfBlock(new Condition(parametersVar + ".USE_CACHE")).addContent(
-                        new FunctionCall("delete", parametersVar + ".CACHE_SET")
+                new IfBlock(new Condition(parametersClass + ".USE_CACHE")).addContent(
+                        new FunctionCall("delete", parametersClass + ".CACHE_SET")
                                 .addArgument("id")
                                 .byItself()
                 )
@@ -2195,11 +2199,28 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
         javaClass.addContent(deleteFunction).addContent(EMPTY_LINE);
 
-
-        final FunctionDeclaration deleteFunctionWithTransaction =
+        javaClass.addContent(
                 new FunctionDeclaration("delete")
                         .addArgument(new FunctionArgument("DBTransaction", "transaction"))
                         .addContent(
+                                new FunctionCall("delete")
+                                        .byItself()
+                                        .addArguments("transaction", "true")
+                        )
+        ).addContent(EMPTY_LINE);
+
+        final FunctionDeclaration deleteFunctionWithTransaction =
+                new FunctionDeclaration("delete")
+                        .visibility(Visibility.PRIVATE)
+                        .addArgument(new FunctionArgument("DBTransaction", "transaction"))
+                        .addArgument(new FunctionArgument("boolean", "checkCacheStatus"))
+                        .addContent(
+                                new IfBlock(new Condition(getCacheCheckDeleteCondition()))
+                                        .addContent(
+                                                new ExceptionThrow("UnsupportedOperationException")
+                                                        .addArgument(quickQuote("Cannot delete bean in transaction if caching is active."))
+                                        )
+                        ).addContent(EMPTY_LINE).addContent(
                                 new FunctionCall("preDeleteExtraDbActions").byItself().addArgument("transaction")
                         );
 
@@ -2285,6 +2306,10 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                         .visibility(Visibility.PROTECTED)
         ).addContent(EMPTY_LINE);
 	}
+
+    private String getCacheCheckDeleteCondition() {
+        return "checkCacheStatus && " + parametersClass + ".USE_CACHE && " + parametersClass + ".PREVENT_CACHE_USE_WITH_TRANSACTIONS";
+    }
 
     private FunctionCall getUpdateItemOrderAboveFunctionCall(
             final String queryRetrievalFunction,
@@ -2680,8 +2705,8 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
     private void addUpdateCaching() {
 	    javaClass.addContent(
 	            new FunctionDeclaration("updateCaching").visibility(Visibility.PRIVATE).addContent(
-	                    new IfBlock(new Condition(parametersVar + ".USE_CACHE")).addContent(
-	                            new FunctionCall("submit", parametersVar + ".CACHE_SET")
+	                    new IfBlock(new Condition(parametersClass + ".USE_CACHE")).addContent(
+	                            new FunctionCall("submit", parametersClass + ".CACHE_SET")
                                         .addArgument("(" + beanName + ") this")
                                         .byItself()
                         )

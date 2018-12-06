@@ -32,6 +32,12 @@ public class ParametersSourceFile extends BaseCode {
                         "USE_CACHE",
                         "CACHE_SET != null",
                         Visibility.PUBLIC).markAsStatic().markAsFinal()
+        ).addContent(
+                new VarDeclaration(
+                        "boolean",
+                        "PREVENT_CACHE_USE_WITH_TRANSACTIONS",
+                        "true",
+                        Visibility.PUBLIC).markAsStatic().markAsFinal()
         );
     }
 
