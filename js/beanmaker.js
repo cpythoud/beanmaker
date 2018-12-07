@@ -1,4 +1,4 @@
-// beanmaker.js -- v0.4.0 -- 2018-12-06
+// beanmaker.js -- v0.4.1 -- 2018-12-06
 
 $.ajaxSetup({cache : false});
 
@@ -249,7 +249,13 @@ BEANMAKER.retargetLocationOrReload = function(target) {
 };
 
 BEANMAKER.reloadToHashAfterChange = function(hash) {
-    BEANMAKER.retargetLocationOrReload(window.location.pathname + hash);
+    var target = window.location.pathname + hash;
+    if (BEANMAKER.endsWith(window.location.href, target))
+        window.location.reload();
+    else {
+        window.location.href = target;
+        window.location.reload();
+    }
 };
 
 BEANMAKER.reloadAfterChangeNoParameters = function() {
