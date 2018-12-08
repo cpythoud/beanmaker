@@ -1,4 +1,4 @@
-// beanmaker.js -- v0.4.1 -- 2018-12-06
+// beanmaker.js -- v0.4.2 -- 2018-12-08
 
 $.ajaxSetup({cache : false});
 
@@ -261,3 +261,32 @@ BEANMAKER.reloadToHashAfterChange = function(hash) {
 BEANMAKER.reloadAfterChangeNoParameters = function() {
     BEANMAKER.retargetLocationOrReload(window.location.pathname);
 };
+
+BEANMAKER.getRequestParametersFromDataAttributes = function ($element, extraParameters) {
+    var parameters = $element.data();
+
+    if (extraParameters)
+        $.extend(parameters, extraParameters);
+
+    if ($.isEmptyObject(parameters))
+        return "";
+
+    var start = true;
+    var parameterString = "";
+    for (var key in parameters) {
+        if (parameters.hasOwnProperty(key)) {
+            if (start) {
+                parameterString += '?';
+                start = false;
+            } else
+                parameterString += '&';
+
+            parameterString += key;
+            parameterString += '=';
+            parameterString += parameters[key];
+        }
+    }
+
+    return parameterString;
+};
+
