@@ -4,6 +4,7 @@ import org.dbbeans.util.MimeTypes;
 import org.dbbeans.util.Pair;
 import org.dbbeans.util.Strings;
 
+import javax.lang.model.element.NestingKind;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -11,10 +12,10 @@ import javax.servlet.http.HttpServletResponse;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-
 import java.io.OutputStream;
+
+import java.math.BigDecimal;
 import java.util.Enumeration;
 import java.util.List;
 
@@ -272,5 +273,22 @@ public abstract class BeanMakerBaseServlet extends HttpServlet {
 
         inputStream.close();
         outputStream.close();
+    }
+
+    protected <B extends DbBeanInterface> B getBean(
+            final B newBean,
+            final HttpServletRequest request,
+            final String idParameterName
+    ) throws ServletException
+    {
+        final String idStr = request.getParameter(idParameterName);
+        if (idStr == null)
+            throw new ServletException("Missing parameter: " + idParameterName);
+        final long id = Strings.getLongVal(idStr);
+        if (id == 0)
+            throw new ServletException("Invalid parameter: " + idParameterName + " = " + idStr);
+
+        newBean.setId(id);
+        return newBean;
     }
 }
