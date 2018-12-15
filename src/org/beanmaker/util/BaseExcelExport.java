@@ -1,6 +1,5 @@
 package org.beanmaker.util;
 
-import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Row;
@@ -120,6 +119,28 @@ public abstract class BaseExcelExport extends TabularView {
 
     protected void addSuperTitleRowTo(final Sheet sheet) { }
 
+    protected int addAdHocSuperTitleCell(
+            final Sheet sheet,
+            final Row superTitleRow,
+            final String text,
+            final int startingCellNumber,
+            final int cellCount)
+    {
+        if (text == null)
+            throw new NullPointerException("text cannot be null");
+        if (startingCellNumber < 0)
+            throw new IllegalArgumentException("starting cell must be 0 or positive");
+        if (cellCount <= 0)
+            throw new IllegalArgumentException("cell count must be 1 or more");
+
+        superTitleRow.createCell(startingCellNumber).setCellValue(text);
+        superTitleRow.getCell(startingCellNumber).setCellStyle(superHeaderFormat);
+        int nextCell = startingCellNumber + cellCount;
+        sheet.addMergedRegion(new CellRangeAddress(0, 0, startingCellNumber, nextCell - 1));
+
+        return nextCell;
+    }
+
     protected int addSuperTitleCell(
             final Sheet sheet,
             final Row superTitleRow,
@@ -129,17 +150,13 @@ public abstract class BaseExcelExport extends TabularView {
     {
         if (propertyName == null)
             throw new NullPointerException("propertyName cannot be null");
-        if (startingCellNumber < 0)
-            throw new IllegalArgumentException("starting cell must be 0 or positive");
-        if (cellCount <= 0)
-            throw new IllegalArgumentException("cell count must be 1 or more");
 
-        superTitleRow.createCell(startingCellNumber).setCellValue(resourceBundle.getString(propertyName));
-        superTitleRow.getCell(startingCellNumber).setCellStyle(superHeaderFormat);
-        int nextCell = startingCellNumber + cellCount;
-        sheet.addMergedRegion(new CellRangeAddress(0, 0, startingCellNumber, nextCell - 1));
-
-        return nextCell;
+        return addAdHocSuperTitleCell(
+                sheet,
+                superTitleRow,
+                resourceBundle.getString(propertyName),
+                startingCellNumber,
+                cellCount);
     }
 
     protected abstract void addTitleRowTo(final Sheet sheet);
