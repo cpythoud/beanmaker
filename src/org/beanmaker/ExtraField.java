@@ -80,6 +80,10 @@ public class ExtraField {
         return ternaryRequiredImport != null;
     }
 
+    public boolean requiresAnyImport() {
+        return requiresImport() || requiresSecondaryImport() || requiresTernaryImport();
+    }
+
     @Override
     public String toString() {
         final StringBuilder buf = new StringBuilder();

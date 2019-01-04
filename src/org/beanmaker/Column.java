@@ -22,6 +22,7 @@ public class Column {
     private String javaName;
 
     private boolean required;
+    private final boolean shouldBeRequired;
     private boolean unique = false;
 
     private String associatedBeanClass;
@@ -55,6 +56,7 @@ public class Column {
 		this.scale = scale;
 		this.autoincrement = autoincrement;
         this.required = required;
+        shouldBeRequired = required;
 		
 		if (SPECIAL_CASES.contains(sqlName)) {
 			special = true;
@@ -103,6 +105,7 @@ public class Column {
 		this.javaType = col.javaType;
 		this.javaName = col.javaName;
 		this.required = col.required;
+		this.shouldBeRequired = col.shouldBeRequired;
         this.unique = col.unique;
 		this.associatedBeanClass = col.associatedBeanClass;
         this.itemOrderAssociatedField = col.itemOrderAssociatedField;
@@ -238,10 +241,14 @@ public class Column {
 	}
 	
 	private void suggestType() {
-        if (id || itemOrder || sqlName.startsWith("id_"))
-            javaType = "long";
-        else
-            javaType = getSuggestedType(sqlTypeName, precision);
+    	javaType = getSuggestedType();
+	}
+
+	public String getSuggestedType() {
+		if (id || itemOrder || sqlName.startsWith("id_"))
+			return "long";
+
+		return getSuggestedType(sqlTypeName, precision);
 	}
 
     public static String getSuggestedType(final String sqlTypeName, final int precision) {
@@ -266,9 +273,13 @@ public class Column {
 
         return "String";
     }
+
+    public String getSuggestedName() {
+    	return Strings.uncapitalize(Strings.camelize(sqlName));
+	}
 	
 	private void suggestName() {
-		javaName = Strings.uncapitalize(Strings.camelize(sqlName));
+		javaName = getSuggestedName();
 	}
 	
 	public boolean couldHaveAssociatedBean() {
@@ -295,16 +306,24 @@ public class Column {
 		return associatedBeanClass != null && associatedBeanClass.equals(DEFAULT_FILE_CLASS);
 	}
 
+	public String getSuggestedAssociatedBeanClass() {
+		if (!couldHaveAssociatedBean())
+			return "";
+
+		if (couldBeLabelReference())
+			return DEFAULT_LABEL_CLASS;
+
+		if (couldBeFileReference())
+			return DEFAULT_FILE_CLASS;
+
+		return Strings.camelize(sqlName.substring(3));
+	}
+
 	private void suggestAssociatedBeanClass() {
 		if (!couldHaveAssociatedBean())
 			return;
 
-		if (couldBeLabelReference())
-			associatedBeanClass = DEFAULT_LABEL_CLASS;
-		else if (couldBeFileReference())
-			associatedBeanClass = DEFAULT_FILE_CLASS;
-		else
-			associatedBeanClass = Strings.camelize(sqlName.substring(3));
+		associatedBeanClass = getSuggestedAssociatedBeanClass();
 	}
 	
 	public boolean hasAssociatedBean() {
@@ -344,5 +363,9 @@ public class Column {
             unique = false;
         }
     }
+
+    public boolean shouldBeRequired() {
+		return shouldBeRequired;
+	}
 }
 

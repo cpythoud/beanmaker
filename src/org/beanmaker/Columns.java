@@ -1,5 +1,7 @@
 package org.beanmaker;
 
+import org.dbbeans.util.Strings;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -15,6 +17,7 @@ public class Columns {
     private String table;
 
     private final List<Column> columns;
+    private final List<OneToManyRelationship> detectedOneToManyRelationships;
     private final List<OneToManyRelationship> oneToManyRelationships;
     private final List<ExtraField> extraFields = new ArrayList<ExtraField>();
 
@@ -26,15 +29,9 @@ public class Columns {
 		this.db = db;
 		this.table = table;
 		columns = server.getColumns(db, table);
-		oneToManyRelationships = server.getDetectedOneToManyRelationship(db, table);
+		detectedOneToManyRelationships = server.getDetectedOneToManyRelationship(db, table);
+		oneToManyRelationships = new ArrayList<OneToManyRelationship>(detectedOneToManyRelationships);
 	}
-	
-	/*public Columns(final Columns cols) {
-		server = cols.server;
-		db = cols.db;
-		table = cols.table;
-		columns = cols.getList();
-	}*/
 
     public String getTable() {
         return table;
@@ -295,6 +292,25 @@ public class Columns {
 	public List<OneToManyRelationship> getOneToManyRelationships() {
 		return Collections.unmodifiableList(oneToManyRelationships);
 	}
+
+	public List<OneToManyRelationship> getDetectedOneToManyRelationships() {
+		return Collections.unmodifiableList(detectedOneToManyRelationships);
+	}
+
+	public Set<String> getOneToManyRelationshipTableNames() {
+		return getOneToManyRelationshipTableNames(oneToManyRelationships);
+	}
+
+	public Set<String> getDetectedOneToManyRelationshipTableNames() {
+		return getOneToManyRelationshipTableNames(detectedOneToManyRelationships);
+	}
+
+	private Set<String> getOneToManyRelationshipTableNames(List<OneToManyRelationship> relationships) {
+		Set<String> tableNames = new HashSet<String>();
+		for (OneToManyRelationship relationship: relationships)
+			tableNames.add(relationship.getTable());
+		return tableNames;
+	}
 	
 	public boolean hasOneToManyRelationships() {
 		return oneToManyRelationships.size() > 0;
@@ -369,5 +385,9 @@ public class Columns {
     public boolean hasExtraFields() {
         return extraFields.size() > 0;
     }
+
+    public String getSuggestedBeanName() {
+		return Strings.camelize(table);
+	}
 }
 

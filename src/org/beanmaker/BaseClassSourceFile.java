@@ -10,7 +10,6 @@ import org.jcodegen.java.Condition;
 import org.jcodegen.java.ConstructorDeclaration;
 import org.jcodegen.java.ElseBlock;
 import org.jcodegen.java.ElseIfBlock;
-import org.jcodegen.java.EmptyLine;
 import org.jcodegen.java.ExceptionThrow;
 import org.jcodegen.java.ForLoop;
 import org.jcodegen.java.FunctionArgument;
