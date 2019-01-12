@@ -1,5 +1,6 @@
 package org.beanmaker;
 
+import org.dbbeans.util.English;
 import org.dbbeans.util.Strings;
 
 import java.util.ArrayList;
@@ -387,7 +388,11 @@ public class Columns {
     }
 
     public String getSuggestedBeanName() {
-		return Strings.camelize(table);
+		return getSuggestedBeanName(table);
+	}
+
+	public static String getSuggestedBeanName(final String table) {
+		return Strings.camelize(English.singularize(table));
 	}
 }
 
