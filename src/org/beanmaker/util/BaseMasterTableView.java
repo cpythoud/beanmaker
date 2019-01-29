@@ -744,7 +744,7 @@ public abstract class BaseMasterTableView extends TabularView {
             final String beanName,
             final String editTooltip)
     {
-        final TdTag cell = new TdTag();
+        final TdTag cell = new TdTag().cssClass(tdResetCssClass);
 
         if (enableDragNDrop)
             cell.child(new SpanTag().cssClass(iconLibrary + dragNDropActiveIcon));
