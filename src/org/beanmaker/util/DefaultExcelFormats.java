@@ -1,13 +1,14 @@
 package org.beanmaker.util;
 
+import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.util.CellRangeAddress;
 
 import org.dbbeans.util.Money;
+import org.dbbeans.util.Pair;
 
 import java.sql.Date;
 import java.sql.Time;
@@ -96,19 +97,10 @@ public class DefaultExcelFormats implements ExcelFormats {
             final int startingCellNumber,
             final int cellCount)
     {
-        if (text == null)
-            throw new NullPointerException("text cannot be null");
-        if (startingCellNumber < 0)
-            throw new IllegalArgumentException("starting cell must be 0 or positive");
-        if (cellCount <= 0)
-            throw new IllegalArgumentException("cell count must be 1 or more");
-
-        superTitleRow.createCell(startingCellNumber).setCellValue(text);
-        superTitleRow.getCell(startingCellNumber).setCellStyle(superHeaderFormat);
-        int nextCell = startingCellNumber + cellCount;
-        sheet.addMergedRegion(new CellRangeAddress(0, 0, startingCellNumber, nextCell - 1));
-
-        return nextCell;
+        Pair<Cell, Integer> cellNextColumnPair =
+                ExcelFormatUtil.addMultiColumnCell(sheet, superTitleRow, text, startingCellNumber, cellCount);
+        cellNextColumnPair.e1.setCellStyle(superHeaderFormat);
+        return cellNextColumnPair.e2;
     }
 
     @Override
