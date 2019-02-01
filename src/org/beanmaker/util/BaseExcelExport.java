@@ -144,4 +144,8 @@ public abstract class BaseExcelExport extends TabularView {
     protected void autosizeColumns(final Sheet sheet, final int columns) {
         excelFormats.autosizeColumns(sheet, columns);
     }
+
+    protected String getYesOrNoRepresentation(final boolean value) {
+        return value ? yesName : noName;
+    }
 }
