@@ -323,6 +323,8 @@ public class BaseMasterTableViewSourceFile extends BeanCodeForTabularView {
         masterFunction.addContent(new ReturnStatement("line"));
         javaClass.addContent(masterFunction).addContent(EMPTY_LINE);
 
+        javaClass.addContent(getDataToLineFunction()).addContent(EMPTY_LINE);
+
         if (columns.hasItemOrder())
             addMultiOperationCellGetterFunction();
         else
@@ -350,13 +352,11 @@ public class BaseMasterTableViewSourceFile extends BeanCodeForTabularView {
         functionDeclaration.addContent(
                 new IfBlock(new Condition("displayId")).addContent(getChildCall("id"))
         );
-        for (Column column: columns.getList())
-            if (!(column.isId() || column.isItemOrder())) {
-                if (column.isLabelReference())
-                    functionDeclaration.addContent(getAddLabelDataCall(column.getJavaName()));
-                else
-                    functionDeclaration.addContent(getChildCall(column.getJavaName()));
-            }
+        functionDeclaration.addContent(
+                new FunctionCall("addDataToLine")
+                        .byItself()
+                        .addArguments("line", beanVarName)
+        );
         functionDeclaration.addContent(
                 new IfBlock(new Condition("showEditLinks")
                         .andCondition(new Condition(new FunctionCall("okToDelete").addArgument(beanVarName))))
@@ -364,6 +364,23 @@ public class BaseMasterTableViewSourceFile extends BeanCodeForTabularView {
         );
 
         functionDeclaration.addContent(EMPTY_LINE);
+    }
+
+    private FunctionDeclaration getDataToLineFunction() {
+        final FunctionDeclaration functionDeclaration = new FunctionDeclaration("addDataToLine")
+                .visibility(Visibility.PROTECTED)
+                .addArgument(new FunctionArgument("TrTag", "line"))
+                .addArgument(new FunctionArgument(beanName, beanVarName));
+
+        for (Column column: columns.getList())
+            if (!(column.isId() || column.isItemOrder())) {
+                if (column.isLabelReference())
+                    functionDeclaration.addContent(getAddLabelDataCall(column.getJavaName()));
+                else
+                    functionDeclaration.addContent(getChildCall(column.getJavaName()));
+            }
+
+        return functionDeclaration;
     }
 
     private FunctionCall getAddLabelDataCall(final String javaName) {
