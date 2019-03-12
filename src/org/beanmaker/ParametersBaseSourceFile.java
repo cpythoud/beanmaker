@@ -1,11 +1,11 @@
 package org.beanmaker;
 
+import org.dbbeans.util.Strings;
+
 import org.jcodegen.java.FunctionCall;
 import org.jcodegen.java.FunctionDeclaration;
 import org.jcodegen.java.ObjectCreation;
 import org.jcodegen.java.ReturnStatement;
-
-import org.dbbeans.util.Strings;
 import org.jcodegen.java.VarDeclaration;
 import org.jcodegen.java.Visibility;
 
@@ -38,16 +38,23 @@ public class ParametersBaseSourceFile extends BeanCodeWithDBInfo {
     }
 
     private void addOrderingFieldsGetter() {
-        addStringListGetter("getOrderingFields", columns.getOrderByField());
+        if (itemOrderField == null || itemOrderField.isUnique())
+            addStringListGetter("getOrderingFields", columns.getOrderByField());
+        else
+            addStringListGetter(
+                    "getOrderingFields",
+                    itemOrderField.getItemOrderAssociatedField(),
+                    columns.getOrderByField());
     }
 
-    private void addStringListGetter(final String getter, final String originalValue) {
+    private void addStringListGetter(final String getter, final String... originalValues) {
+        FunctionCall arrayFunctionCall = new FunctionCall("asList", "Arrays");
+        for (String originalValue: originalValues)
+            arrayFunctionCall.addArgument(Strings.quickQuote(originalValue));
+
         javaClass.addContent(
-                new FunctionDeclaration(getter, "List<String>").addContent(
-                        new ReturnStatement(
-                                new FunctionCall("asList", "Arrays").addArgument(Strings.quickQuote(originalValue))
-                        )
-                )
+                new FunctionDeclaration(getter, "List<String>")
+                        .addContent(new ReturnStatement(arrayFunctionCall))
         ).addContent(EMPTY_LINE);
     }
 
