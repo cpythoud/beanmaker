@@ -20,7 +20,6 @@ import org.jcodegen.java.Visibility;
 import static org.beanmaker.SourceFiles.chopId;
 
 import static org.dbbeans.util.Strings.capitalize;
-import static org.dbbeans.util.Strings.normalize;
 import static org.dbbeans.util.Strings.quickQuote;
 import static org.dbbeans.util.Strings.uncapitalize;
 
@@ -227,6 +226,12 @@ public class BaseHTMLViewSourceFile extends ViewCode {
         javaClass.addContent(
                 new FunctionDeclaration("getFormStart", "FormTag")
                         .visibility(Visibility.PROTECTED)
+                        .addContent(
+                                new FunctionCall("setReadonly", "htmlFormHelper")
+                                        .addArgument("readonly")
+                                        .byItself()
+                        )
+                        .addContent(EMPTY_LINE)
                         .addContent(
                                 new IfBlock(new Condition("horizontal")).addContent(
                                         new ReturnStatement(

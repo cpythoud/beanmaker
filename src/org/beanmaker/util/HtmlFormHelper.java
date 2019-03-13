@@ -35,6 +35,8 @@ public class HtmlFormHelper {
     private boolean inline = false;
     private boolean inlineWithoutLabels = false;
     private boolean horizontal = false;
+    private boolean readonly = false;
+    private String readonlyExtension = "-readonly";
 
     private String horizontalSizeShift = "sm";
     private int horizontalLabelWidth = 4;
@@ -145,6 +147,22 @@ public class HtmlFormHelper {
 
     public boolean isHorizontal() {
         return horizontal;
+    }
+
+    public void setReadonly(boolean readonly) {
+        this.readonly = readonly;
+    }
+
+    public boolean isReadonly() {
+        return readonly;
+    }
+
+    public void setReadonlyExtension(String readonlyExtension) {
+        this.readonlyExtension = readonlyExtension;
+    }
+
+    public String getReadonlyExtension() {
+        return readonlyExtension;
     }
 
     private static final List<String> BOOTSTRAP_SIZES = Arrays.asList("xs", "sm", "md", "lg");
@@ -338,7 +356,7 @@ public class HtmlFormHelper {
                 new FormTag()
                         .role("form")
                         .id(getHtmlId(beanName, id))
-                        .name(beanName)
+                        .name(beanName + (readonly ? readonlyExtension : ""))
                         .method(FormTag.Method.POST);
 
         if (htmlFormMultipart)
@@ -595,7 +613,7 @@ public class HtmlFormHelper {
     }
 
     protected String getLabelText(final String fieldLabel, final boolean required) {
-        if (required)
+        if (required && !readonly)
             return fieldLabel + requiredExtension;
 
         return fieldLabel + notRequiredExtension;
