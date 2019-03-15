@@ -339,6 +339,8 @@ public class HtmlFormHelper {
         final StringBuilder formCssClasses = new StringBuilder();
 
         formCssClasses.append(beanName).append("-form");
+        if (readonly)
+            formCssClasses.append(readonlyExtension);
 
         if (inline)
             formCssClasses.append(" form-inline");
@@ -1095,7 +1097,7 @@ public class HtmlFormHelper {
     }
 
     protected String getHtmlId(final String beanName, final long id) {
-        return beanName + "_" + id;
+        return beanName + (readonly ? readonlyExtension : "") + "_" + id;
     }
 
     public DivTag getFileField(
