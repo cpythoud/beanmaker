@@ -4,6 +4,7 @@ import org.dbbeans.util.Strings;
 import org.jcodegen.html.ButtonTag;
 import org.jcodegen.html.InputTag;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -73,7 +74,7 @@ public class HFHParameters {
         // selects
         selected = params.selected;
         if (params.selectPairs != null)
-            selectPairs.addAll(params.selectPairs);
+            selectPairs = new ArrayList<IdNamePair>(params.selectPairs);
 
         // checkboxes
         checked = params.checked;
