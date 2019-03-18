@@ -55,6 +55,11 @@ public class HFHParameters {
     // extra parameters
     private Map<String, String> extraParams;
 
+    // extra CSS classes
+    private String groupExtraCssClasses;
+    private String labelExtraCssClasses;
+    private String tagExtraCssClasses;
+
 
     public HFHParameters() { }
 
@@ -104,6 +109,10 @@ public class HFHParameters {
             initExtraParamMap();
             extraParams.putAll(params.extraParams);
         }
+
+        groupExtraCssClasses = params.groupExtraCssClasses;
+        labelExtraCssClasses = params.labelExtraCssClasses;
+        tagExtraCssClasses = params.tagExtraCssClasses;
     }
 
     private synchronized void initExtraParamMap() {
@@ -436,5 +445,41 @@ public class HFHParameters {
 
     public boolean isAsTextArea() {
         return asTextArea;
+    }
+
+    public String getGroupExtraCssClasses() {
+        return groupExtraCssClasses;
+    }
+
+    public void setGroupExtraCssClasses(String groupExtraCssClasses) {
+        this.groupExtraCssClasses = groupExtraCssClasses;
+    }
+
+    public boolean hasGroupExtraCssClasses() {
+        return !Strings.isEmpty(groupExtraCssClasses);
+    }
+
+    public String getLabelExtraCssClasses() {
+        return labelExtraCssClasses;
+    }
+
+    public void setLabelExtraCssClasses(String labelExtraCssClasses) {
+        this.labelExtraCssClasses = labelExtraCssClasses;
+    }
+
+    public boolean hasLabelExtraCssClasses() {
+        return !Strings.isEmpty(labelExtraCssClasses);
+    }
+
+    public String getTagExtraCssClasses() {
+        return tagExtraCssClasses;
+    }
+
+    public void setTagExtraCssClasses(String tagExtraCssClasses) {
+        this.tagExtraCssClasses = tagExtraCssClasses;
+    }
+
+    public boolean hasTagExtraCssClasses() {
+        return !Strings.isEmpty(tagExtraCssClasses);
     }
 }

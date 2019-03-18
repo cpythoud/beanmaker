@@ -16,6 +16,7 @@ import org.jcodegen.html.SelectTag;
 import org.jcodegen.html.SpanTag;
 import org.jcodegen.html.Tag;
 import org.jcodegen.html.TextareaTag;
+import org.jcodegen.html.util.CssClasses;
 
 import java.util.Arrays;
 import java.util.List;
@@ -486,10 +487,18 @@ public class HtmlFormHelper {
 
     public DivTag getTextField(final HFHParameters params) {
         final String fieldId = getFieldId(params.getField(), params.getIdBean(), params.isReadonly());
-        final LabelTag label = getLabel(params.getFieldLabel(), fieldId, params.isRequired());
+        final LabelTag label =
+                getLabel(params.getFieldLabel(), fieldId, params.isRequired(), params.getLabelExtraCssClasses());
 
         final InputTag input =
-                getInputTag(params.getInputType(), fieldId, params.getField(), params.getValue(), params.isReadonly());
+                getInputTag(
+                        params.getInputType(),
+                        fieldId,
+                        params.getField(),
+                        params.getValue(),
+                        params.isReadonly(),
+                        params.getTagExtraCssClasses());
+
         if (params.isRequired() && useRequiredInHtml)
             input.required();
         if (params.getPlaceholder() != null)
@@ -501,7 +510,7 @@ public class HtmlFormHelper {
         if (!params.isAutocomplete())
             input.attribute("autocomplete", "off");
 
-        return getFormGroup(label, input, params.getHelpText());
+        return getFormGroup(label, input, params.getHelpText(), params.getGroupExtraCssClasses());
     }
 
     protected String getFieldId(final String field, final long idBean, final boolean readonly) {
@@ -535,35 +544,54 @@ public class HtmlFormHelper {
             final String value,
             final boolean readonly)
     {
+        return getInputTag(type, id, name, value, readonly, null);
+    }
+
+    protected InputTag getInputTag(
+            final InputTag.InputType type,
+            final String id,
+            final String name,
+            final String value,
+            final boolean readonly,
+            final String extraCssClasses)
+    {
         if (type == InputTag.InputType.DATE)
             return new InputTag(inputTypeForDateFields == null ? type : inputTypeForDateFields)
-                    .cssClass(readonly || cssClassForDateFields == null ? "form-control" : "form-control " + cssClassForDateFields)
+                    .cssClass(CssClasses.start("form-control").add(cssClassForDateFields, !readonly).add(extraCssClasses).get())
                     .id(id).name(name).value(value);
 
         if (type == InputTag.InputType.TIME)
             return new InputTag(readonly || inputTypeForTimeFields == null ? type : inputTypeForTimeFields)
-                    .cssClass(cssClassForTimeFields == null ? "form-control" : "form-control " + cssClassForTimeFields)
+                    .cssClass(CssClasses.start("form-control").add(cssClassForTimeFields).add(extraCssClasses).get())
                     .id(id).name(name).value(value);
 
         if (type == InputTag.InputType.NUMBER)
             return new InputTag(inputTypeForNumberFields == null ? type : inputTypeForNumberFields)
-                    .cssClass(cssClassForNumberFields == null ? "form-control" : "form-control " + cssClassForNumberFields)
+                    .cssClass(CssClasses.start("form-control").add(cssClassForNumberFields).add(extraCssClasses).get())
                     .id(id).name(name).value(value);
 
         if (type == InputTag.InputType.FILE) {
             final InputTag fileInput = new InputTag(InputTag.InputType.FILE);
             if (!Strings.isEmpty(cssClassForFileFields))
-                fileInput.cssClass(cssClassForFileFields);
+                fileInput.cssClass(CssClasses.start(cssClassForFileFields).add(extraCssClasses).get());
             if (!Strings.isEmpty(value))
                 fileInput.placeholder(value);
             return fileInput.id(id).name(name);
         }
 
-        return new InputTag(type).cssClass("form-control").id(id).name(name).value(value);
+        return new InputTag(type)
+                .cssClass(CssClasses.start("form-control").add(extraCssClasses).get())
+                .id(id)
+                .name(name)
+                .value(value);
     }
 
     public DivTag getFormGroup() {
         return new DivTag().cssClass("form-group");
+    }
+
+    public DivTag getFormGroup(final String extraCssClasses) {
+        return new DivTag().cssClass(CssClasses.start("form-group").add(extraCssClasses).get());
     }
 
     public DivTag getFormGroup(final LabelTag label, final Tag field) {
@@ -571,8 +599,12 @@ public class HtmlFormHelper {
     }
 
     public DivTag getFormGroup(final LabelTag label, final Tag field, final String helpText) {
+        return getFormGroup(label, field, helpText, null);
+    }
+
+    public DivTag getFormGroup(final LabelTag label, final Tag field, final String helpText, final String extraCssClasses) {
         final DivTag formGroup =
-                new DivTag().cssClass("form-group")
+                new DivTag().cssClass(CssClasses.start("form-group").add(extraCssClasses).get())
                         .child(label);
 
         if (horizontal) {
@@ -600,16 +632,33 @@ public class HtmlFormHelper {
     }
 
     protected LabelTag getLabel(final String fieldLabel, final String fieldId, final boolean required) {
+        return getLabel(fieldLabel, fieldId, required, null);
+    }
+
+    protected LabelTag getLabel(
+            final String fieldLabel,
+            final String fieldId,
+            final boolean required,
+            final String extraCssClasses)
+    {
         final LabelTag label;
         if (fieldId == null)
             label = new LabelTag(getLabelText(fieldLabel, required));
         else
             label = new LabelTag(getLabelText(fieldLabel, required), fieldId);
 
+        final StringBuilder cssClasses = new StringBuilder();
         if (inlineWithoutLabels)
-            label.cssClass("sr-only");
+            cssClasses.append("sr-only");
         if (horizontal)
-            label.cssClass(getHorizontalLabelClasses());
+            cssClasses.append(getHorizontalLabelClasses());
+        if (!Strings.isEmpty(extraCssClasses)) {
+            if (cssClasses.length() > 0)
+                cssClasses.append(" ");
+            cssClasses.append(extraCssClasses);
+        }
+        if (cssClasses.length() > 0)
+            label.cssClass(cssClasses.toString());
 
         return label;
     }
@@ -813,7 +862,7 @@ public class HtmlFormHelper {
 
     public DivTag getSelectField(final HFHParameters params) {
         final String fieldId = getFieldId(params.getField(), params.getIdBean(), params.isReadonly());
-        final LabelTag label = getLabel(params.getFieldLabel(), fieldId, params.isRequired());
+        final LabelTag label = getLabel(params.getFieldLabel(), fieldId, params.isRequired(), params.getLabelExtraCssClasses());
 
         final FormElement formElement;
         if (params.isReadonly())
@@ -826,7 +875,7 @@ public class HtmlFormHelper {
         if (params.isDisabled())
             formElement.disabled();
 
-        return getFormGroup(label, formElement, params.getHelpText());
+        return getFormGroup(label, formElement, params.getHelpText(), params.getGroupExtraCssClasses());
     }
 
     private FormElement getReadOnlyFormElement(final HFHParameters params, final String fieldId) {
@@ -836,12 +885,12 @@ public class HtmlFormHelper {
                 if (pair.getId().equals(params.getSelected()))
                     value = pair.getName();
 
-        return getInputTag(InputTag.InputType.TEXT, fieldId, params.getField(), value, true)
+        return getInputTag(InputTag.InputType.TEXT, fieldId, params.getField(), value, true, params.getTagExtraCssClasses())
                 .readonly();
     }
 
     private FormElement getReadWriteFormElement(final HFHParameters params, final String fieldId) {
-        final SelectTag select = getSelectTag(params.getField(), fieldId);
+        final SelectTag select = getSelectTag(params.getField(), fieldId, params.getTagExtraCssClasses());
 
         for (IdNamePair pair: params.getSelectPairs()) {
             final OptionTag optionTag = new OptionTag(pair.getName(), pair.getId());
@@ -854,7 +903,13 @@ public class HtmlFormHelper {
     }
 
     protected SelectTag getSelectTag(final String name, final String id) {
-        return new SelectTag(name).cssClass("form-control").id(id);
+        return getSelectTag(name, id, null);
+    }
+
+    protected SelectTag getSelectTag(final String name, final String id, final String extraCssClasses) {
+        return new SelectTag(name)
+                .cssClass(CssClasses.start("form-control").add(extraCssClasses).get())
+                .id(id);
     }
 
     public DivTag getTextAreaField(
@@ -900,9 +955,9 @@ public class HtmlFormHelper {
 
     public DivTag getTextAreaField(final HFHParameters params) {
         final String fieldId = getFieldId(params.getField(), params.getIdBean(), params.isReadonly());
-        final LabelTag label = getLabel(params.getFieldLabel(), fieldId, params.isRequired());
+        final LabelTag label = getLabel(params.getFieldLabel(), fieldId, params.isRequired(), params.getLabelExtraCssClasses());
 
-        final TextareaTag textarea = getTextAreaTag(fieldId, params.getField(), params.getValue());
+        final TextareaTag textarea = getTextAreaTag(fieldId, params.getField(), params.getValue(), params.getTagExtraCssClasses());
         if (params.isRequired() && useRequiredInHtml)
             textarea.required();
         if (params.getPlaceholder() != null)
@@ -912,11 +967,18 @@ public class HtmlFormHelper {
         if (params.isReadonly())
             textarea.readonly();
 
-        return getFormGroup(label, textarea, params.getHelpText());
+        return getFormGroup(label, textarea, params.getHelpText(), params.getGroupExtraCssClasses());
     }
 
     protected TextareaTag getTextAreaTag(final String id, final String name, final String value) {
-        return new TextareaTag(value).cssClass("form-control").id(id).name(name);
+        return getTextAreaTag(id, name, value, null);
+    }
+
+    protected TextareaTag getTextAreaTag(final String id, final String name, final String value, final String extraCssClasses) {
+        return new TextareaTag(value)
+                .cssClass(CssClasses.start("form-control").add(extraCssClasses).get())
+                .id(id)
+                .name(name);
     }
 
     public DivTag getCheckboxField(
@@ -973,7 +1035,11 @@ public class HtmlFormHelper {
         final DivTag innerPart = getCheckbox(params);
 
         if (horizontal)
-            return getFormGroup().child(new DivTag().cssClass(getHorizontalFieldClassesWithOffset()).child(innerPart));
+            return getFormGroup(params.getGroupExtraCssClasses())
+                    .child(new DivTag().cssClass(getHorizontalFieldClassesWithOffset()).child(innerPart));
+
+        if (params.hasGroupExtraCssClasses())
+            innerPart.changeCssClasses(CssClasses.start("checkbox").add(params.getGroupExtraCssClasses()).get());
 
         return innerPart;
     }
@@ -1029,12 +1095,15 @@ public class HtmlFormHelper {
     }
 
     protected DivTag getCheckbox(final HFHParameters params) {
+        LabelTag labelTag = new LabelTag()
+                .child(getCheckboxTag(params))
+                .child(new CData(" " + params.getFieldLabel()));
+        if (params.hasLabelExtraCssClasses())
+            labelTag.cssClass(params.getLabelExtraCssClasses());
+
         return new DivTag()
                 .cssClass("checkbox")
-                .child(new LabelTag()
-                                .child(getCheckboxTag(params))
-                                .child(new CData(" " + params.getFieldLabel()))
-                );
+                .child(labelTag);
     }
 
     protected InputTag getCheckboxTag(
@@ -1080,6 +1149,8 @@ public class HtmlFormHelper {
                         .name(params.getField())
                         .id(getFieldId(params.getField(), params.getIdBean(), params.getIdNameSuffix(), params.isReadonly()));
 
+        if (params.hasTagExtraCssClasses())
+            checkbox.cssClass(params.getTagExtraCssClasses());
         if (params.isChecked())
             checkbox.checked();
         if (params.isDisabled())
@@ -1130,7 +1201,7 @@ public class HtmlFormHelper {
 
     public DivTag getFileField(final HFHParameters params) {
         final String fieldId = getFieldId(params.getField(), params.getIdBean(), params.isReadonly());
-        final LabelTag label = getLabel(params.getFieldLabel(), null, params.isRequired());
+        final LabelTag label = getLabel(params.getFieldLabel(), null, params.isRequired(), params.getLabelExtraCssClasses());
 
         final LabelTag uploadButton = new LabelTag(uploadButtonLabel, fieldId).cssClass(uploadButtonCssClasses);
 
@@ -1140,7 +1211,8 @@ public class HtmlFormHelper {
                         fieldId,
                         params.getField(),
                         params.getCurrentFile(),
-                        params.isReadonly());
+                        params.isReadonly(),
+                        params.getTagExtraCssClasses());
 
         final SpanTag filenameDisplay =
                 new SpanTag(params.hasCurrentFile() ? params.getCurrentFile() : uploadNoFileLabel)
@@ -1161,7 +1233,7 @@ public class HtmlFormHelper {
         if (params.isReadonly())
             input.readonly();
 
-        return getFileFormGroup(label, uploadButton, input, filenameDisplay, removeFileButton);
+        return getFileFormGroup(label, uploadButton, input, filenameDisplay, removeFileButton, params.getGroupExtraCssClasses());
     }
 
     private DivTag getFileFormGroup(
@@ -1169,10 +1241,12 @@ public class HtmlFormHelper {
             final LabelTag uploadButton,
             final InputTag input,
             final SpanTag filenameDisplay,
-            final SpanTag removeFileButton)
+            final SpanTag removeFileButton,
+            final String extraCssClasses)
     {
         final DivTag formGroup =
-                new DivTag().cssClass("form-group")
+                new DivTag()
+                        .cssClass(CssClasses.start("form-group").add(extraCssClasses).get())
                         .child(label);
 
         if (horizontal) {
@@ -1201,13 +1275,13 @@ public class HtmlFormHelper {
     }
 
     public DivTag getBooleanRadiosField(final HFHParameters params) {
-        final LabelTag label = getLabel(params.getFieldLabel(), params.isRequired());
+        final LabelTag label = getLabel(params.getFieldLabel(), null, params.isRequired(), params.getLabelExtraCssClasses());
 
         final DivTag wrapper = new DivTag();
         wrapper.child(getBooleanRadioButton(params, true));
         wrapper.child(getBooleanRadioButton(params, false));
 
-        return getFormGroup(label, wrapper);
+        return getFormGroup(label, wrapper, null, params.getGroupExtraCssClasses());
     }
 
     // TODO: split into 2 or more functions for clarity and separation of concerns
@@ -1227,6 +1301,8 @@ public class HtmlFormHelper {
                 new InputTag(InputTag.InputType.RADIO)
                         .name(params.getField())
                         .value(fieldValue);
+        if (params.hasTagExtraCssClasses())
+            radioButton.cssClass(params.getTagExtraCssClasses());
         if (params.isChecked() && positiveValue)
             radioButton.checked();
         if (!params.isChecked() && !positiveValue)
@@ -1247,6 +1323,7 @@ public class HtmlFormHelper {
 
     // While waiting for code in client projects to be regenerated to solve this bug.
     // This function will soon be removed. DO NOT USE.
+    @Deprecated
     public DivTag getLabelFormField(
             final String value,
             final DbBeanLanguage dbBeanLanguage,
