@@ -162,7 +162,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                     && !isIdReference
                     && !field.equals("itemOrder")))
                 addProperty(new VarDeclaration("String", field + "Str", EMPTY_STRING));
-            if (isIdReference && field.endsWith("Label"))
+            if (isIdReference && column.getAssociatedBeanClass().equals("DbBeanLabel"))
                 addProperty(new VarDeclaration("DbBeanLabel", uncapitalize(chopId(field))));
         }
 
