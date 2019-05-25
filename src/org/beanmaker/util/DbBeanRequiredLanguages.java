@@ -1,6 +1,8 @@
 package org.beanmaker.util;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -10,6 +12,10 @@ public class DbBeanRequiredLanguages {
 
     public DbBeanRequiredLanguages() {
         languageIds = new HashSet<Long>();
+    }
+
+    public DbBeanRequiredLanguages(final DbBeanLanguage... languages) {
+        this(languages.length == 0 ? Collections.<DbBeanLanguage>emptyList() : Arrays.asList(languages));
     }
 
     public DbBeanRequiredLanguages(final Collection<DbBeanLanguage> languages) {
