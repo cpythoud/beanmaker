@@ -457,6 +457,14 @@ public abstract class BaseMasterTableView extends TabularView {
         return "tb-" + name + (extraCssClasses == null ? "" : " " + extraCssClasses);
     }
 
+    protected TdTag getEmptyTableCell(final String name) {
+        return getEmptyTableCell(name, null);
+    }
+
+    protected TdTag getEmptyTableCell(final String name, final String extraCssClasses) {
+        return new TdTag().cssClass(getTableCellCssClasses(name, extraCssClasses));
+    }
+
     protected TdTag getTableCell(final String name, final Date value) {
         return getTableCell(name, value, null);
     }
