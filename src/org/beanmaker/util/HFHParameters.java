@@ -115,11 +115,13 @@ public class HFHParameters {
         tagExtraCssClasses = params.tagExtraCssClasses;
     }
 
+    // TODO: change return type into HFHParameters for fluent interface / will requires all client to recompile
     private synchronized void initExtraParamMap() {
         if (extraParams == null)
             extraParams = new HashMap<String, String>();
     }
 
+    // TODO: change return type into HFHParameters for fluent interface / will requires all client to recompile
     public void setExtra(final String name, final String value) {
         if (extraParams == null)
             initExtraParamMap();
@@ -244,6 +246,7 @@ public class HFHParameters {
         return readonly;
     }
 
+    // TODO: change return type into HFHParameters for fluent interface / will requires all client to recompile
     public void setReadonly(final boolean readonly) {
         this.readonly = readonly;
     }
@@ -252,6 +255,7 @@ public class HFHParameters {
         return autocomplete;
     }
 
+    // TODO: change return type into HFHParameters for fluent interface / will requires all client to recompile
     public void setAutocomplete(final boolean autocomplete) {
         this.autocomplete = autocomplete;
     }
@@ -451,6 +455,7 @@ public class HFHParameters {
         return groupExtraCssClasses;
     }
 
+    // TODO: change return type into HFHParameters for fluent interface / will requires all client to recompile
     public void setGroupExtraCssClasses(String groupExtraCssClasses) {
         this.groupExtraCssClasses = groupExtraCssClasses;
     }
@@ -463,6 +468,7 @@ public class HFHParameters {
         return labelExtraCssClasses;
     }
 
+    // TODO: change return type into HFHParameters for fluent interface / will requires all client to recompile
     public void setLabelExtraCssClasses(String labelExtraCssClasses) {
         this.labelExtraCssClasses = labelExtraCssClasses;
     }
@@ -475,6 +481,7 @@ public class HFHParameters {
         return tagExtraCssClasses;
     }
 
+    // TODO: change return type into HFHParameters for fluent interface / will requires all client to recompile
     public void setTagExtraCssClasses(String tagExtraCssClasses) {
         this.tagExtraCssClasses = tagExtraCssClasses;
     }
