@@ -1708,9 +1708,8 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 )
         ).addContent(EMPTY_LINE);
 
-        final FunctionDeclaration protectedDataOKFunction =
+        final FunctionDeclaration transactionDataOKFunction =
                 new FunctionDeclaration("isDataOK", "boolean")
-                        .visibility(Visibility.PROTECTED)
                         .addArgument(new FunctionArgument("DBTransaction", "transaction"))
                         .addContent(
                                 new FunctionCall("clearErrorMessages", internalsVar).byItself()
@@ -1718,19 +1717,19 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 
         for (Column column: columns.getList())
             if (column.isLabelReference())
-                protectedDataOKFunction.addContent(
+                transactionDataOKFunction.addContent(
                         new FunctionCall("init" + chopId(column.getJavaName()))
                                 .byItself()
                 );
 
-        protectedDataOKFunction.addContent(
+        transactionDataOKFunction.addContent(
                         new VarDeclaration("boolean", "ok", "true")
         ).addContent(EMPTY_LINE);
 
         int okAssignCount = 0;
         for (Column column: columns.getList())
             if (!column.isSpecial() && !column.getJavaType().equals("boolean")) {
-                protectedDataOKFunction.addContent(
+                transactionDataOKFunction.addContent(
                         new Assignment(
                                 "ok",
                                 dataOkOKUpdateExpression(
@@ -1739,11 +1738,11 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 ++okAssignCount;
             }
         if (okAssignCount > 0)
-            protectedDataOKFunction.addContent(EMPTY_LINE);
+            transactionDataOKFunction.addContent(EMPTY_LINE);
 
-        protectedDataOKFunction.addContent(new ReturnStatement("ok"));
+        transactionDataOKFunction.addContent(new ReturnStatement("ok"));
 
-        javaClass.addContent(protectedDataOKFunction).addContent(EMPTY_LINE);
+        javaClass.addContent(transactionDataOKFunction).addContent(EMPTY_LINE);
 
         // checkDataForField functions
         for (Column column: columns.getList()) {
