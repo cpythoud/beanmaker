@@ -115,18 +115,19 @@ public class HFHParameters {
         tagExtraCssClasses = params.tagExtraCssClasses;
     }
 
-    // TODO: change return type into HFHParameters for fluent interface / will requires all client to recompile
     private synchronized void initExtraParamMap() {
         if (extraParams == null)
             extraParams = new HashMap<String, String>();
     }
 
     // TODO: change return type into HFHParameters for fluent interface / will requires all client to recompile
-    public void setExtra(final String name, final String value) {
+    public HFHParameters setExtra(final String name, final String value) {
         if (extraParams == null)
             initExtraParamMap();
 
         extraParams.put(name, value);
+
+        return this;
     }
 
     public String getExtra(final String name) {
@@ -255,9 +256,10 @@ public class HFHParameters {
         return autocomplete;
     }
 
-    // TODO: change return type into HFHParameters for fluent interface / will requires all client to recompile
-    public void setAutocomplete(final boolean autocomplete) {
+    public HFHParameters setAutocomplete(final boolean autocomplete) {
         this.autocomplete = autocomplete;
+
+        return this;
     }
 
     public String getSelected() {
@@ -455,9 +457,10 @@ public class HFHParameters {
         return groupExtraCssClasses;
     }
 
-    // TODO: change return type into HFHParameters for fluent interface / will requires all client to recompile
-    public void setGroupExtraCssClasses(String groupExtraCssClasses) {
+    public HFHParameters setGroupExtraCssClasses(String groupExtraCssClasses) {
         this.groupExtraCssClasses = groupExtraCssClasses;
+
+        return this;
     }
 
     public boolean hasGroupExtraCssClasses() {
@@ -468,9 +471,10 @@ public class HFHParameters {
         return labelExtraCssClasses;
     }
 
-    // TODO: change return type into HFHParameters for fluent interface / will requires all client to recompile
-    public void setLabelExtraCssClasses(String labelExtraCssClasses) {
+    public HFHParameters setLabelExtraCssClasses(String labelExtraCssClasses) {
         this.labelExtraCssClasses = labelExtraCssClasses;
+
+        return this;
     }
 
     public boolean hasLabelExtraCssClasses() {
@@ -481,9 +485,10 @@ public class HFHParameters {
         return tagExtraCssClasses;
     }
 
-    // TODO: change return type into HFHParameters for fluent interface / will requires all client to recompile
-    public void setTagExtraCssClasses(String tagExtraCssClasses) {
+    public HFHParameters setTagExtraCssClasses(String tagExtraCssClasses) {
         this.tagExtraCssClasses = tagExtraCssClasses;
+
+        return this;
     }
 
     public boolean hasTagExtraCssClasses() {
