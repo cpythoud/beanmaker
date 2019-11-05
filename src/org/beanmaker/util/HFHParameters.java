@@ -1,10 +1,12 @@
 package org.beanmaker.util;
 
 import org.dbbeans.util.Strings;
+
 import org.jcodegen.html.ButtonTag;
 import org.jcodegen.html.InputTag;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +29,7 @@ public class HFHParameters {
     // selects
     private String selected;
     private List<IdNamePair> selectPairs;
+    private Map<String, List<IdNamePair>> optionGroupSelectPairs;
     
     // checkboxes
     private boolean checked;
@@ -290,6 +293,27 @@ public class HFHParameters {
 
     public HFHParameters setSelectPairs(final List<IdNamePair> selectPairs) {
         this.selectPairs = selectPairs;
+
+        return this;
+    }
+
+    public Map<String, List<IdNamePair>> getOptionGroupSelectPairs() {
+        if (optionGroupSelectPairs == null)
+            throw new HFHParameterMissingException("optionGroupSelectPairs");
+
+        return optionGroupSelectPairs;
+    }
+
+    public boolean hasOptionGroupSelectData() {
+        return optionGroupSelectPairs != null;
+    }
+
+    public HFHParameters setOptionGroupSelectPairs(Map<String, List<IdNamePair>> optionGroupSelectPairs) {
+        this.optionGroupSelectPairs = optionGroupSelectPairs;
+
+        selectPairs = new ArrayList<IdNamePair>();
+        for (List<IdNamePair> idNamePairs: optionGroupSelectPairs.values())
+            selectPairs.addAll(idNamePairs);
 
         return this;
     }

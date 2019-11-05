@@ -10,6 +10,7 @@ import org.jcodegen.html.FormTag;
 import org.jcodegen.html.HtmlCodeFragment;
 import org.jcodegen.html.InputTag;
 import org.jcodegen.html.LabelTag;
+import org.jcodegen.html.OptgroupTag;
 import org.jcodegen.html.OptionTag;
 import org.jcodegen.html.PTag;
 import org.jcodegen.html.SelectTag;
@@ -20,8 +21,11 @@ import org.jcodegen.html.util.CssClasses;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 public class HtmlFormHelper {
+
+    public static final String SELECT_OFF_GROUP_MAP_KEY = "__ROOT__";
 
     private String notRequiredExtension = "";
     private String requiredExtension = " *";
@@ -892,14 +896,30 @@ public class HtmlFormHelper {
     private FormElement getReadWriteFormElement(final HFHParameters params, final String fieldId) {
         final SelectTag select = getSelectTag(params.getField(), fieldId, params.getTagExtraCssClasses());
 
-        for (IdNamePair pair: params.getSelectPairs()) {
-            final OptionTag optionTag = new OptionTag(pair.getName(), pair.getId());
-            if (pair.getId().equals(params.getSelected()))
-                optionTag.selected();
-            select.child(optionTag);
-        }
+        if (params.hasOptionGroupSelectData()) {
+            final Map<String, List<IdNamePair>> pairMap = params.getOptionGroupSelectPairs();
+            for (String groupName: pairMap.keySet()) {
+                if (groupName.equals(SELECT_OFF_GROUP_MAP_KEY))
+                    addPairs(select, pairMap.get(groupName), params.getSelected());
+                else {
+                    final OptgroupTag group = new OptgroupTag(groupName);
+                    addPairs(group, pairMap.get(groupName), params.getSelected());
+                    select.child(group);
+                }
+            }
+        } else
+            addPairs(select, params.getSelectPairs(), params.getSelected());
 
         return select;
+    }
+
+    private void addPairs(final Tag selectOrGroup, List<IdNamePair> pairs, String selected) {
+        for (IdNamePair pair: pairs) {
+            final OptionTag optionTag = new OptionTag(pair.getName(), pair.getId());
+            if (pair.getId().equals(selected))
+                optionTag.selected();
+            selectOrGroup.child(optionTag);
+        }
     }
 
     protected SelectTag getSelectTag(final String name, final String id) {
