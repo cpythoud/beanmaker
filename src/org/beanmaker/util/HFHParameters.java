@@ -6,8 +6,8 @@ import org.jcodegen.html.ButtonTag;
 import org.jcodegen.html.InputTag;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -83,6 +83,13 @@ public class HFHParameters {
         selected = params.selected;
         if (params.selectPairs != null)
             selectPairs = new ArrayList<IdNamePair>(params.selectPairs);
+        if (params.optionGroupSelectPairs != null) {
+            optionGroupSelectPairs = new LinkedHashMap<String, List<IdNamePair>>();
+            for (String optionGroupName: params.optionGroupSelectPairs.keySet())
+                optionGroupSelectPairs.put(
+                        optionGroupName,
+                        new ArrayList<IdNamePair>(params.optionGroupSelectPairs.get(optionGroupName)));
+        }
 
         // checkboxes
         checked = params.checked;
