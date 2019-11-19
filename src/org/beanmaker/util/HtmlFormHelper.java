@@ -1325,7 +1325,7 @@ public class HtmlFormHelper {
             radioButton.cssClass(params.getTagExtraCssClasses());
         if (params.isChecked() && positiveValue)
             radioButton.checked();
-        if (!params.isChecked() && !positiveValue)
+        if (!params.isChecked() && !positiveValue && !params.areRadioButtonsUnchecked())
             radioButton.checked();
         if (params.isDisabled())
             radioButton.disabled();

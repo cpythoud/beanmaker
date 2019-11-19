@@ -51,6 +51,7 @@ public class HFHParameters {
     private String noLabel;
     private String yesValue;
     private String noValue;
+    private boolean radioButtonsUnchecked;
 
     // labels
     private boolean asTextArea;
@@ -111,6 +112,7 @@ public class HFHParameters {
         noLabel = params.noLabel;
         yesValue = params.yesValue;
         noValue = params.noValue;
+        radioButtonsUnchecked = params.radioButtonsUnchecked;
 
         // labels
         asTextArea = params.asTextArea;
@@ -470,6 +472,16 @@ public class HFHParameters {
 
     public HFHParameters setNoValue(String noValue) {
         this.noValue = noValue;
+
+        return this;
+    }
+
+    public boolean areRadioButtonsUnchecked() {
+        return radioButtonsUnchecked;
+    }
+
+    public HFHParameters setRadioButtonsUnchecked(boolean radioButtonsUnchecked) {
+        this.radioButtonsUnchecked = radioButtonsUnchecked;
 
         return this;
     }
