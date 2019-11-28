@@ -1,4 +1,4 @@
-// beanmaker.js -- v0.4.2 -- 2018-12-08
+// beanmaker.js -- v0.5.0 -- 2019-11-27
 
 $.ajaxSetup({cache : false});
 
@@ -290,3 +290,21 @@ BEANMAKER.getRequestParametersFromDataAttributes = function ($element, extraPara
     return parameterString;
 };
 
+BEANMAKER.setupDataRefresh = function (id, availabilityCheckURL, dataURL, checkFrequency) {
+    if (checkFrequency === undefined)
+        checkFrequency = 5;
+
+    window.setTimeout(function () {
+        $.ajax({
+            url: availabilityCheckURL,
+            type: 'post',
+            dataType: 'json',
+            success: function (data) {
+                if (data.available)
+                    $('#' + id).load(dataURL);
+                else
+                    BEANMAKER.setupDataRefresh(id, availabilityCheckURL, dataURL, checkFrequency);
+            }
+        });
+    }, checkFrequency * 1000);
+};
