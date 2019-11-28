@@ -1392,5 +1392,33 @@ public class HtmlFormHelper {
     protected Tag getTextLabelTag(final String id, final String value) {
         return new SpanTag(value).cssClass("form-control").id(id);
     }
+
+    public DivTag getFractionField(final HFHParameters params) {
+        final LabelTag label = getLabel(params.getFieldLabel(), null, params.isRequired(), params.getLabelExtraCssClasses());
+
+        final String altCSSClasses = params.getTagExtraCssClasses() == null ? "" : params.getTagExtraCssClasses();
+        final HFHParameters numeratorParams = params.getNumeratorParameters();
+        final HFHParameters denominatorParams = params.getDenominatorParameters();
+        final DivTag wrapper = new DivTag();
+        wrapper.child(getInputTag(
+                InputTag.InputType.NUMBER,
+                getFieldId(numeratorParams.getField(), numeratorParams.getIdBean(), numeratorParams.isReadonly()),
+                numeratorParams.getField(),
+                numeratorParams.getValue(),
+                numeratorParams.isReadonly())
+                .style("width: " + numeratorParams.getFractionFieldSize() + "ex")
+                .changeCssClasses(altCSSClasses));
+        wrapper.child(new CData("&nbsp;/&nbsp;"));
+        wrapper.child(getInputTag(
+                InputTag.InputType.NUMBER,
+                getFieldId(denominatorParams.getField(), denominatorParams.getIdBean(), denominatorParams.isReadonly()),
+                denominatorParams.getField(),
+                denominatorParams.getValue(),
+                denominatorParams.isReadonly())
+                .style("width: " + denominatorParams.getFractionFieldSize() + "ex")
+                .changeCssClasses(altCSSClasses));
+
+        return getFormGroup(label, wrapper, null, params.getGroupExtraCssClasses());
+    }
 }
 

@@ -56,6 +56,13 @@ public class HFHParameters {
     // labels
     private boolean asTextArea;
 
+    // numerator / denominator pairs
+    private String numeratorField;
+    private String denominatorField;
+    private String numeratorValue;
+    private String denominatorValue;
+    private int fractionFieldSize = 6;  // 6ex by default
+
     // extra parameters
     private Map<String, String> extraParams;
 
@@ -116,6 +123,13 @@ public class HFHParameters {
 
         // labels
         asTextArea = params.asTextArea;
+
+        // numerator / denominator pairs
+        numeratorField = params.numeratorField;
+        denominatorField = params.denominatorField;
+        numeratorValue = params.numeratorValue;
+        denominatorValue = params.denominatorValue;
+        fractionFieldSize = params.fractionFieldSize;
 
         if (params.extraParams != null) {
             initExtraParamMap();
@@ -494,6 +508,76 @@ public class HFHParameters {
 
     public boolean isAsTextArea() {
         return asTextArea;
+    }
+
+    public HFHParameters setNumeratorField(String numeratorField) {
+        this.numeratorField = numeratorField;
+
+        return this;
+    }
+
+    public String getNumeratorField() {
+        return numeratorField;
+    }
+
+    public HFHParameters setDenominatorField(String denominatorField) {
+        this.denominatorField = denominatorField;
+
+        return this;
+    }
+
+    public String getDenominatorField() {
+        return denominatorField;
+    }
+
+    public HFHParameters setNumeratorValue(String numeratorValue) {
+        this.numeratorValue = numeratorValue;
+
+        return this;
+    }
+
+    public String getNumeratorValue() {
+        return numeratorValue;
+    }
+
+    public HFHParameters setDenominatorValue(String denominatorValue) {
+        this.denominatorValue = denominatorValue;
+
+        return this;
+    }
+
+    public String getDenominatorValue() {
+        return denominatorValue;
+    }
+
+    public HFHParameters setFractionFieldSize(int fractionFieldSize) {
+        this.fractionFieldSize = fractionFieldSize;
+
+        return this;
+    }
+
+    public int getFractionFieldSize() {
+        return fractionFieldSize;
+    }
+
+    public HFHParameters getNumeratorParameters() {
+        if (numeratorValue == null || denominatorValue == null)
+            throw new IllegalStateException("No data available for numerator or denominator");
+
+        HFHParameters numeratorParameters = new HFHParameters(this);
+        numeratorParameters.field = numeratorField;
+        numeratorParameters.value = numeratorValue;
+        return numeratorParameters;
+    }
+
+    public HFHParameters getDenominatorParameters() {
+        if (numeratorValue == null || denominatorValue == null)
+            throw new IllegalStateException("No data available for numerator or denominator");
+
+        HFHParameters denominatorParameters = new HFHParameters(this);
+        denominatorParameters.field = denominatorField;
+        denominatorParameters.value = denominatorValue;
+        return denominatorParameters;
     }
 
     public String getGroupExtraCssClasses() {
