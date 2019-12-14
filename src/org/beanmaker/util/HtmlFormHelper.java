@@ -68,6 +68,8 @@ public class HtmlFormHelper {
 
     private String readonlyPostfix = "-ro";
 
+    private boolean displayROFilesAsLinks = false;
+
 
     public String getNotRequiredExtension() {
         return notRequiredExtension;
@@ -338,6 +340,14 @@ public class HtmlFormHelper {
 
     public String getReadonlyPostfix() {
         return readonlyPostfix;
+    }
+
+    public void setDisplayROFilesAsLinks(final boolean displayROFilesAsLinks) {
+        this.displayROFilesAsLinks = displayROFilesAsLinks;
+    }
+
+    public boolean isDisplayROFilesAsLinks() {
+        return displayROFilesAsLinks;
     }
 
     protected String getFormCssClasses(final String beanName) {
@@ -1220,6 +1230,9 @@ public class HtmlFormHelper {
     }
 
     public DivTag getFileField(final HFHParameters params) {
+        if (params.isReadonly())
+            return getReadOnlyFileField(params);
+
         final String fieldId = getFieldId(params.getField(), params.getIdBean(), params.isReadonly());
         final LabelTag label = getLabel(params.getFieldLabel(), null, params.isRequired(), params.getLabelExtraCssClasses());
 
@@ -1254,6 +1267,29 @@ public class HtmlFormHelper {
             input.readonly();
 
         return getFileFormGroup(label, uploadButton, input, filenameDisplay, removeFileButton, params.getGroupExtraCssClasses());
+    }
+
+    protected DivTag getReadOnlyFileField(HFHParameters params) {
+        final String fieldId = getFieldId(params.getField(), params.getIdBean(), true);
+        final LabelTag label = getLabel(params.getFieldLabel(), null, params.isRequired(), params.getLabelExtraCssClasses());
+
+        final Tag input;
+        if (displayROFilesAsLinks && params.hasCurrentFileLink())
+            input = params.getCurrentFileLink();
+        else {
+            input = getInputTag(
+                    InputTag.InputType.TEXT,
+                    fieldId,
+                    params.getField(),
+                    params.getCurrentFile(),
+                    true,
+                    params.getTagExtraCssClasses());
+        }
+
+        if (params.isDisabled())
+            input.disabled();
+
+        return getFormGroup(label, input, null, params.getGroupExtraCssClasses());
     }
 
     private DivTag getFileFormGroup(

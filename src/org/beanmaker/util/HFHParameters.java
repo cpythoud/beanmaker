@@ -4,6 +4,7 @@ import org.dbbeans.util.Strings;
 
 import org.jcodegen.html.ButtonTag;
 import org.jcodegen.html.InputTag;
+import org.jcodegen.html.Tag;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,6 +39,7 @@ public class HFHParameters {
 
     // file inputs
     private String currentFile;
+    private Tag currentFileLink;  // for read-only forms
     
     // buttons
     private ButtonTag.ButtonType buttonType;
@@ -106,6 +108,7 @@ public class HFHParameters {
 
         // file inputs
         currentFile = params.currentFile;
+        currentFileLink = params.currentFileLink;
 
         // buttons
         buttonType = params.buttonType;
@@ -146,7 +149,7 @@ public class HFHParameters {
             extraParams = new HashMap<String, String>();
     }
 
-    // TODO: change return type into HFHParameters for fluent interface / will requires all client to recompile
+    // TODO: change return type into HFHParameters for fluent interface / will requires all clients to recompile
     public HFHParameters setExtra(final String name, final String value) {
         if (extraParams == null)
             initExtraParamMap();
@@ -273,7 +276,7 @@ public class HFHParameters {
         return readonly;
     }
 
-    // TODO: change return type into HFHParameters for fluent interface / will requires all client to recompile
+    // TODO: change return type into HFHParameters for fluent interface / will requires all clients to recompile
     public void setReadonly(final boolean readonly) {
         this.readonly = readonly;
     }
@@ -383,6 +386,20 @@ public class HFHParameters {
 
     public boolean hasCurrentFile() {
         return !Strings.isEmpty(currentFile);
+    }
+
+    public Tag getCurrentFileLink() {
+        return currentFileLink;
+    }
+
+    public HFHParameters setCurrentFileLink(final Tag currentFileLink) {
+        this.currentFileLink = currentFileLink;
+
+        return this;
+    }
+
+    public boolean hasCurrentFileLink() {
+        return currentFileLink != null;
     }
 
     public ButtonTag.ButtonType getButtonType() {
