@@ -926,6 +926,8 @@ public class HtmlFormHelper {
     private void addPairs(final Tag selectOrGroup, List<IdNamePair> pairs, String selected) {
         for (IdNamePair pair: pairs) {
             final OptionTag optionTag = new OptionTag(pair.getName(), pair.getId());
+            if (pair.isDisabled())
+                optionTag.disabled();
             if (pair.getId().equals(selected))
                 optionTag.selected();
             selectOrGroup.child(optionTag);

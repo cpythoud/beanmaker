@@ -8,26 +8,42 @@ public class IdNamePair implements Comparable<IdNamePair> {
 
 	private final String id;
 	private final String name;
-	
+	private final boolean disabled;
+
 	public IdNamePair(final int id, final String name) {
+		this(id, name, false);
+	}
+
+	public IdNamePair(final long id, final String name) {
+		this(id, name, false);
+	}
+
+	public IdNamePair(final String id, final String name) {
+		this(id, name, false);
+	}
+	
+	public IdNamePair(final int id, final String name, final boolean disabled) {
 		if (id < 0)
 			throw new IllegalArgumentException("id must be zero or positive");
 		
 		this.id = Integer.toString(id);
 		this.name = name;
+		this.disabled = disabled;
 	}
 	
-	public IdNamePair(final long id, final String name) {
+	public IdNamePair(final long id, final String name, final boolean disabled) {
 		if (id < 0)
 			throw new IllegalArgumentException("id must be zero or positive");
 		
 		this.id = Long.toString(id);
 		this.name = name;
+		this.disabled = disabled;
 	}
 	
-	public IdNamePair(final String id, final String name) {
+	public IdNamePair(final String id, final String name, final boolean disabled) {
 		this.id = id;
 		this.name = name;
+		this.disabled = disabled;
 	}
 	
 	public String getId() {
@@ -36,6 +52,10 @@ public class IdNamePair implements Comparable<IdNamePair> {
 	
 	public String getName() {
 		return name;
+	}
+
+	public boolean isDisabled() {
+		return disabled;
 	}
 
 	// Assumes only one "please select ..." element with id "0", throws an IllegalStateException otherwise.
