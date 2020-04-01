@@ -541,7 +541,8 @@ public class HtmlFormHelper {
     }
 
     // For possible backward compatibility with older projects
-    // THIS FUNCTION WILL BE DEPRECATED IN NEXT RELEASE AND REMOVED IN THE FUTURE -- DO NOT USE
+    // THIS FUNCTION WILL BE REMOVED IN THE FUTURE -- DO NOT USE
+    @Deprecated
     protected InputTag getInputTag(
             final InputTag.InputType type,
             final String id,
