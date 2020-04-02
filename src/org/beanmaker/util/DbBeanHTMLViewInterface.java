@@ -19,6 +19,8 @@ public interface DbBeanHTMLViewInterface extends DbBeanViewInterface {
 
     void setAllFields(final ServletRequest request);
 
+    void setAllFields(final HttpRequestParameters parameters);
+
     boolean isDataOK();
 
     void updateDB();

@@ -8,11 +8,10 @@ import org.jcodegen.java.ImportsManager;
 import org.jcodegen.java.JavaClass;
 import org.jcodegen.java.ObjectCreation;
 import org.jcodegen.java.SourceFile;
-
 import org.jcodegen.java.VarDeclaration;
 import org.jcodegen.java.Visibility;
-import org.dbbeans.util.Strings;
 
+import org.dbbeans.util.Strings;
 
 public abstract class BaseCode {
     protected final SourceFile sourceFile;
@@ -87,7 +86,16 @@ public abstract class BaseCode {
     }
 
     protected void addNonImplementedFunction(final String name, final FunctionArgument... functionArguments) {
-        addNonImplementedFunction(null, name, false, functionArguments);
+        addNonImplementedFunction(null, name, false, false, Visibility.PUBLIC, functionArguments);
+    }
+
+    protected void addNonImplementedOverriddenFunction(
+            final String returnType,
+            final String name,
+            final Visibility visibility,
+            final FunctionArgument... functionArguments)
+    {
+        addNonImplementedFunction(returnType, name, false, true, visibility, functionArguments);
     }
 
     protected void addNonImplementedStaticFunction(
@@ -95,13 +103,15 @@ public abstract class BaseCode {
             final String name,
             final FunctionArgument... functionArguments)
     {
-        addNonImplementedFunction(returnType, name, true, functionArguments);
+        addNonImplementedFunction(returnType, name, true, false, Visibility.PUBLIC, functionArguments);
     }
 
     private void addNonImplementedFunction(
             final String returnType,
             final String name,
             final boolean staticFunction,
+            final boolean overridden,
+            final Visibility visibility,
             final FunctionArgument... functionArguments)
     {
         final FunctionDeclaration functionDeclaration;
@@ -110,8 +120,13 @@ public abstract class BaseCode {
         else
             functionDeclaration = new FunctionDeclaration(name, returnType);
 
+        functionDeclaration.visibility(visibility);
+
         if (staticFunction)
             functionDeclaration.markAsStatic();
+
+        if (overridden)
+            functionDeclaration.annotate("@Override");
 
         final StringBuilder argTypeList = new StringBuilder();
         for (FunctionArgument argument: functionArguments) {

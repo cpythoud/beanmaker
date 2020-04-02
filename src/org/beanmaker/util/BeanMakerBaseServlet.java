@@ -4,8 +4,8 @@ import org.dbbeans.util.MimeTypes;
 import org.dbbeans.util.Pair;
 import org.dbbeans.util.Strings;
 
-import javax.lang.model.element.NestingKind;
 import javax.servlet.ServletException;
+
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -15,11 +15,49 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import java.math.BigDecimal;
 import java.util.Enumeration;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public abstract class BeanMakerBaseServlet extends HttpServlet {
+
+    public enum Operation {
+        GET_FORM(1, "get"), SUBMIT_FORM(2, "submit"), DELETE_BEAN(3, "delete");
+
+        private final int index;
+        private final String paramValue;
+
+        Operation(final int index, final String paramValue) {
+            this.index = index;
+            this.paramValue = paramValue;
+        }
+
+        public int getIndex() {
+            return index;
+        }
+
+        private static final Map<String, Operation> OPERATION_MAP = initOperationMap();
+
+        private static Map<String, Operation> initOperationMap() {
+            Map<String, Operation> map = new LinkedHashMap<String, Operation>();
+            for (Operation operation: values())
+                map.put(operation.paramValue, operation);
+            return map;
+        }
+
+        public static Operation from(final HttpServletRequest request) throws ServletException {
+            String paramValue = request.getParameter("beanmaker_operation");
+            if (paramValue == null)
+                throw new ServletException("Missing beanmaker_operation parameter");
+
+            Operation operation = OPERATION_MAP.get(paramValue);
+            if (operation == null)
+                throw new ServletException("Unknown operation: " + paramValue);
+
+            return operation;
+        }
+    }
 
     @Override
     public void doGet(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
@@ -290,5 +328,9 @@ public abstract class BeanMakerBaseServlet extends HttpServlet {
 
         newBean.setId(id);
         return newBean;
+    }
+
+    protected int getOperationIndex(final HttpServletRequest request) throws ServletException {
+        return Operation.from(request).getIndex();
     }
 }
