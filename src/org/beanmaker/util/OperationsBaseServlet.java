@@ -17,7 +17,9 @@ public abstract class OperationsBaseServlet extends BeanMakerBaseServlet {
         switch (getOperationIndex(request)) {
             case 1:
                 response.setContentType("text/html; charset=UTF-8");
+                out.println(getFormPrefix(request));
                 out.println(getForm(request));
+                out.println(getFormSuffix(request));
                 break;
             case 2:
                 response.setContentType("text/json; charset=UTF-8");
@@ -32,22 +34,28 @@ public abstract class OperationsBaseServlet extends BeanMakerBaseServlet {
         }
     }
 
+    protected String getFormPrefix(final HttpServletRequest request) {
+        return "";
+    }
+
     protected String getForm(final HttpServletRequest request) {
-        return getHTMLView(getBeanId(request), getLanguage(request.getSession())).getHtmlForm();
+        return getHTMLView(getBeanId(request, "id"), getLanguage(request.getSession())).getHtmlForm();
+    }
+
+    private String getFormSuffix(final HttpServletRequest request) {
+        return "";
     }
 
     protected abstract DbBeanHTMLViewInterface getHTMLView(final long id, final DbBeanLanguage language);
 
-    protected long getBeanId(final HttpServletRequest request) {
-        return getBeanId(request, "id");
-    }
+    protected abstract long getSubmitBeanId(final HttpServletRequest request);
 
     protected abstract DbBeanLanguage getLanguage(final HttpSession session);
 
     protected String submitForm(HttpServletRequest request) {
         return processBean(
                 new HttpRequestParameters(request),
-                getHTMLView(getBeanId(request), getLanguage(request.getSession()))
+                getHTMLView(getSubmitBeanId(request), getLanguage(request.getSession()))
         );
     }
 
@@ -63,7 +71,7 @@ public abstract class OperationsBaseServlet extends BeanMakerBaseServlet {
     }
 
     protected String deleteBean(final HttpServletRequest request) {
-        return deleteBean(getInstance(getBeanId(request)));
+        return deleteBean(getInstance(getBeanId(request, "id")));
     }
 
     protected abstract DbBeanInterface getInstance(final long id);

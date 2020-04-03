@@ -1,5 +1,7 @@
 package org.beanmaker;
 
+import org.dbbeans.util.Strings;
+
 import org.jcodegen.java.Condition;
 import org.jcodegen.java.FunctionArgument;
 import org.jcodegen.java.FunctionCall;
@@ -22,6 +24,8 @@ public class BaseServletSourceFile extends BeanCode {
         importsManager.addImport("org.beanmaker.util.DbBeanHTMLViewInterface");
         importsManager.addImport("org.beanmaker.util.DbBeanInterface");
         importsManager.addImport("org.beanmaker.util.DbBeanLanguage");
+
+        importsManager.addImport("javax.servlet.http.HttpServletRequest");
     }
 
     private void addHTMLViewFunction() {
@@ -44,6 +48,19 @@ public class BaseServletSourceFile extends BeanCode {
         ).addContent(EMPTY_LINE);
     }
 
+    private void addBeanIdFunction() {
+        javaClass.addContent(
+                new FunctionDeclaration("getSubmitBeanId", "long")
+                        .annotate("@Override")
+                        .visibility(Visibility.PROTECTED)
+                        .addArgument(new FunctionArgument("HttpServletRequest", "request"))
+                        .addContent(
+                                new ReturnStatement(new FunctionCall("getBeanId")
+                                        .addArguments("request", Strings.quickQuote("submitted" + beanName)))
+                        )
+        ).addContent(EMPTY_LINE);
+    }
+
     private void addInstanceFunction() {
         javaClass.addContent(
                 new FunctionDeclaration("getInstance", "DbBeanInterface")
@@ -60,6 +77,7 @@ public class BaseServletSourceFile extends BeanCode {
 
         addImports();
         addHTMLViewFunction();
+        addBeanIdFunction();
         addInstanceFunction();
     }
 }
