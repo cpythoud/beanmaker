@@ -23,8 +23,8 @@ public class BaseServletSourceFile extends BeanCode {
     private void addImports() {
         importsManager.addImport("org.beanmaker.util.DbBeanHTMLViewInterface");
         importsManager.addImport("org.beanmaker.util.DbBeanInterface");
-        importsManager.addImport("org.beanmaker.util.DbBeanLanguage");
 
+        importsManager.addImport("javax.servlet.ServletException");
         importsManager.addImport("javax.servlet.http.HttpServletRequest");
     }
 
@@ -34,17 +34,31 @@ public class BaseServletSourceFile extends BeanCode {
                         .annotate("@Override")
                         .visibility(Visibility.PROTECTED)
                         .addArgument(new FunctionArgument("long", "id"))
-                        .addArgument(new FunctionArgument("DbBeanLanguage", "language"))
+                        .addArgument(new FunctionArgument("HttpServletRequest", "request"))
+                        .addException("ServletException")
                         .addContent(VarDeclaration.declareAndInit(beanName, beanVarName))
                         .addContent(EMPTY_LINE)
+                        /*.addContent(
+                                new VarDeclaration(
+                                        "long",
+                                        "id",
+                                        new FunctionCall("getBeanId")
+                                                .addArguments("request", Strings.quickQuote("id"))
+                                ).markAsFinal()
+                        )*/
                         .addContent(
                                 new IfBlock(new Condition("id > 0"))
                                         .addContent(new FunctionCall("setId", beanVarName)
                                                 .addArgument("id")
                                                 .byItself()))
                         .addContent(EMPTY_LINE)
-                        .addContent(new ReturnStatement(
-                                new ObjectCreation(beanName + "HTMLView").addArguments(beanVarName, "language")))
+                        .addContent(
+                                new ReturnStatement(
+                                        new ObjectCreation(beanName + "HTMLView")
+                                                .addArgument(beanVarName)
+                                                .addArgument(new FunctionCall("getLanguage")
+                                                        .addArgument(new FunctionCall("getSession", "request"))))
+                        )
         ).addContent(EMPTY_LINE);
     }
 

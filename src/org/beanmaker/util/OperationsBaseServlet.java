@@ -17,9 +17,7 @@ public abstract class OperationsBaseServlet extends BeanMakerBaseServlet {
         switch (getOperationIndex(request)) {
             case 1:
                 response.setContentType("text/html; charset=UTF-8");
-                out.println(getFormPrefix(request));
                 out.println(getForm(request));
-                out.println(getFormSuffix(request));
                 break;
             case 2:
                 response.setContentType("text/json; charset=UTF-8");
@@ -34,29 +32,28 @@ public abstract class OperationsBaseServlet extends BeanMakerBaseServlet {
         }
     }
 
-    protected String getFormPrefix(final HttpServletRequest request) {
-        return "";
+    protected String getForm(final HttpServletRequest request) throws ServletException {
+        return getFormPrefix(request) +
+                getHTMLView(getBeanId(request, "id"), request).getHtmlForm() +
+                getFormSuffix(request);
     }
 
-    protected String getForm(final HttpServletRequest request) {
-        return getHTMLView(getBeanId(request, "id"), getLanguage(request.getSession())).getHtmlForm();
+    protected String getFormPrefix(final HttpServletRequest request) {
+        return "";
     }
 
     private String getFormSuffix(final HttpServletRequest request) {
         return "";
     }
 
-    protected abstract DbBeanHTMLViewInterface getHTMLView(final long id, final DbBeanLanguage language);
+    protected abstract DbBeanHTMLViewInterface getHTMLView(final long id, final HttpServletRequest request) throws ServletException;
 
     protected abstract long getSubmitBeanId(final HttpServletRequest request);
 
     protected abstract DbBeanLanguage getLanguage(final HttpSession session);
 
-    protected String submitForm(HttpServletRequest request) {
-        return processBean(
-                new HttpRequestParameters(request),
-                getHTMLView(getSubmitBeanId(request), getLanguage(request.getSession()))
-        );
+    protected String submitForm(HttpServletRequest request) throws ServletException {
+        return processBean(new HttpRequestParameters(request), getHTMLView(getSubmitBeanId(request), request));
     }
 
     protected String processBean(final HttpRequestParameters parameters, final DbBeanHTMLViewInterface htmlView) {
