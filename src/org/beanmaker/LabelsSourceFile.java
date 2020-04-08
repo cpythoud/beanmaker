@@ -42,6 +42,14 @@ public class LabelsSourceFile extends BaseCode {
                 new FunctionArgument("long", "id"),
                 new FunctionArgument("DBTransaction", "transaction"));
 
+        addNonImplementedStaticFunction("boolean", "isNameOK", new FunctionArgument("String", "name"));
+
+        addNonImplementedStaticFunction(
+                "boolean",
+                "isNameOK",
+                new FunctionArgument("String", "name"),
+                new FunctionArgument("DBTransaction", "transaction"));
+
         addNonImplementedStaticFunction(
                 "String",
                 "get",

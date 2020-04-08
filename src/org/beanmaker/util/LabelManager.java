@@ -13,6 +13,10 @@ public interface LabelManager {
 
     boolean isIdOK(final long id, final DBTransaction transaction);
 
+    boolean isNameOK(final String name);
+
+    boolean isNameOK(final String name, final DBTransaction transaction);
+
     String get(final long id, final DbBeanLanguage dbBeanLanguage);
 
     String get(final String name, final DbBeanLanguage dbBeanLanguage);
