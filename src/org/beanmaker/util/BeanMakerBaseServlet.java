@@ -333,4 +333,28 @@ public abstract class BeanMakerBaseServlet extends HttpServlet {
     protected int getOperationIndex(final HttpServletRequest request) throws ServletException {
         return Operation.from(request).getIndex();
     }
+
+    protected String getExpectedStringParameter(final HttpServletRequest request, final String parameterName) throws ServletException {
+        String value = request.getParameter(parameterName);
+        if (value == null)
+            throw new ServletException("Missing request parameter: " + parameterName);
+
+        return value;
+    }
+
+    protected int getExpectedIntegerParameter(final HttpServletRequest request, final String parameterName) throws ServletException {
+        try {
+            return Integer.parseInt(getExpectedStringParameter(request, parameterName));
+        } catch (final NumberFormatException nex) {
+            throw new ServletException(nex);
+        }
+    }
+
+    protected long getExpectedLongParameter(final HttpServletRequest request, final String parameterName) throws ServletException {
+        try {
+            return Long.parseLong(getExpectedStringParameter(request, parameterName));
+        } catch (final NumberFormatException nex) {
+            throw new ServletException(nex);
+        }
+    }
 }
