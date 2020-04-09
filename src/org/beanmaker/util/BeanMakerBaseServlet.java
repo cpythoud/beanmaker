@@ -23,7 +23,10 @@ import java.util.Map;
 public abstract class BeanMakerBaseServlet extends HttpServlet {
 
     public enum Operation {
-        GET_FORM(1, "get"), SUBMIT_FORM(2, "submit"), DELETE_BEAN(3, "delete");
+        GET_FORM(1, "get"),
+        SUBMIT_FORM(2, "submit"),
+        DELETE_BEAN(3, "delete"),
+        CHANGE_ORDER(4, "order");
 
         private final int index;
         private final String paramValue;
@@ -330,8 +333,8 @@ public abstract class BeanMakerBaseServlet extends HttpServlet {
         return newBean;
     }
 
-    protected int getOperationIndex(final HttpServletRequest request) throws ServletException {
-        return Operation.from(request).getIndex();
+    protected Operation getOperation(final HttpServletRequest request) throws ServletException {
+        return Operation.from(request);
     }
 
     protected String getExpectedStringParameter(final HttpServletRequest request, final String parameterName) throws ServletException {

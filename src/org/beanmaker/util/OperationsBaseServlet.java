@@ -1,34 +1,37 @@
 package org.beanmaker.util;
 
+import org.dbbeans.util.Strings;
+
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 
 public abstract class OperationsBaseServlet extends BeanMakerBaseServlet {
 
     @Override
     protected void processRequest(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
-        final PrintWriter out = response.getWriter();
-
-        switch (getOperationIndex(request)) {
-            case 1:
+        switch (getOperation(request)) {
+            case GET_FORM:
                 response.setContentType("text/html; charset=UTF-8");
-                out.println(getForm(request));
+                response.getWriter().println(getForm(request));
                 break;
-            case 2:
+            case SUBMIT_FORM:
                 response.setContentType("text/json; charset=UTF-8");
-                out.println(submitForm(request));
+                response.getWriter().println(submitForm(request));
                 break;
-            case 3:
+            case DELETE_BEAN:
                 response.setContentType("text/json; charset=UTF-8");
-                out.println(deleteBean(request));
+                response.getWriter().println(deleteBean(request));
+                break;
+            case CHANGE_ORDER:
+                response.setContentType("text/json; charset=UTF-8");
+                response.getWriter().println(changeOrder(request));
                 break;
             default:
-                throw new AssertionError("Unidentified operation index: " + getOperationIndex(request));
+                throw new AssertionError("Unidentified operation: " + getOperation(request));
         }
     }
 
@@ -72,4 +75,15 @@ public abstract class OperationsBaseServlet extends BeanMakerBaseServlet {
     }
 
     protected abstract DbBeanInterface getInstance(final long id);
+
+    protected String changeOrder(final HttpServletRequest request) throws ServletException {
+        final long id = getBeanId(request, "id");
+
+        final ChangeOrderDirection direction = getChangeOrderDirection(request);
+        final long companionId = Strings.getLongVal(request.getParameter("companionId"));
+
+        return changeOrder(id, direction, companionId);
+    }
+
+    protected abstract String changeOrder(final long id, final ChangeOrderDirection direction, final long companionId);
 }
