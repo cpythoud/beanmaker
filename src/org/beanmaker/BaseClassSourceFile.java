@@ -62,8 +62,12 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         importsManager.addImport("java.util.Locale");
 
         importsManager.addImport("org.beanmaker.util.BeanInternals");
-        if (columns.hasItemOrder())
+        if (columns.hasItemOrder()) {
             importsManager.addImport("org.beanmaker.util.DbBeanWithItemOrderInterface");
+            if (columns.hasCodeField())
+                importsManager.addImport("org.beanmaker.util.DbBeanWithCode");
+        } else if (columns.hasCodeField())
+            importsManager.addImport("org.beanmaker.util.DbBeanWithCode");
         else
             importsManager.addImport("org.beanmaker.util.DbBeanInterface");
         importsManager.addImport("org.beanmaker.util.DBQueries");
@@ -124,8 +128,12 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 	
 	private void addClassModifiers() {
         javaClass.markAsAbstract().extendsClass("DbBean");
-        if (columns.hasItemOrder())
+        if (columns.hasItemOrder()) {
             javaClass.implementsGenericInterface("DbBeanWithItemOrderInterface", beanName);
+            if (columns.hasCodeField())
+                javaClass.implementsInterface("DbBeanWithCode");
+        } else if (columns.hasCodeField())
+            javaClass.implementsInterface("DbBeanWithCode");
         else
             javaClass.implementsInterface("DbBeanInterface");
 

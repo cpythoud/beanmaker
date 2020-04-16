@@ -394,5 +394,13 @@ public class Columns {
 	public static String getSuggestedBeanName(final String table) {
 		return Strings.camelize(English.singularize(table));
 	}
+
+	public boolean hasCodeField() {
+		for (Column column: columns)
+			if (column.getJavaName().equals("code"))
+				return true;
+
+		return false;
+	}
 }
 
