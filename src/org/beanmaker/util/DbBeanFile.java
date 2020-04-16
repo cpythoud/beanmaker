@@ -20,4 +20,6 @@ public interface DbBeanFile extends DbBeanInterface {
     File getFile();
     String getInternalFilename();
     String getFileUrl();
+
+    void makeSureFileExists();
 }
