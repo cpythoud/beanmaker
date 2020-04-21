@@ -1,10 +1,12 @@
 package org.beanmaker;
 
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
 
 import org.jcodegen.java.AnonymousClassCreation;
 import org.jcodegen.java.Assignment;
+import org.jcodegen.java.CatchBlock;
 import org.jcodegen.java.Comparison;
 import org.jcodegen.java.Condition;
 import org.jcodegen.java.ConstructorDeclaration;
@@ -23,6 +25,7 @@ import org.jcodegen.java.LineOfCode;
 import org.jcodegen.java.ObjectCreation;
 import org.jcodegen.java.OperatorExpression;
 import org.jcodegen.java.ReturnStatement;
+import org.jcodegen.java.TryBlock;
 import org.jcodegen.java.VarDeclaration;
 import org.jcodegen.java.Visibility;
 import org.jcodegen.java.WhileBlock;
@@ -78,6 +81,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         importsManager.addImport("org.dbbeans.sql.DBQuerySetup");
         importsManager.addImport("org.dbbeans.sql.DBQuerySetupProcess");
         importsManager.addImport("org.dbbeans.sql.DBTransaction");
+        importsManager.addImport("org.dbbeans.sql.SQLRuntimeException");
         importsManager.addImport("org.dbbeans.sql.queries.BooleanCheckQuery");
 
         importsManager.addImport("org.dbbeans.util.Strings");
@@ -3192,7 +3196,6 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         javaClass.addContent(
                 new FunctionDeclaration("getList", new GenericType("List", beanName))
                         .addArgument(new FunctionArgument("ResultSet", "rs"))
-                        .addException("SQLException")
                         .markAsStatic()
                         .addContent(
                                 VarDeclaration.createGenericContainerDeclaration(
@@ -3203,12 +3206,16 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                         )
                         .addContent(EMPTY_LINE)
                         .addContent(
-                                new WhileBlock(new Condition(new FunctionCall("next", "rs"))).addContent(
-                                        new FunctionCall("add", "list")
-                                                .addArgument(new ObjectCreation(beanName)
-                                                        .addArgument("rs"))
-                                                .byItself()
-                                )
+                                new TryBlock().addContent(
+                                        new WhileBlock(new Condition(new FunctionCall("next", "rs"))).addContent(
+                                                new FunctionCall("add", "list")
+                                                        .addArgument(new ObjectCreation(beanName)
+                                                                .addArgument("rs"))
+                                                        .byItself()
+                                        )
+                                ).addCatchBlock(
+                                        new CatchBlock(new FunctionArgument("SQLException", "sqlex"))
+                                                .addContent(new ExceptionThrow("SQLRuntimeException").addArgument("sqlex")))
                         )
                         .addContent(EMPTY_LINE)
                         .addContent(
