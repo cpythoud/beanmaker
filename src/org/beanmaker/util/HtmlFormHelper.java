@@ -70,6 +70,8 @@ public class HtmlFormHelper {
 
     private boolean displayROFilesAsLinks = false;
 
+    private String readonlyFormCssClass = null;
+
 
     public String getNotRequiredExtension() {
         return notRequiredExtension;
@@ -350,12 +352,23 @@ public class HtmlFormHelper {
         return displayROFilesAsLinks;
     }
 
+    public void setReadonlyFormCssClass(String readonlyFormCssClass) {
+        this.readonlyFormCssClass = readonlyFormCssClass;
+    }
+
+    public String getReadonlyFormCssClass() {
+        return readonlyFormCssClass;
+    }
+
     protected String getFormCssClasses(final String beanName) {
         final StringBuilder formCssClasses = new StringBuilder();
 
         formCssClasses.append(beanName).append("-form");
-        if (readonly)
+        if (readonly) {
             formCssClasses.append(readonlyExtension);
+            if (readonlyFormCssClass != null)
+                formCssClasses.append(" ").append(readonlyFormCssClass);
+        }
 
         if (inline)
             formCssClasses.append(" form-inline");
