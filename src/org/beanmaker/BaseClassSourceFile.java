@@ -2073,7 +2073,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
     }
 
     private String getNotUniqueQuery(final Column column) {
-        return "SELECT id FROM " + tableName + " WHERE " + column.getSqlName() + "=? AND id <> ?";
+        return "SELECT id FROM " + tableName + " WHERE " + backquote(column.getSqlName()) + "=? AND id <> ?";
     }
 	
 	private void addReset() {
@@ -3281,7 +3281,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 		for (Column column: columns.getList()) {
 			final String name = column.getSqlName();
 			if (!name.equals("id")) {
-				buf.append(name);
+				buf.append(backquote(name));
 				buf.append(", ");
 			}
 		}
@@ -3338,7 +3338,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 			final String name = column.getSqlName();
 			if (!name.equals("id")) {
 				count++;
-				buf.append(name);
+				buf.append(backquote(name));
 				buf.append(", ");
 			}
 		}
@@ -3365,7 +3365,7 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
 		for (Column column: columns.getList()) {
 			final String name = column.getSqlName();
 			if (!name.equals("id")) {
-				buf.append(name);
+				buf.append(backquote(name));
 				buf.append("=?, ");
 			}
 		}
@@ -3402,6 +3402,10 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
         else
             indicator.addContent(new ReturnStatement("false"));
         javaClass.addContent(indicator).addContent(EMPTY_LINE);
+    }
+
+    private String backquote(String fieldName) {
+	    return "`" + fieldName + "`";
     }
 }
 
