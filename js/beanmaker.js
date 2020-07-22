@@ -1,11 +1,11 @@
-// beanmaker.js -- v0.5.0 -- 2019-11-27
+// beanmaker.js -- v0.6.0 -- 2020-07-17
 
 $.ajaxSetup({cache : false});
 
-var BEANMAKER = { };
+const BEANMAKER = { };
 
 BEANMAKER.parseId = function (idString) {
-    var parts = idString.split('_');
+    const parts = idString.split('_');
     return parts[parts.length - 1];
 };
 
@@ -16,7 +16,7 @@ BEANMAKER.getItemId = function (linkOrButton) {
 BEANMAKER.setupModal = function(linkId, addText, editText, url, formName, extraSetupFunc) {
     $('body').on('click', '.' + linkId, function (event) {
         event.preventDefault();
-        var idBean = BEANMAKER.getItemId($(this));
+        const idBean = BEANMAKER.getItemId($(this));
         if (idBean === 0)
             $('#' + linkId + '_dialog_title').text(addText);
         else
@@ -33,22 +33,22 @@ BEANMAKER.setupModal = function(linkId, addText, editText, url, formName, extraS
 };
 
 BEANMAKER.showErrorMessages = function(idContainer, errors, stylesToAdd, stylesToRemove) {
-    var $container = $('#' + idContainer);
+    const $container = $('#' + idContainer);
     $container.empty();
     if (stylesToAdd)
         $container.addClass(stylesToAdd);
     if (stylesToRemove)
         $container.removeClass(stylesToRemove);
 
-    var errorList = $('<ul>');
-    var errorCount = errors.length;
-    for (var i = 0; i < errorCount; i++)
+    const errorList = $('<ul>');
+    const errorCount = errors.length;
+    for (let i = 0; i < errorCount; i++)
         errorList.append('<li>' + errors[i].fieldLabel + ' : ' + errors[i].message + '</li>');
     errorList.appendTo($container);
 };
 
 BEANMAKER.showErrorMessage = function (idContainer, message, stylesToAdd, stylesToRemove) {
-    var $container = $('#' + idContainer);
+    const $container = $('#' + idContainer);
     $container.empty();
     if (stylesToAdd)
         $container.addClass(stylesToAdd);
@@ -83,14 +83,14 @@ BEANMAKER.ajaxSubmitDefaults = {
 };
 
 BEANMAKER.ajaxSubmit = function(event, nonDefaultParams, refreshOnSuccessFunction, $this) {
-    var params = $.extend({}, BEANMAKER.ajaxSubmitDefaults, nonDefaultParams);
+    const params = $.extend({}, BEANMAKER.ajaxSubmitDefaults, nonDefaultParams);
     event.preventDefault();
-    var $form;
+    let $form;
     if (params.formID)
         $form = $('#' + params.formID);
     else
         $form = $('form[name="' + params.formName + '"]');
-    var multipart = $form.attr('enctype') === 'multipart/form-data';
+    const multipart = $form.attr('enctype') === 'multipart/form-data';
     BEANMAKER.setLoadingStatus($form);
     $.ajax({
         url: params.action,
@@ -152,12 +152,12 @@ BEANMAKER.scrollToTop = function() {
 };
 
 BEANMAKER.postToNewLocation = function(href, parameters) {
-    var tempForm = document.createElement('form');
+    const tempForm = document.createElement('form');
     tempForm.method = 'post';
     tempForm.action = href;
 
-    for (var name in parameters) {
-        var hiddenInput = document.createElement('input');
+    for (let name in parameters) {
+        const hiddenInput = document.createElement('input');
         hiddenInput.type = 'hidden';
         hiddenInput.setAttribute('name', name);
         hiddenInput.setAttribute('value', parameters[name]);
@@ -249,7 +249,7 @@ BEANMAKER.retargetLocationOrReload = function(target) {
 };
 
 BEANMAKER.reloadToHashAfterChange = function(hash) {
-    var target = window.location.pathname + hash;
+    const target = window.location.pathname + hash;
     if (BEANMAKER.endsWith(window.location.href, target))
         window.location.reload();
     else {
@@ -263,7 +263,7 @@ BEANMAKER.reloadAfterChangeNoParameters = function() {
 };
 
 BEANMAKER.getRequestParametersFromDataAttributes = function ($element, extraParameters) {
-    var parameters = $element.data();
+    const parameters = $element.data();
 
     if (extraParameters)
         $.extend(parameters, extraParameters);
@@ -271,9 +271,9 @@ BEANMAKER.getRequestParametersFromDataAttributes = function ($element, extraPara
     if ($.isEmptyObject(parameters))
         return "";
 
-    var start = true;
-    var parameterString = "";
-    for (var key in parameters) {
+    let start = true;
+    let parameterString = "";
+    for (let key in parameters) {
         if (parameters.hasOwnProperty(key)) {
             if (start) {
                 parameterString += '?';
@@ -307,4 +307,16 @@ BEANMAKER.setupDataRefresh = function (id, availabilityCheckURL, dataURL, checkF
             }
         });
     }, checkFrequency * 1000);
+};
+
+BEANMAKER.removeTableLine = function (tableName, id) {
+    if (!tableName.startsWith('#'))
+        tableName = '#' + tableName;
+    $(tableName + "_row_" + id).remove();
+    const $counter = $(tableName + "_total");
+    let count = Number($counter.text()) - 1;
+    $counter.text(count.toString());
+    const $shower = $(tableName + "_shown");
+    count = Number($shower.text()) - 1;
+    $shower.text(count.toString());
 };
