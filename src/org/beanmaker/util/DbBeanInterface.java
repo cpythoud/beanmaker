@@ -1,5 +1,7 @@
 package org.beanmaker.util;
 
+import org.dbbeans.sql.DBTransaction;
+
 import java.util.List;
 import java.util.Locale;
 
@@ -12,6 +14,7 @@ public interface DbBeanInterface {
     void resetId();
 
     void updateDB();
+    long updateDB(final DBTransaction transaction);
 
     void preUpdateConversions();
 
