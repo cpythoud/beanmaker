@@ -1,6 +1,8 @@
 package org.beanmaker.util;
 
 import java.io.File;
+import java.sql.Date;
+import java.sql.Timestamp;
 
 public interface DbBeanFile extends DbBeanInterface {
 
@@ -18,8 +20,12 @@ public interface DbBeanFile extends DbBeanInterface {
     boolean isAltDirEmpty();
 
     File getFile();
+    File getSafeNameFileCopy();
     String getInternalFilename();
     String getFileUrl();
+
+    Date getModificationDate();
+    Timestamp getModificationTimestamp();
 
     void makeSureFileExists();
 }
