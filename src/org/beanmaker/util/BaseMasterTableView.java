@@ -878,4 +878,19 @@ public abstract class BaseMasterTableView extends TabularView {
     }
 
     protected void initExcelExportExtraParameters() { }
+
+    protected TdTag adjustSorting(TdTag cell, int value) {
+        return cell.attribute("data-sort-value", Strings.zeroFill(value, zeroFilledMaxDigits));
+    }
+
+    protected TdTag adjustSorting(TdTag cell, long value) {
+        return cell.attribute("data-sort-value", Strings.zeroFill(value, zeroFilledMaxDigits));
+    }
+
+    protected TdTag adjustSorting(TdTag cell, String value) {
+        if (Strings.isEmpty(value))
+            return adjustSorting(cell, 0);
+
+        return adjustSorting(cell, Strings.getLongVal(value));
+    }
 }
