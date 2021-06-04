@@ -44,6 +44,10 @@ public class LocalFilesSourceFile extends BaseCode {
         addNonImplementedStaticFunction(
                 "DbBeanFileStoredFilenameCalculator",
                 "getDefaultFileStoredFileNameCalculator");
+
+        addNonImplementedStaticFunction(
+                "int",
+                "getSubDirFileCountThreshold");
     }
 
     private void createSourceCode() {

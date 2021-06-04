@@ -122,6 +122,9 @@ public class BaseHTMLViewSourceFile extends ViewCode {
                                                                 "LocalFiles"),
                                                         new FunctionCall(
                                                                 "getDefaultFileStoredFileNameCalculator",
+                                                                "LocalFiles"),
+                                                        new FunctionCall(
+                                                                "getSubDirFileCountThreshold",
                                                                 "LocalFiles"))
                                 )
                         )
