@@ -72,7 +72,7 @@
         let didFilter = false;
         $table.find('.' + opts.formElementFilterCssClass).each(function () {
             const filterName = this.name;
-            const filterVal = $.trim($(this).val());  // ! .toLowerCase();
+            const filterVal = $.trim($(this).val()).toLowerCase();
             if (filterVal !== '') {
                 $table.find('td.' + filterName).each(function () {
                     let content;
@@ -89,7 +89,8 @@
                 });
                 didFilter = true;
             }
-            setCookie($table, filterName, filterVal);
+            // ! On stocke la valeur d'origine et pas la valeur de filtrage, sinon on a un problème avec les select littéraux
+            setCookie($table, filterName, $.trim($(this).val()));
         });
         if (!didFilter)
             removeFiltering($table, opts);
@@ -371,6 +372,12 @@
             console.log("HIDE ADVANCED SEARCH MODALE");
         },
         zebraCssClass: 'alternate'
+    };
+
+    // * to be called from a cancel link external to the table
+    $.fn.clearFilters = function() {
+        const $table = $(this);
+        clearFilters($table, $.fn.cctable.defaults);
     };
 
 })(jQuery);
