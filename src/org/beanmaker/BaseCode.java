@@ -1,5 +1,6 @@
 package org.beanmaker;
 
+import org.jcodegen.java.ClassSourceFile;
 import org.jcodegen.java.EmptyLine;
 import org.jcodegen.java.ExceptionThrow;
 import org.jcodegen.java.FunctionArgument;
@@ -7,14 +8,13 @@ import org.jcodegen.java.FunctionDeclaration;
 import org.jcodegen.java.ImportsManager;
 import org.jcodegen.java.JavaClass;
 import org.jcodegen.java.ObjectCreation;
-import org.jcodegen.java.SourceFile;
 import org.jcodegen.java.VarDeclaration;
 import org.jcodegen.java.Visibility;
 
 import org.dbbeans.util.Strings;
 
 public abstract class BaseCode {
-    protected final SourceFile sourceFile;
+    protected final ClassSourceFile sourceFile;
     protected final JavaClass javaClass;
     protected final ImportsManager importsManager;
 
@@ -31,7 +31,7 @@ public abstract class BaseCode {
         if (Strings.isEmpty(packageName))
             throw new IllegalArgumentException("packageName empty");
 
-        sourceFile = new SourceFile(packageName, className);
+        sourceFile = new ClassSourceFile(packageName, className);
         javaClass = sourceFile.getJavaClass();
         importsManager = sourceFile.getImportsManager();
 
@@ -144,4 +144,5 @@ public abstract class BaseCode {
 
         javaClass.addContent(functionDeclaration).addContent(EMPTY_LINE);
     }
+
 }
