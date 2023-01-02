@@ -1,6 +1,7 @@
 package org.beanmaker;
 
 import org.jcodegen.java.ClassSourceFile;
+import org.jcodegen.java.Configuration;
 import org.jcodegen.java.EmptyLine;
 import org.jcodegen.java.ExceptionThrow;
 import org.jcodegen.java.FunctionArgument;
@@ -25,6 +26,10 @@ public abstract class BaseCode {
 
 
     public BaseCode(final String className, final String packageName) {
+        Configuration.setCurrentConfiguration(
+                Configuration.builder().setDefaultDeclarationVisibility(Visibility.PUBLIC).create()
+        );
+
         if (Strings.isEmpty(className))
             throw new IllegalArgumentException("className empty");
 
