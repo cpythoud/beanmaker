@@ -415,64 +415,9 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                 .visibility(Visibility.PUBLIC)
                 .addArgument(new FunctionArgument("long", "id")).annotate("@Override");
 
-        // function inner class for database row retrieval
-        /*final JavaClass databaseInnerClass = new JavaClass("DataFromDBQuery").visibility(Visibility.NONE)
-                .implementsInterface("DBQuerySetupProcess");
-        for (Column column : columns.getList()) {
-            final String type = column.getJavaType();
-            final String field = column.getJavaName();
-            if (!field.equals("id")) {
-                if (type.equals("int") || type.equals("long"))
-                    databaseInnerClass.addContent(new VarDeclaration(type, field, "0"));
-                else if (type.equals("String") || JAVA_TEMPORAL_TYPES.contains(type) || type.equals("Money"))
-                    databaseInnerClass.addContent(new VarDeclaration(type, field, "null"));
-                else if (type.equals("boolean"))
-                    databaseInnerClass.addContent(new VarDeclaration(type, field, "false"));
-                else
-                    throw new IllegalStateException("Java type not allowed: " + type);
-            }
-        }
-        databaseInnerClass.addContent(new VarDeclaration("boolean", "idOK", "false"))
-                .addContent(EMPTY_LINE)
-                .addContent(getInnerClassSetupPSWithIdFunction())
-                .addContent(EMPTY_LINE);
-        final FunctionDeclaration processRS = getInnerClassProcessRSFunctionStart();
-        final IfBlock ifRsNext = new IfBlock(new Condition("rs.next()"));
-        int index = 0;
-        for (Column column : columns.getList()) {
-            final String type = column.getJavaType();
-            final String field = column.getJavaName();
-            if (!field.equals("id")) {
-                ++index;
-                if (type.equals("Money"))
-                    ifRsNext.addContent(new Assignment(field, new ObjectCreation("Money")
-                            .addArgument(new FunctionCall("getLong", "rs").addArgument(Integer.toString(index)))
-                            .addArgument(new FunctionCall("getDefaultMoneyFormat", parametersVar))));
-                else {
-                    final String getterName = "get" + capitalize(type);
-                    ifRsNext.addContent(new Assignment(field, new FunctionCall(getterName, "rs")
-                            .addArgument(Integer.toString(index))));
-                }
-            }
-        }
-        ifRsNext.addContent(new Assignment("idOK", "true"));
-        processRS.addContent(ifRsNext);
-        databaseInnerClass.addContent(processRS);
-        function.addContent(databaseInnerClass).addContent(EMPTY_LINE);*/
-
         // * check for bad ID
         function.addContent(new IfBlock(new Condition("id <= 0")).addContent("throw new IllegalArgumentException(\"id = \" + id + \" <= 0\");"))
                 .addContent(EMPTY_LINE);
-
-        // instantiate DBQuery inner class & use it to retrieve data
-        /*function.addContent(
-                new VarDeclaration("DataFromDBQuery", "dataFromDBQuery", new ObjectCreation("DataFromDBQuery")).markAsFinal()
-        ).addContent(
-                new FunctionCall("processQuery", "dbAccess")
-                        .byItself()
-                        .addArgument(quickQuote(getReadSQLQuery()))
-                        .addArgument("dataFromDBQuery")
-        ).addContent(EMPTY_LINE);*/
 
         // ! new lambda ResultSet processing part
         var lambdaIfBlock = new IfBlock(new Condition(new FunctionCall("next", "rs")));
@@ -525,41 +470,8 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
                                 .addContent(lambdaIfBlock))
         ).addContent(EMPTY_LINE);
 
-        // check if data was returned
-        /*function.addContent(
-                new IfBlock(new Condition("!dataFromDBQuery.idOK")).addContent(
-                        new ExceptionThrow("IllegalArgumentException").addArgument("\"id = \" + id + \" does not exist\"")
-                )
-        ).addContent(EMPTY_LINE);*/
-
         // * extra DB actions
         function.addContent("initExtraDbActions(id);");
-
-        // fields assignment
-        /*function.addContent(new Assignment("this.id", "id"));
-        for (Column column : columns.getList()) {
-            final String type = column.getJavaType();
-            final String field = column.getJavaName();
-            final boolean isIdReference = column.getSqlName().startsWith("id_");
-            if (!field.equals("id")) {
-                function.addContent(new Assignment("this." + field, "dataFromDBQuery." + field));
-                if (JAVA_TEMPORAL_TYPES.contains(type))
-                    function.addContent(
-                            new Assignment(field + "Str",
-                                    new FunctionCall("convert" + type + "ToString").addArgument(field))
-                    );
-                if ((type.equals("int") || type.equals("long")) && !field.equals("itemOrder") && !isIdReference)
-                    function.addContent(
-                            new Assignment(field + "Str",
-                                    new FunctionCall("valueOf", "String").addArgument(field))
-                    );
-                if (type.equals("Money"))
-                    function.addContent(
-                            new Assignment(field + "Str",
-                                    new FunctionCall("toString", field))
-                    );
-            }
-        }*/
 
         for (OneToManyRelationship relationship : relationships)
             if (!relationship.isListOnly())
