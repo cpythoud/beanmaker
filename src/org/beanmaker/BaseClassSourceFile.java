@@ -997,55 +997,46 @@ public class BaseClassSourceFile extends BeanCodeWithDBInfo {
             if (relationship.isListOnly()) {
                 importsManager.addImport("org.dbbeans.sql.DBQuerySetupRetrieveData");
 
-                final FunctionDeclaration preparedStatementSetup = new FunctionDeclaration("setupPreparedStatement")
-                        .annotate("@Override")
-                        .addException("SQLException")
-                        .addArgument(new FunctionArgument("PreparedStatement", "stat"))
-                        .addContent(new FunctionCall("setLong", "stat")
-                                .addArgument("1")
-                                .addArgument("id")
-                                .byItself());
-
-                final FunctionCall dbAccessFunction = new FunctionCall("processQuery", "dbAccess").byItself();
-                final FunctionDeclaration listGetter =
+                javaClass.addContent(
                         new FunctionDeclaration("get" + capitalize(listName), new GenericType("List", beanClass))
-                                .addContent(VarDeclaration.createListDeclaration(beanClass, listName).markAsFinal())
-                                .addContent(EMPTY_LINE)
-                                .addContent(dbAccessFunction
-                                        .addArgument(new OperatorExpression(quickQuote("SELECT ") + " + " + beanClass + ".DATABASE_FIELD_LIST + " + quickQuote(" FROM " + relationship.getTable() + " WHERE " + relationship.getIdSqlName() + "=? ORDER BY "),
-                                                new FunctionCall("getOrderByFields", beanClass + "." + Strings.uncamelize(beanClass).toUpperCase() + "_PARAMETERS"),
-                                                OperatorExpression.Operator.ADD))
-                                        .addArgument(new AnonymousClassCreation("DBQuerySetupProcess").setContext(dbAccessFunction)
-                                                .addContent(preparedStatementSetup)
-                                                .addContent(EMPTY_LINE)
-                                                .addContent(new FunctionDeclaration("processResultSet")
-                                                        .annotate("@Override")
-                                                        .addException("SQLException")
-                                                        .addArgument(new FunctionArgument("ResultSet", "rs"))
-                                                        .addContent(new WhileBlock(new Condition("rs.next()"))
-                                                                .addContent(new FunctionCall("add", listName).byItself()
-                                                                        .addArgument(new ObjectCreation(beanClass)
-                                                                                .addArgument("rs")))))))
-                                .addContent(EMPTY_LINE)
-                                .addContent(new ReturnStatement(listName));
-                javaClass.addContent(listGetter).addContent(EMPTY_LINE);
+                                .addContent(
+                                        new ReturnStatement(
+                                                new FunctionCall("processQuery", "dbAccess")
+                                                        .addArgument(
+                                                                new OperatorExpression(quickQuote("SELECT ") + " + " + beanClass + ".DATABASE_FIELD_LIST + " + quickQuote(" FROM " + relationship.getTable() + " WHERE " + relationship.getIdSqlName() + "=? ORDER BY "),
+                                                                        new FunctionCall("getOrderByFields", beanClass + "." + Strings.uncamelize(beanClass).toUpperCase() + "_PARAMETERS"),
+                                                                        OperatorExpression.Operator.ADD)
+                                                        )
+                                                        .addArgument(
+                                                                new LambdaExpression()
+                                                                        .addLambdaParameter("stat")
+                                                                        .addContent(new FunctionCall("setLong", "stat").addArguments("1", "id"))
+                                                        )
+                                                        .addArgument(beanClass + "::getList")
+                                        )
+                                )
+                ).addContent(EMPTY_LINE);
 
-                final FunctionCall dbAccessForCountFunction = new FunctionCall("processQuery", "dbAccess");
-                final FunctionDeclaration countGetter =
+                javaClass.addContent(
                         new FunctionDeclaration("getCountFor" + capitalize(listName), "long")
-                                .addContent(new ReturnStatement(
-                                        dbAccessForCountFunction
-                                                .addArgument(quickQuote("SELECT COUNT(id) FROM " + relationship.getTable() + " WHERE " + relationship.getIdSqlName() + "=?"))
-                                                .addArgument(new AnonymousClassCreation("DBQuerySetupRetrieveData<Long>").setContext(dbAccessFunction)
-                                                        .addContent(preparedStatementSetup)
-                                                        .addContent(new FunctionDeclaration("processResultSet", "Long")
-                                                                .annotate("@Override")
-                                                                .addException("SQLException")
-                                                                .addArgument(new FunctionArgument("ResultSet", "rs"))
-                                                                .addContent(new FunctionCall("next", "rs").byItself())
-                                                                .addContent(new ReturnStatement(new FunctionCall("getLong", "rs").addArgument("1")))))
-                                ));
-                javaClass.addContent(countGetter).addContent(EMPTY_LINE);
+                                .addContent(
+                                        new ReturnStatement(
+                                                new FunctionCall("processQuery", "dbAccess")
+                                                        .addArgument(quickQuote("SELECT COUNT(id) FROM " + relationship.getTable() + " WHERE " + relationship.getIdSqlName() + "=?"))
+                                                        .addArgument(
+                                                                new LambdaExpression()
+                                                                        .addLambdaParameter("stat")
+                                                                        .addContent(new FunctionCall("setLong", "stat").addArguments("1", "id"))
+                                                        )
+                                                        .addArgument(
+                                                                new Lambda()
+                                                                        .addLambdaParameter("rs")
+                                                                        .addContent(new FunctionCall("next", "rs").byItself())
+                                                                        .addContent(new ReturnStatement(new FunctionCall("getLong", "rs").addArgument("1")))
+                                                        )
+                                        )
+                                )
+                ).addContent(EMPTY_LINE);
             } else {
                 importsManager.addImport("java.util.Collections");
 
