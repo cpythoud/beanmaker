@@ -1,7 +1,7 @@
 package org.beanmaker.util;
 
-import net.pythoud.passwords.CharacterSets;
-import net.pythoud.passwords.PasswordMaker;
+import rodeo.password.pgencheck.CharacterGroups;
+import rodeo.password.pgencheck.PasswordMaker;
 
 import org.dbbeans.sql.DBAccess;
 import org.dbbeans.sql.DBQueryRetrieveData;
@@ -16,9 +16,9 @@ import java.sql.SQLException;
 public class ProtectedIdManager {
 
     private static final PasswordMaker CODE_GENERATOR =
-            PasswordMaker.getFactory()
-                    .setCharCount(32)
-                    .setMainChars(CharacterSets.UPPER_CASES + CharacterSets.LOWER_CASES + CharacterSets.DIGITS)
+            PasswordMaker.factory()
+                    .setLength(32)
+                    .addCharGroup(CharacterGroups.UPPER_CASE + CharacterGroups.LOWER_CASE + CharacterGroups.DIGITS)
                     .create();
 
     private final DBAccess dbAccess;
@@ -68,7 +68,7 @@ public class ProtectedIdManager {
     }
 
     private String createCode(final long id) {
-        final String code = CODE_GENERATOR.getPassword();
+        String code = CODE_GENERATOR.create();
 
         if (!exists(code))
             dbAccess.processUpdate(
