@@ -116,7 +116,9 @@ public class MySQLDatabaseServer extends AbstractDatabaseServer {
 
     @Override
 	public List<OneToManyRelationship> getDetectedOneToManyRelationship(final String dbName, final String tableName) {
-		final int tableNameLength = tableName.length();
+        return new ArrayList<>();
+
+		/*final int tableNameLength = tableName.length();
 		
 		final List<String> likes = new ArrayList<String>();
 		likes.add(tableName);
@@ -171,7 +173,7 @@ public class MySQLDatabaseServer extends AbstractDatabaseServer {
             DBUtils.connectionSilentClose(conn);
         }
 		
-		return relationships;
+		return relationships;*/
 	}
 			
 	
